@@ -949,7 +949,7 @@ module Watir
                 htmlSource = "<HTML>"
                 htmlSource = html_source(document.body,htmlSource," ")
                 htmlSource += "\n</HTML>\n"
-                puts htmlSource
+                #puts htmlSource
                 #Give htmlSource as input to Rexml.
                 begin
                     @rexmlDomobject = REXML::Document.new(htmlSource)
