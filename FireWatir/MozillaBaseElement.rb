@@ -2,8 +2,6 @@
   license
   ---------------------------------------------------------------------------
   Copyright (c) 2005-2006, Angrez Singh, Abhishek Goliya
-  Persistent Systems Pvt. Ltd.
-  All rights reserved.
   
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
@@ -37,24 +35,28 @@
 # Base class for html elements.
 # This is not a class that users would normally access.
     class Element
-        
         include Container
         # Number of spaces that separate the property from the value in the to_s method
         TO_S_SIZE = 14
 
-        # XPath Result type. Return only first node that matches the xpath expression.
-        # More details: "http://developer.mozilla.org/en/docs/DOM:document.evaluate"
+        # How to get the nodes using XPath in mozilla.
+        ORDERED_NODE_ITERATOR_TYPE = 5
+        # To get the number of nodes returned by the xpath expression
+        NUMBER_TYPE = 1
+        # To get single node value
         FIRST_ORDERED_NODE_TYPE = 9
+        @@current_element_object = ""
+        @@current_level = 0 
         
         attr_accessor :element_name
         attr_accessor :element_type
         def initialize(element)
-            
             if(element != nil && element.class == String)
                 @element_name = element
                 # Get the type of the element.
-                $jssh_socket.send("#{element}; \n", 0)
+                $jssh_socket.send("#{element};\n", 0)
                 temp = read_socket()
+                #puts "#{element} and type is #{temp}"
                 temp =~ /\[object\s(.*)\]/
                 if $1
                     @element_type = $1
@@ -80,20 +82,23 @@
                         # Every element has its name starting from element. If yes then
                         # use element_name to send the command to jssh. Else its a number
                         # and we are still searching for element, in this case use doc.all
-                        # array with element_name as index to send command to jssh.
-                        if(element_type == 'HTMLDivElement')
-                            ole_method_name = 'innerHTML'
-                        end
+                        # array with element_name as index to send command to jssh
+                        #puts element_object.to_s
+                        #if(element_type == 'HTMLDivElement')
+                        #    ole_method_name = 'innerHTML'
+                        #end
                         $jssh_socket.send('typeof(' + element_object + '.#{ole_method_name});\n', 0)
-                        returnType = read_socket()
-                        $jssh_socket.send('' + element_object + '.#{ole_method_name};\n', 0)
-                        returnValue = read_socket()
+                        return_type = read_socket()
+                        $jssh_socket.send(element_object + '.#{ole_method_name};\n', 0)
+                        return_value = read_socket()
                         
-                        if(returnType == \"boolean\")
-                            return false if returnValue == \"false\"
-                            return true if returnValue == \"true\"
+                        if(return_type == \"boolean\")
+                            return_value = false if return_value == \"false\"
+                            return_value = true if return_value == \"true\"
                         end
-                        return returnValue
+                        @@current_element_object = ''
+                        @@current_level = 0
+                        return return_value
                     end"
         end
         
@@ -105,12 +110,22 @@
                         # and we are still searching for element, in this case use doc.all
                         # array with element_name as index to send command to jssh.
                         begin
-                            element_object.to_s
+                            $jssh_socket.send('typeof(' + element_object + '.#{method_name});\n', 0)
+                            return_type = read_socket()
                             $jssh_socket.send('' + element_object + '.#{method_name};\n', 0)
-                            read_socket()
+                            return_value = read_socket()
+                            if(return_type == \"boolean\")
+                                return_value = false if return_value == \"false\"
+                                return_value = true if return_value == \"true\"
+                            end    
+                        
+                            @@current_element_object = ''
+                            @@current_level = 0
+                            return return_value
                         rescue
-                            ''
+                            return ''
                         end
+                        
                     end"
         end
         
@@ -131,17 +146,17 @@
         def highlight(set_or_clear)
             if set_or_clear == :set
                 #puts "element_name is : #{element_object}"
-                $jssh_socket.send("#{element_object}.style.background; \n", 0)
-                @original_color = read_socket()
+                jssh_command = " var original_color = #{element_object}.style.background;"
+                jssh_command += " #{element_object}.style.background = \"#{DEFAULT_HIGHLIGHT_COLOR}\"; original_color;"
                 
                 # TODO: Need to change this so that it would work if user sets any other color.
                 #puts "color is : #{DEFAULT_HIGHLIGHT_COLOR}"
-                $jssh_socket.send("#{element_object}.style.background = \"#{DEFAULT_HIGHLIGHT_COLOR}\"; \n", 0)
-                read_socket()
+                $jssh_socket.send("#{jssh_command}\n", 0)
+                @original_color = read_socket()
                 
             else # BUG: assumes is :clear, but could actually be anything
                 begin 
-                    $jssh_socket.send("#{element_object}.style.background = \"#{@original_color}\"; \n", 0)
+                    $jssh_socket.send("#{element_object}.style.background = \"#{@original_color}\";\n", 0)
                     read_socket()
                 rescue
                     # we could be here for a number of reasons...
@@ -184,23 +199,40 @@
             jssh_command += "   var element = elements[i];"
             jssh_command += "   var attribute = '';"
             jssh_command += "   var same_type = false;"
-            jssh_command += "      for(var j=0; j<types.length; j++) {"
-            jssh_command += "          if(types[j] == element.type) {"
-            jssh_command += "               same_type = true;"
-            jssh_command += "               break;"
-            jssh_command += "          }"
+            jssh_command += "   for(var j=0; j<types.length; j++) {"
+            jssh_command += "       if(types[j] == element.type) {"
+            jssh_command += "           same_type = true;"
+            jssh_command += "           break;"
             jssh_command += "       }"
-            jssh_command += "   same_type;"
+            jssh_command += "   }"
+            #jssh_command += "  same_type;"
             jssh_command += "   if(same_type == true) {"
-            jssh_command += "     if(\"index\" == \"#{how}\") { "
-            jssh_command += "         attribute = object_index; object_index += 1; "
-            jssh_command += "     } else {"
-            jssh_command += "         attribute = element.#{how};"
-            jssh_command += "     }"
+            jssh_command += "       if(\"index\" == \"#{how}\") { "
+            jssh_command += "           attribute = object_index; object_index += 1; "
+            jssh_command += "       } else {"
+            jssh_command += "           attribute = element.#{how};"
+            jssh_command += "       }"
             jssh_command += "    if(attribute == \"\") o = 'NoMethodError';"
-            jssh_command += "     var found = false;"
-            if(what.class == "RegExp")
-                jssh_command += "found = attribute.match(#{what});"
+            jssh_command += "    var found = false;"
+
+            if(what.class == Regexp)
+                # Construct the regular expression because we can't use it directly by converting it to string.
+                # If reg ex is /Google/i then its string conversion will be (?i-mx:Google) so we can't use it.
+                # Construct the regular expression again from the string conversion.
+                oldRegExp = what.to_s
+                newRegExp = "/" + what.source + "/"
+                flags = oldRegExp.slice(2, oldRegExp.index(':') - 2)
+
+                for i in 0..flags.length do
+                    flag = flags[i, 1]
+                    if(flag == '-')
+                        break;
+                    else
+                        newRegExp << flag
+                    end
+                end
+                jssh_command += "var regExp = new RegExp(#{newRegExp});"
+                jssh_command += "found = regExp.test(attribute);"
             else
                 jssh_command += "found = (attribute == \"#{what}\");"
             end
@@ -218,11 +250,11 @@
             jssh_command += "     }"
             jssh_command += "   }"
             jssh_command += "}"
-            jssh_command += " element_name;"
+            jssh_command += "element_name;"
             #puts jssh_command 
-            $jssh_socket.send("#{jssh_command}; \n", 0)
+            $jssh_socket.send("#{jssh_command};\n", 0)
             element_name = read_socket();          
-            #puts element_name
+            #puts "element name in find control is : #{element_name}"
             if(element_name != "")
                 return Element.new(element_name)
             else
@@ -230,10 +262,485 @@
             end
         end
         
+        # Function to locate the element. Re-implemented here so that we don't have to 
+        # make small round-trips via socket to JSSh. Instead write the logic for locating
+        # the element in JavaScript and send it to JSSh.
+        def locate_tagged_element_xpath(tag, how, what, types, value = nil)
+            how = :value if how == :caption
+            xpath = ""
+            if(@@current_element_object == "")
+                xpath = "//#{tag}[@#{how}='#{what}'"
+                if(types != nil)
+                    xpath += " and ("
+                    count = 0
+                    types.each do |type|
+                        if count == 0
+                            xpath += "@type = '#{type}'"
+                            count += 1
+                        else
+                            xpath += " or @type = '#{type}'"
+                        end
+                    end
+                    xpath += ")"
+                elsif(value != nil)
+                    xpath += " and @value = '#{value}'"
+                end
+
+                xpath += "]"
+            end
+            #puts "xpath for finding out the element is : #{xpath}"
+            return element_by_xpath(xpath)
+        end
+
+        # Function to locate the element. Re-implemented here so that we don't have to 
+        # make small round-trips via socket to JSSh. Instead write the logic for locating
+        # the element in JavaScript and send it to JSSh.
+        def locate_tagged_element(tag, how, what, types = nil, value = nil)
+            #puts caller(0)
+            jssh_command = ""
+            how = :value if how == :caption 
+            how = :href if how == :url
+            #puts "current element is : #{@@current_element_object} and tag is #{tag}"
+            # If there is no current element i.e. element in current context we are searching the whole DOM tree.
+            # So get all the elements.
+            if(@@current_element_object == "")
+                jssh_command += "var elements = null; elements = #{DOCUMENT_VAR}.getElementsByTagName(\"#{tag}\");"
+                if(types != nil and types.include?("textarea"))
+                    jssh_command += "var elements2 = null; elements2 = #{DOCUMENT_VAR}.getElementsByTagName(\"textarea\");
+                                     var length = elements.length + elements2.length;
+                                     var arr = new Array(length);
+                                     for(var i = 0; i < elements.length; ++i)
+                                     {
+                                        arr[i] = elements[i];
+                                     }
+                                     for(var i = elements.length, j = 0; j < elements2.length; ++j,++i)
+                                     {
+                                        arr[i] = elements2[j];
+                                     }
+                                     elements = arr;"
+                        
+                end                     
+            else
+                jssh_command += "var elements_#{@@current_level} = #{@@current_element_object}.getElementsByTagName(\"#{tag}\");" 
+                if(types != nil and types.include?("textarea"))
+                    jssh_command += "var elements2_#{@@current_level} = #{@@current_element_object}.getElementsByTagName(\"textarea\");
+                                     var length = elements_#{@@current_level}.length + elements2_#{@@current_level}.length;
+                                     var arr = new Array(length);
+                                     for(var i = 0; i < elements_#{@@current_level}.length; ++i)
+                                     {
+                                        arr[i] = elements_#{@@current_level}[i];
+                                     }
+                                     for(var i = elements_#{@@current_level}.length, j = 0; j < elements2_#{@@current_level}.length; ++j,++i)
+                                     {
+                                        arr[i] = elements2_#{@@current_level}[j];
+                                     }
+                                     elements_#{@@current_level} = arr;"
+                end
+            end
+
+            if(types != nil)
+                jssh_command += "var types = new Array("
+                count = 0
+                types.each do |type|
+                    if count == 0
+                        jssh_command += "\"#{type}\""
+                        count += 1
+                    else
+                        jssh_command += ",\"#{type}\""
+                    end
+                end
+                jssh_command += ");"
+            else
+                jssh_command += "var types = null;"
+            end    
+            #jssh_command += "var elements = #{element_object}.getElementsByTagName('*');"
+            jssh_command += "var object_index = 1; var o = null; var element_name = '';"
+            
+            if(value == nil)
+                jssh_command += "var value = null;"
+            else
+                jssh_command += "var value = #{value};"
+            end
+            #jssh_command += "elements.length;"
+            if(@@current_element_object == "")
+
+                jssh_command += "for(var i=0; i<elements.length; i++)
+                                 {
+                                    if(element_name != \"\") break;
+                                    var element = elements[i];"
+            else
+                jssh_command += "for(var i=0; i<elements_#{@@current_level}.length; i++)
+                                 {
+                                    if(element_name != \"\") break;
+                                    var element = elements_#{@@current_level}[i];"
+            end
+
+            jssh_command += "   var attribute = '';
+                                var same_type = false;
+                                if(types) 
+                                {
+                                    for(var j=0; j<types.length; j++)
+                                    {
+                                        if(types[j] == element.type)
+                                        {
+                                            same_type = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    same_type = true;
+                                }
+                                if(same_type == true)
+                                {
+                                    if(\"index\" == \"#{how}\")
+                                    {
+                                        attribute = object_index; object_index += 1; 
+                                    }     
+                                    else
+                                    {
+                                        attribute = element.#{how};
+                                    }
+                                    if(attribute == \"\") o = 'NoMethodError';
+                                    var found = false;"
+
+            if(what.class == Regexp)
+                # Construct the regular expression because we can't use it directly by converting it to string.
+                # If reg ex is /Google/i then its string conversion will be (?i-mx:Google) so we can't use it.
+                # Construct the regular expression again from the string conversion.
+                oldRegExp = what.to_s
+                newRegExp = "/" + what.source + "/"
+                flags = oldRegExp.slice(2, oldRegExp.index(':') - 2)
+
+                for i in 0..flags.length do
+                    flag = flags[i, 1]
+                    if(flag == '-')
+                        break;
+                    else
+                        newRegExp << flag
+                    end
+                end
+                #puts "old reg ex is #{what} new reg ex is #{newRegExp}"
+                jssh_command += "   var regExp = new RegExp(#{newRegExp});
+                                    found = regExp.test(attribute);"
+            elsif(how == :index)
+                jssh_command += "   found = (attribute == #{what});"
+            else                        
+                jssh_command += "   found = (attribute == \"#{what}\");"
+            end
+            #jssh_command += "    found;"
+            if(@@current_element_object == "")
+                jssh_command += "   if(found) 
+                                    { 
+                                        if(value)
+                                        {
+                                            if(element.value == \"#{value}\")
+                                            {
+                                                o = element;
+                                                element_name = \"elements[\" + i + \"]\";
+                                                break;
+                                            }
+                                        } 
+                                        else
+                                        {
+                                            o = element;
+                                            element_name = \"elements[\" + i + \"]\";
+                                            break;
+                                        }
+                                    }"
+            else
+                jssh_command += "   if(found) 
+                                    { 
+                                        if(value)
+                                        {
+                                            if(element.value == \"#{value}\")
+                                            {
+                                                o = element;
+                                                element_name = \"elements_#{@@current_level}[\" + i + \"]\";
+                                                break;
+                                            }
+                                        } 
+                                        else
+                                        {
+                                            o = element;
+                                            element_name = \"elements_#{@@current_level}[\" + i + \"]\";
+                                            break;
+                                        }
+                                    }"
+            end                        
+            jssh_command +="     }
+                             }
+                            element_name;"
+            # Remove \n that are there in the string as a result of pressing enter while formatting.                
+            jssh_command.gsub!(/\n/, "")                
+            #puts jssh_command 
+            $jssh_socket.send("#{jssh_command};\n", 0)
+            @@current_element_object = element_name = read_socket();          
+            #puts "element name in find control is : #{element_name}"
+            @@current_level = @@current_level + 1
+            if(element_name != "")
+                return Element.new(element_name)
+            else
+                return nil
+            end
+        end
+        
+        # Function to locate the element. Re-implemented here so that we don't have to 
+        # make small round-trips via socket to JSSh. Instead write the logic for locating
+        # the element in JavaScript and send it to JSSh.
+        def alocate_tagged_element(tag, how, what, types = nil, value = nil)
+            jssh_command = ""
+            how = :value if how == :caption
+            how = :href if how == :url
+            
+            # If there is no current element i.e. element in current context we are searching the whole DOM tree.
+            # So get all the elements.
+            if(@@current_element_object == "")
+                jssh_command += "var elements = #{DOCUMENT_VAR}.getElementsByTagName(\"#{tag}\");"
+            else
+                jssh_command += "var elements = #{@@current_element_object}.getElementsByTagName(\"#{tag}\");" 
+            end
+
+            can_create_xpath = true
+
+            if(types.include?("select-one") || types.include?("select-multiple"))
+                can_create_xpath = false
+            end
+
+            if(can_create_xpath and how != :text and how != :src and what.class != Regexp)
+                how_clause = ""
+                type_clause = ""
+                value_clause = ""
+                
+                if(@@current_element_object == "")
+                    if(how != :index)
+                        how_clause = "@#{how}='#{what}'"
+                    end        
+                    
+                    if(types != nil)
+                        count = 0
+                        types.each do |type|
+                            if count == 0
+                                if(type != "text")
+                                    type_clause += "@type = '#{type}'"
+                                    count += 1
+                                end    
+                            else
+                                type_clause += " or @type = '#{type}'" if type != "text"
+                            end
+                        end
+                    end    
+
+                    if(value != nil)
+                        value_clause += "@value = '#{value}'"
+                    end
+
+                    xpath = "//#{tag}"
+                    is_how_added = false
+
+                    if(how_clause != "")
+                        xpath += "[#{how_clause}"
+                        is_how_added = true
+                    end
+
+                    is_type_added = false
+                    if(type_clause != "")
+                        if(is_how_added)
+                            xpath += " and (#{type_clause})"
+                            is_type_added = true
+                        else
+                            xpath += "[(#{type_clause})"
+                            is_type_added = true
+                        end
+                    end
+
+                    is_value_added = false
+                    if(value_clause != "")
+                        if(is_how_added || is_type_added)
+                            xpath += " and #{value_clause}"
+                            is_value_added = true
+                        else
+                            xpath += "[#{value_clause}"
+                            is_value_added = true
+                        end
+                    end
+
+                    if(is_how_added || is_type_added || is_value_added)
+                        xpath += "]"
+                    end    
+                end
+                #puts "the xpath to find the element is : #{xpath}"
+                if(how == :index)
+                    elements = elements_by_xpath(xpath)
+                    index = what.to_i
+                    #puts "length of elements = #{elements.length}"
+                    return elements[index - 1]
+                else
+                    return element_by_xpath(xpath)
+                end    
+            else
+
+                if(types != nil)
+                    jssh_command += "var types = new Array("
+                    count = 0
+                    types.each do |type|
+                        if count == 0
+                            jssh_command += "\"#{type}\""
+                            count += 1
+                        else
+                            jssh_command += ",\"#{type}\""
+                        end
+                    end
+                    jssh_command += ");"
+                else
+                    jssh_command += "var types = null;"
+                end    
+                #jssh_command += "var elements = #{element_object}.getElementsByTagName('*');"
+                jssh_command += "var element_name = '';"
+            
+                if(value == nil)
+                    jssh_command += "var value = null;"
+                else
+                    jssh_command += "var value = #{value};"
+                end
+                #jssh_command += "elements.length;"
+                jssh_command += "for(var i=0; i<elements.length; i++)
+                                 {
+                                    if(element_name != \"\") continue;
+                                    var element = elements[i];
+                                    var attribute = '';
+                                    var same_type = false;
+                                    if(types) 
+                                    {
+                                        for(var j=0; j<types.length; j++)
+                                        {
+                                            if(types[j] == element.type)
+                                            {
+                                                same_type = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        same_type = true;
+                                    }
+                                    if(same_type == true)
+                                    {
+                                        attribute = element.#{how};
+                                    
+                                        var found = false;"
+
+                if(what.class == Regexp)
+                    # Construct the regular expression because we can't use it directly by converting it to string.
+                    # If reg ex is /Google/i then its string conversion will be (?i-mx:Google) so we can't use it.
+                    # Construct the regular expression again from the string conversion.
+                    oldRegExp = what.to_s
+                    newRegExp = "/" + what.source + "/"
+                    flags = oldRegExp.slice(2, oldRegExp.index(':') - 2)
+
+                    for i in 0..flags.length do
+                        flag = flags[i, 1]
+                        if(flag == '-')
+                            break;
+                        else
+                            newRegExp << flag
+                        end
+                    end
+                    jssh_command += "   var regExp = new RegExp(#{newRegExp});
+                                        found = regExp.test(attribute);"
+                else
+                    jssh_command += "   found = (attribute == \"#{what}\");"
+                end
+
+                jssh_command += "       if(found) 
+                                        { 
+                                            if(value)
+                                            {
+                                                if(element.value == \"#{value}\")
+                                                {
+                                                    element_name = \"elements[\" + i + \"]\";
+                                                    break;
+                                                }
+                                            } 
+                                            else
+                                            {
+                                                element_name = \"elements[\" + i + \"]\";
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                element_name;"
+
+            end
+            # Remove \n that are there in the string as a result of pressing enter while formatting.                
+            jssh_command.gsub!(/\n/, "")                
+            #puts "jssh_command in locate_tagged_element is : #{jssh_command}" 
+            $jssh_socket.send("#{jssh_command};\n", 0)
+            @@current_element_object = element_name = read_socket();          
+            #puts "element name in locate_tagged_element is : #{element_name}"
+            if(element_name != "")
+                return Element.new(element_name)
+            else
+                return nil
+            end
+        end
+        
+        # Mozilla browser directly supports XPath query on its DOM. So need need to create
+        # the DOM tree as we did with IE.
+        # Refer: http://developer.mozilla.org/en/docs/DOM:document.evaluate
+        def elements_by_xpath(xpath)
+            jssh_command = "var xpathResult = #{DOCUMENT_VAR}.evaluate(\"count(#{xpath})\", #{DOCUMENT_VAR}, null, #{NUMBER_TYPE}, null); xpathResult.numberValue;"
+            $jssh_socket.send("#{jssh_command}\n", 0);
+            node_count = read_socket()
+            #puts "value of count is : #{node_count}"
+
+            jssh_command = "var element_xpath = new Array(" + node_count + ");"
+
+            jssh_command += "var result = #{DOCUMENT_VAR}.evaluate(\"#{xpath}\", #{DOCUMENT_VAR}, null, #{ORDERED_NODE_ITERATOR_TYPE}, null); 
+                             var iterate = result.iterateNext();
+                             var count = 0;
+                             while(iterate)
+                             {
+                                element_xpath[count] = iterate;
+                                iterate = result.iterateNext();
+                                count++;
+                             }"
+                             
+            # Remove \n that are there in the string as a result of pressing enter while formatting.                
+            jssh_command.gsub!(/\n/, "")                
+            #puts jssh_command
+            $jssh_socket.send("#{jssh_command};\n", 0)             
+            result = read_socket()
+
+            elements = Array.new(node_count.to_i)
+
+            for i in 0..elements.length - 1 do
+                elements[i] = Element.new("element_xpath[#{i}]")
+            end
+
+            return elements;
+        end
+
+        def element_by_xpath(xpath)
+            $jssh_socket.send("var element_xpath = null; element_xpath = #{DOCUMENT_VAR}.evaluate(\"#{xpath}\", #{DOCUMENT_VAR}, null, #{FIRST_ORDERED_NODE_TYPE}, null).singleNodeValue; element_xpath;\n", 0)             
+            result = read_socket()
+            #puts "result is : #{result}"
+            if(result == "null" || result == "")
+                return nil
+            else
+                @@current_element_object = "element_xpath"
+                return Element.new("element_xpath")
+            end
+        end
         # This function returns the name of the element with which we can access it in JSSh.
         def element_object
+            #puts caller.join("\n")
+            #puts "In element_object element name is : #{element_name}"
+            return @element_name if @element_name != nil
             return @o.element_name if @o != nil
-            return @element_name
         end
         
         # This function returns the type of element. For e.g.: HTMLAnchorElement
@@ -265,24 +772,30 @@
         end
         
         # This function fires event on an element.
-        def fireEvent(event)
+        def fireEvent(event, wait = true)
             #puts "here in fire event function. Event is : #{event}"
             #puts "typeof(#{element_object}.#{event.downcase}); \n"
-            $jssh_socket.send("typeof(#{element_object}.#{event.downcase}); \n", 0)
+            $jssh_socket.send("typeof(#{element_object}.#{event.downcase});\n", 0)
             isDefined = read_socket()
             #puts "is method there : #{isDefined}"
             if(isDefined != "undefined")
-                $jssh_socket.send("#{element_object}.#{event.downcase}(); \n", 0)
-                read_socket()
+                $jssh_socket.send("#{element_object}.#{event.downcase}();\n", 0)
+                read_socket() if wait
             end
+            @@current_element_object = ''
+            @@current_level = 0
         end
         
         # This function returns the value of any attribute of an element.
         def attribute_value(attribute_name)
+            
             #puts attribute_name
             assert_exists()
             $jssh_socket.send("#{element_object}.getAttribute(\"#{attribute_name}\");\n" , 0)
-            return read_socket()
+            return_value = read_socket()
+            @@current_element_object = ''
+            @@current_level = 0
+            return return_value
         end
         
         # This function checks if element exists or not.
@@ -301,43 +814,59 @@
         
         def enabled?
             assert_exists
-            $jssh_socket.send("#{element_object}.disabled; \n", 0)
+            $jssh_socket.send("#{element_object}.disabled;\n", 0)
             value = read_socket()
+            @@current_element_object = '' 
+            @@current_level = 0
             return true if(value == "false") 
             return false if(value == "true") 
-            
             return value
         end
         
         def exists?
-            locate if defined?(locate)
             #puts "element is : #{element_object}"
-            unless element_object
+            if(element_object == nil || element_object == "")
+                #puts "locating element"
+                locate if defined?(locate)
+            else
+                #puts "not locating the element again"
+                return true
+            end    
+            @@current_element_object = '' 
+            @@current_level = 0
+            if(element_object == nil || element_object == "")
                 return false
-            end
-            return true
+            else
+                return true
+            end    
         end
         
         def text
             assert_exists
-            
-            # Get the text for the element by iterating over its nodes. If node is of the
-            # type text, then return that value.
-            jssh_command = "var nodes = #{element_object}.childNodes; var str = \"\";"
-            jssh_command += "for(var i=0; i<nodes.length; i++)"
-            jssh_command += "  if(nodes[i].nodeName == \"#text\") "
-            jssh_command += "    str += nodes[i].nodeValue;\n"
+           
+            if(element_type == "HTMLOptionElement")
+                jssh_command = "#{element_object}.text.replace(/^\s*|\s*$/g,'');"
+            else
+                # Get the text for the element by iterating over its nodes. If node is of the
+                # type text, then return that value.
+                jssh_command = "var nodes = #{element_object}.childNodes; var str = \"\";"
+                jssh_command += "for(var i=0; i<nodes.length; i++)"
+                jssh_command += "  if(nodes[i].nodeName == \"#text\") "
+                jssh_command += "    str += nodes[i].nodeValue;"
+            end
             
             #puts jssh_command
-            $jssh_socket.send("#{jssh_command}", 0)
-            returnValue = read_socket()
+            $jssh_socket.send("#{jssh_command}\n", 0)
+            return_value = read_socket()
             #puts "return value is : #{returnValue}"
             
-            if(returnType == "boolean")
-                return false if returnValue == "false"
-                return true if returnValue == "true"
-            end
-            return returnValue
+            #if(returnType == "boolean")
+            #    return_value = false if returnValue == "false"
+            #    return_value = true if returnValue == "true"
+            #end
+            @@current_element_object = ''
+            @@current_level = 0
+            return return_value
         end
         alias innerText text
         
@@ -360,22 +889,25 @@
         end
         
         # returns the name of the element (as defined in html)
-        def_wrap_guard :name
+        def_wrap :name
         # returns the id of the element
-        def_wrap_guard :id
+        def_wrap :id
         # returns whether the element is disabled
         def_wrap :disabled 
         alias disabled? disabled
+        # returns the state of the element
+        def_wrap :checked
+        #alias checked? checked
         # returns the value of the element
-        def_wrap_guard :value
+        def_wrap :value
         # returns the title of the element
-        def_wrap_guard :title
+        def_wrap :title
         
-        def_wrap_guard :alt
-        def_wrap_guard :src
+        def_wrap :alt
+        def_wrap :src
         
         # returns the type of the element
-        def_wrap_guard :type # input elements only        
+        def_wrap :type # input elements only        
 
         # returns the url the link points to
         def_wrap :href # link only
@@ -401,10 +933,12 @@
         #      id         b5
         #      value      Disabled Button
         #      disabled   true
-        def to_s
-            assert_exists
-            return string_creator #.join("\n")
-        end
+        #def to_s
+        #    assert_exists
+        #    @@current_element_object = '' 
+        #    @@current_level = 0
+        #    return string_creator #.join("\n")
+        #end
         
         # Function to fire click events on elements.  
         def click
@@ -412,7 +946,7 @@
             assert_enabled
 
             highlight(:set)
-            
+            #puts "#{element_object} and #{element_type}" 
             case element_type
                 
                 when "HTMLAnchorElement"
@@ -420,12 +954,13 @@
                     # More info: http://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-48250443
                     # https://bugzilla.mozilla.org/show_bug.cgi?id=148585
 
-                    var jssh_command = "var event = #{DOCUMENT_VAR}.createEvent(\"MouseEvents\");"
+                    jssh_command = "var event = #{DOCUMENT_VAR}.createEvent(\"MouseEvents\");"
                     
                     # Info about initMouseEvent at: http://www.xulplanet.com/references/objref/MouseEvent.html        
                     jssh_command += "event.initMouseEvent('click',true,true,null,1,0,0,0,0,false,false,false,false,0,null);"
-                    jssh_command += "#{element_object}.dispatchEvent(event); \n"
-                    
+                    jssh_command += "#{element_object}.dispatchEvent(event);\n"
+                   
+                    #puts "jssh_command is: #{jssh_command}"
                     $jssh_socket.send("#{jssh_command}", 0)
                     read_socket()
                 when "HTMLImageElement", "HTMLDivElement", "HTMLSpanElement"
@@ -434,71 +969,75 @@
                     $jssh_socket.send("#{element_object}.click();\n" , 0)
                     read_socket()
             end
-            
-            @container.wait() if @container
+           
             highlight(:clear)
+            # Wait for firefox to reload.
+            wait()
         end
-        
+       
+        def wait
+            ff = FireWatir::Firefox.new
+            ff.wait()
+            @@current_element_object = ''
+            @@current_level = 0
+        end
+
         # Function that doesn't wait after clicking. Useful when click function opens a new
-        # javascript pop up.
+        # javascript pop up. Creates a new socket and then clicks the button. Old socket remains
+        # as it is. So that processing can be continued.
         def click_no_wait
             assert_exists
             assert_enabled
 
             highlight(:set)
-            # Special check for link or anchor tag. Because click() doesn't work on links.
-            # More info: http://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-48250443
-            # https://bugzilla.mozilla.org/show_bug.cgi?id=148585
-
+            
             if(element_type == "HTMLAnchorElement")
-                var jssh_command = "var event = #{DOCUMENT_VAR}.createEvent(\"MouseEvents\");"
-                
+                jssh_command = "var event = document.createEvent(\"MouseEvents\");"
                 # Info about initMouseEvent at: http://www.xulplanet.com/references/objref/MouseEvent.html        
                 jssh_command += "event.initMouseEvent('click',true,true,null,1,0,0,0,0,false,false,false,false,0,null);"
-                jssh_command += "#{element_object}.dispatchEvent(event); \n"
-                
+                jssh_command += "#{element_object}.dispatchEvent(event);\n"
+
                 $jssh_socket.send("#{jssh_command}", 0)
                 #read_socket()
             elsif(element_type == "HTMLImageElement")
-                fireEvent("onclick")
+                fireEvent("onclick", false)
             else
-                $jssh_socket.send("#{element_object}.click();\n" , 0)
+                jssh_command = "#{element_object}.click();\n";
+                $jssh_socket.send("#{jssh_command}", 0)
                 #read_socket()
             end
+            @@current_element_object = ''
+            @@current_level = 0
         end
         
         # Used by select list object. 
         def options
-            #puts "#{element_object}"
+            assert_exists
+            #puts "element name in options is : #{element_object}"
             return Element.new("#{element_object}")
         end
         
         def [](key)
-            #puts "#{element_object}"
+            #puts "element object is : #{element_object}"
             #puts "#{element_type}"
+            #puts "key is #{key}"
             if(element_type == "HTMLSelectElement")
+                @@current_element_object = ''
+                @@current_level = 0
                 return Element.new("#{element_object}.options[#{key}]")
             end
         end
         
-        # Function to click "Browser" button of HTMLInput file control.
-        def clickFileFieldButton()
-            jssh_command = "button = #{DOCUMENT_VAR}.getBoxObjectFor(#{element_object}).lastChild;"
-            jssh_command += "button.click(); \n";
+        # Function to set the value of file in HTMLInput file control.
+        def setFileFieldValue(setPath)
+            jssh_command = "textBox = #{DOCUMENT_VAR}.getBoxObjectFor(#{element_object}).firstChild;"
+            jssh_command += "textBox.value = \"#{setPath}\";\n";
             
             #puts jssh_command
             $jssh_socket.send("#{jssh_command}", 0)
             read_socket()
-            length = 0
-            @container.set_browser_document()
-            
-            # Right now found only this way to wait till the File Upload dialog box is not
-            # not closed.
-            while length == 0
-                $jssh_socket.send("elements = #{element_object}.ownerDocument.getElementsByTagName('*'); elements.length;\n", 0)
-                length = read_socket().to_i
-                #puts "length in click function is : #{length}"
-            end
+            @@current_element_object = ''
+            @@current_level = 0
         end
         
         # This method will trap all the function calls for an element & fires them again 
@@ -512,30 +1051,50 @@
 	            for i in args do
 	                jssh_command += i;
 	            end
-	            $jssh_socket.send("#{jssh_command}; \n", 0)
-	            read_socket()
+                #puts "#{jssh_command}"
+	            $jssh_socket.send("#{jssh_command};\n", 0)
+	            return_value = read_socket()
+                #puts "return value is : #{return_value}"
+                return return_value
 	        else
-	            assert_exists
+	            #assert_exists
 	            #puts "element name is #{element_object}"
     	        
     	        # We get method name with trailing '=' when we try to assign a value to a 
     	        # property. So just remove the '=' to get the type 
-	            methodName =~ /([^=]*)/
-	            
-	            temp  = "#{element_object}.#{$1}" 
-	            #puts "#{temp}"
+                temp = ""
+                assingning_value = false
+	            if(methodName =~ /(.*)=$/)
+	                temp  = "#{element_object}.#{$1}" 
+                    assingning_value = true
+                else
+                    temp = "#{element_object}.#{methodName}"
+                end    
+	            #puts "temp is : #{temp}"
                 
-                $jssh_socket.send("typeof(#{temp}); \n", 0)
+                $jssh_socket.send("typeof(#{temp});\n", 0)
                 method_type = read_socket()
-                
+                #puts "method_type is : #{method_type}"
+
+                if(assingning_value)
+                    if(method_type != "boolean")
+                        jssh_command = "#{element_object}.#{methodName}\"#{args[0]}\""
+                    else
+                        jssh_command = "#{element_object}.#{methodName}#{args[0]}"
+                    end    
+                    #puts "jssh_command is : #{jssh_command}"
+                    $jssh_socket.send("#{jssh_command};\n", 0)
+                    read_socket()
+                    return
+                end
+
                 methodName = "#{element_object}.#{methodName}"
-                
                 if(args.length == 0)
                     #puts "In if loop #{methodName}"
                     if(method_type == "function")	        
 	                    jssh_command =  "#{methodName}();\n"
 	                else
-	                    jssh_command =  "#{methodName}; \n"
+	                    jssh_command =  "#{methodName};\n"
 	                end
 	            else
 	                #puts "In else loop : #{methodName}"
@@ -550,7 +1109,7 @@
 				            else
 					            jssh_command += "\"#{i.to_s.gsub(/"/,"\\\"")}\""
 				            end
-				            count += 1   
+				            count = count + 1   
 			            end 
 		            end
 
@@ -561,7 +1120,7 @@
                     jssh_command = jssh_command.gsub("\"false\"", "false")
                     jssh_command = jssh_command.gsub("\"true\"", "true")
                 end
-                #puts "#{jssh_command}"
+                #puts "jssh_command is #{jssh_command}"
 		        $jssh_socket.send("#{jssh_command}", 0)
 		        returnValue = read_socket()
 		        #puts "return value is : #{returnValue}"
@@ -573,6 +1132,8 @@
 		            return returnValue
 		        end
 		    end
+            @@current_element_object = ''
+            @@current_level = 0
 	    end
     end
     
@@ -584,6 +1145,7 @@
     class Document < Element
         def getElementsByTagName(tag)
             jssh_command = "var elements = #{DOCUMENT_VAR}.getElementsByTagName('#{tag}');"
+            #puts "helrlej"
             jssh_command += "elements.length;\n"
             
             $jssh_socket.send("#{jssh_command}", 0)

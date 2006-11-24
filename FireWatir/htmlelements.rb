@@ -1,4 +1,4 @@
-# Classes for all HTML Elements that WATiR can address. This code is refactored from watir.rb file which was written
+# Classes for all HTML Elements that FireWatir can address. This code is refactored from watir.rb file which was written
 # specifically for IE.
 
 class Frame 
@@ -214,7 +214,7 @@ class Frame
     # many of the methods available to this object are inherited from the Element class
     #
     class NonControlElement < Element
-        include Watir::Exception
+        include FireWatir::Exception
         #include Container
         
         def locate
@@ -226,7 +226,7 @@ class Frame
         end            
         
         def initialize(container, how, what)
-            @container = container
+            @container = Element.new(nil)
             @how = how
             @what = what
             super(nil)
@@ -243,12 +243,12 @@ class Frame
         
         # returns the properties of the object in a string
         # raises an ObjectNotFound exception if the object cannot be found
-        def to_s
-            assert_exists
-            r = string_creator
-            r += span_div_string_creator
-            return r.join("\n")
-        end
+        #def to_s
+        #    assert_exists
+        #    r = string_creator
+        #    r += span_div_string_creator
+        #    return r.join("\n")
+        #end
         
         #def ole_inner_elements
         #    puts "here"
@@ -293,16 +293,16 @@ class Frame
 
         # returns the properties of the object in a string
         # raises an ObjectNotFound exception if the object cannot be found
-        def to_s
-            assert_exists
-            r = string_creator
-            r=r + label_string_creator
-            return r.join("\n")
-        end
+        #def to_s
+        #    assert_exists
+        #    r = string_creator
+        #    r=r + label_string_creator
+        #    return r.join("\n")
+        #end
     end
 
     # This class is used for dealing with tables.
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#table method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#table method
     #
     # many of the methods available to this object are inherited from the Element class
     #
@@ -311,7 +311,7 @@ class Frame
  
         # Returns the table object containing anElement
         #   * container  - an instance of an IE object
-        #   * anElement  - a Watir object (TextField, Button, etc.)
+        #   * anElement  - a FireWatir object (TextField, Button, etc.)
         def Table.create_from_element(container, anElement)
             anElement.locate if defined?(anElement.locate)
             o = anElement.ole_object.parentElement
@@ -436,12 +436,12 @@ class Frame
         end
         private :table_body
 
-        # returns a watir object
+        # returns a FireWatir object
         def body(how, what)
             return TableBody.new(@container, how, what, self)
         end
 
-        # returns a watir object
+        # returns a FireWatir object
         def bodies
             assert_exists
             return TableBodies.new(@container, @o)
@@ -487,7 +487,7 @@ class Frame
             return @o.tBodies.length
         end
 
-        # returns the n'th Body as a Watir TableBody object
+        # returns the n'th Body as a FireWatir TableBody object
         def []n
             assert_exists
             return TableBody.new(@container, :direct, ole_table_body_at_index(n))
@@ -608,7 +608,7 @@ class Frame
  
     # this class is a table cell - when called via the Table object
     class TableCell < Element
-        include Watir::Exception
+        include FireWatir::Exception
         include Container 
 
         def locate
@@ -619,6 +619,7 @@ class Frame
             else
                 @o = @container.locate_tagged_element("TD", @how, @what)   
             end
+            puts "helrlej"
         end
 
         # Returns an initialized instance of a table cell          
@@ -653,24 +654,23 @@ class Frame
    end
 
     # This class is the means of accessing an image on a page.
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#image method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#image method
     #
     # many of the methods available to this object are inherited from the Element class
     #
     class Image < Element
         def initialize(container, how, what)
-            @container = container
+            @container = Element.new(nil)
             @how = how
             @what = what
-            super nil
         end
         
         def locate
             if @how == :xpath
                 @o = @container.element_by_xpath(@what)
             else
-            @o = @container.locate_tagged_element('IMG', @how, @what)
-        end            
+                @o = @container.locate_tagged_element('IMG', @how, @what)
+            end            
         end            
 
         # this method produces the properties for an image as an array
@@ -687,12 +687,12 @@ class Frame
         private :image_string_creator
 
         # returns a string representation of the object
-        def to_s
-            assert_exists
-            r = string_creator
-            r=r + image_string_creator
-            return r.join("\n")
-        end
+        #def to_s
+        #    assert_exists
+        #    r = string_creator
+        #    r=r + image_string_creator
+        #    return r.join("\n")
+        #end
 
         # this method returns the file created date of the image
         def fileCreatedDate
@@ -722,12 +722,12 @@ class Frame
         # If the image was not loaded, the browser is unable to determine some of the properties. 
         # We look for these missing properties to see if the image is really there or not. 
         # If the Disk cache is full ( tools menu -> Internet options -> Temporary Internet Files) , it may produce incorrect responses.
-        def hasLoaded?
-            locate
-            raise UnknownObjectException, "Unable to locate image using #{@how} and #{@what}" if @o == nil
-            return false if @o.fileCreatedDate == "" and  @o.fileSize.to_i == -1
-            return true
-        end
+        #def hasLoaded?
+        #    locate
+        #    raise UnknownObjectException, "Unable to locate image using #{@how} and #{@what}" if @o == nil
+        #    return false if @o.fileCreatedDate == "" and  @o.fileSize.to_i == -1
+        #    return true
+        #end
 
         # this method highlights the image ( in fact it adds or removes a border around the image)
         #  * set_or_clear   - symbol - :set to set the border, :clear to remove it
@@ -760,7 +760,7 @@ class Frame
         # Raises a WatirException if AutoIt is not correctly installed
         # path - directory path and file name of where image should be saved
         def save(path)
-            require 'watir/windowhelper'
+            require 'firewatir/windowhelper'
             WindowHelper.check_autoit_installed
             @container.goto(src)
             begin
@@ -782,7 +782,7 @@ class Frame
     
     
     # This class is the means of accessing a link on a page
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#link method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#link method
     # many of the methods available to this object are inherited from the Element class
     #
     class Link < Element
@@ -791,10 +791,9 @@ class Frame
         #   * how         - symbol - how we access the link
         #   * what         - what we use to access the link, text, url, index etc
         def initialize(container, how, what)
-            @container = container
+            @container = Element.new(nil)
             @how = how
             @what = what
-            super(nil)
         end
         
         def locate
@@ -809,22 +808,22 @@ class Frame
         end
         end
 
-        # if an image is used as part of the link, this will return true      
-        def link_has_image
-            assert_exists
-            return true  if @o.getElementsByTagName("IMG").length > 0
-            return false
-        end
+        #TODO: if an image is used as part of the link, this will return true      
+        #def link_has_image
+        #    assert_exists
+        #    return true  if @o.getElementsByTagName("IMG").length > 0
+        #    return false
+        #end
 
-        # this method returns the src of an image, if an image is used as part of the link
-        def src # BUG?
-            assert_exists
-            if @o.getElementsByTagName("IMG").length > 0
-                return  @o.getElementsByTagName("IMG")[0.to_s].src
-            else
-                return ""
-            end
-        end
+        #TODO: this method returns the src of an image, if an image is used as part of the link
+        #def src # BUG?
+        #    assert_exists
+        #    if @o.getElementsByTagName("IMG").length > 0
+        #        return  @o.getElementsByTagName("IMG")[0.to_s].src
+        #    else
+        #        return ""
+        #    end
+        #end
 
         def link_string_creator
             n = []
@@ -835,26 +834,30 @@ class Frame
          end
 
          # returns a textual description of the link
-         def to_s
-            assert_exists
-            r = string_creator
-            r = r + link_string_creator
-            return r.join("\n")
-         end
+         #def to_s
+         #   assert_exists
+         #   r = string_creator
+         #   r = r + link_string_creator
+         #   return r.join("\n")
+         #end
     end
     
     class InputElement < Element
         def locate
             if @how == :xpath
                 @o = @container.element_by_xpath(@what)
-            elsif @how == :direct
-                @o = @what
+            #elsif @how == :direct
+            #    @o = @what
             else
-                @o = @container.locate_input_element(@how, @what, self.class::INPUT_TYPES)
+                if(self.class::INPUT_TYPES.include?("select-one"))
+                    @o = @container.locate_tagged_element("select", @how, @what, self.class::INPUT_TYPES)
+                else    
+                    @o = @container.locate_tagged_element("input", @how, @what, self.class::INPUT_TYPES)
+                end    
             end              
         end
         def initialize(container, how, what)
-            @container = container
+            @container = Element.new(nil)
             @how = how
             @what = what
             super(nil)
@@ -862,7 +865,7 @@ class Frame
     end
     
     # This class is the way in which select boxes are manipulated.
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#select_list method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#select_list method
     class SelectList < InputElement
         INPUT_TYPES = ["select-one", "select-multiple"]
         
@@ -871,7 +874,7 @@ class Frame
         # This method clears the selected items in the select box
         def clearSelection
             assert_exists
-            highlight( :set)
+            #highlight( :set)
             wait = false
             for i in 0..@o.length.to_i - 1 do
                 #@o.each do |selectBoxItem|
@@ -882,7 +885,7 @@ class Frame
                 end
             end
             @container.wait if wait
-            highlight( :clear)
+            #highlight( :clear)
         end
 #        private :clearSelection
         
@@ -908,7 +911,7 @@ class Frame
             assert_exists
             highlight( :set )
             doBreak = false
-            @container.log "Setting box #{@o.name} to #{attribute} #{value} "
+            #@container.log "Setting box #{@o.name} to #{attribute} #{value} "
             for i in 0..@o.length.to_i - 1 do
             #@o.each do |option| # items in the list
                 option = @o.options["#{i}"]
@@ -937,7 +940,7 @@ class Frame
         # Raises UnknownObjectException if the select box is not found
         def getAllContents() # BUG: camel_case.rb
             assert_exists
-            @container.log "There are #{@o.length} items"
+            #@container.log "There are #{@o.length} items"
             returnArray = []
             for i in 0..@o.length.to_i - 1 do
                 #@o.each { |thisItem| returnArray << thisItem.text }
@@ -952,12 +955,12 @@ class Frame
         def getSelectedItems
             assert_exists
             returnArray = []
-            @container.log "There are #{@o.length} items"
+            #@container.log "There are #{@o.length} items"
             for i in 0..@o.length.to_i - 1 do
                 #@o.each do |thisItem|
                 thisItem = @o.options["#{i}"]
                 if thisItem.selected
-                    @container.log "Item ( #{thisItem.text} ) is selected"
+                    #@container.log "Item ( #{thisItem.text} ) is selected"
                     returnArray << thisItem.text 
                 end
             end
@@ -990,9 +993,9 @@ class Frame
     end
 
     # An item in a select list
-    class Option
+    class Option 
         include OptionAccess
-        include Watir::Exception
+        include FireWatir::Exception
         def initialize (select_list, attribute, value)
             @select_list = select_list
             @how = attribute
@@ -1012,7 +1015,6 @@ class Frame
                     break
                 end
             end
-                
         end
         def assert_exists
             unless @option
@@ -1025,16 +1027,20 @@ class Frame
             assert_exists
             @select_list.select_item_in_select_list(@how, @what)
         end
+        def class_name
+            assert_exists
+            @option.class_name
+        end
     end    
 
     # This is the main class for accessing buttons.
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#button method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#button method
     class Button < InputElement
         INPUT_TYPES = ["button", "submit", "image", "reset"] 
     end
     
     # This class is the main class for Text Fields
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#text_field method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#text_field method
     class TextField < InputElement
         INPUT_TYPES = ["text", "password", "textarea"] 
 
@@ -1055,12 +1061,12 @@ class Frame
          end
          private :text_string_creator
 
-         def to_s
-            assert_exists
-            r = string_creator
-            r += text_string_creator
-            return r.join("\n")
-         end
+         #def to_s
+         #   assert_exists
+         #   r = string_creator
+         #   r += text_string_creator
+         #   return r.join("\n")
+         #end
         
         def assert_not_readonly
             raise ObjectReadOnlyException, "Textfield #{@how} and #{@what} is read only." if self.readonly?
@@ -1182,18 +1188,18 @@ class Frame
                 maxLength = @o.maxLength
                 if (maxLength != -1 && value.length > maxLength)
                     original_value = value
-                    value = original_value[0 .. maxLength ]
+                    value = original_value[0..maxLength]
                     @container.log " Supplied string is #{suppliedValue.length} chars, which exceeds the max length (#{maxLength}) of the field. Using value: #{value}"
                 end
             rescue
                 # probably a text area - so it doesnt have a max Length
                 maxLength = -1
             end
-            for i in 0 .. value.length-1   
-                sleep @container.typingspeed   # typing speed
+            for i in 0..value.length-1   
+                #sleep @container.typingspeed   # typing speed
                 c = value[i,1]
                 #@container.log  " adding c.chr " + c  #.chr.to_s
-                @o.value = @o.value.to_s + c   #c.chr
+                @o.value = (@o.value.to_s + c)   #c.chr
                 @o.fireEvent("onKeyDown")
                 @o.fireEvent("onKeyPress")
                 @o.fireEvent("onKeyUp")
@@ -1209,7 +1215,7 @@ class Frame
     end
 
     # this class can be used to access hidden field objects
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#hidden method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#hidden method
     class Hidden < TextField 
         INPUT_TYPES =  ["hidden"]
        
@@ -1240,30 +1246,13 @@ class Frame
         def set(setPath)
             assert_exists
             
-            if($Browser == "Firefox")
-                Thread.new {
-                    clicker = WinClicker.new
-                    clicker.setFileRequesterFileName_newProcess(setPath, "File Upload")
-                }
-                sleep(1)
-                clickFileFieldButton()
-            else	        
-                Thread.new {
-                    clicker = WinClicker.new
-                    clicker.setFileRequesterFileName_newProcess(setPath)
-                }    
-                # may need to experiment with this value.  if it takes longer than this
-                # to open the new external Ruby process, the current thread may become
-                # blocked by the file chooser.
-                sleep(1)	
-                self.click
-            end
+            setFileFieldValue(setPath)
         end
     end
 
     # This class is the class for radio buttons and check boxes. 
     # It contains methods common to both.
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#checkbox or Watir::Container#radio methods
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#checkbox or FireWatir::Container#radio methods
     #
     # most of the methods available to this element are inherited from the Element class
     #
@@ -1272,16 +1261,15 @@ class Frame
             if @how == :xpath
                 @o = @container.element_by_xpath(@what)
             else
-                @o = @container.locate_input_element(@how, @what, @type, @value)
+                @o = @container.locate_tagged_element("input", @how, @what, @type, @value)
             end
         end
         def initialize(container, how, what, type, value = nil)
-            @container = container
+            @container = Element.new(nil)
             @how = how
             @what = what
             @type = type
             @value = value
-            super(nil)
         end
 
         # BUG: rename me
@@ -1293,7 +1281,7 @@ class Frame
             return @o.checked
         end
         alias getState isSet?
-        alias checked? isSet?
+        #alias checked? isSet?
         
         # This method clears a radio button or check box. Note, with radio buttons one of them will almost always be set.
         # Returns true if set or false if not set.
@@ -1302,9 +1290,9 @@ class Frame
         def clear
             assert_exists
             assert_enabled
-            highlight(:set)
+            #highlight(:set)
             set_clear_item(false)
-            highlight(:clear)
+            #highlight(:clear)
         end
         
         # This method sets the radio list item or check box.
@@ -1313,9 +1301,9 @@ class Frame
         def set
             assert_exists
             assert_enabled
-            highlight(:set)
+            #highlight(:set)
             set_clear_item(true)
-            highlight(:clear)
+            #highlight(:clear)
         end
     
         # This method is the common code for setting or clearing checkboxes and radio.
@@ -1331,11 +1319,11 @@ class Frame
     #--
     #  this class makes the docs better
     #++
-    # This class is the watir representation of a radio button.        
+    # This class is the FireWatir representation of a radio button.        
     class Radio < RadioCheckCommon 
     end
 
-    # This class is the watir representation of a check box.
+    # This class is the FireWatir representation of a check box.
     class CheckBox < RadioCheckCommon 
 
         # This method, with no arguments supplied, sets the check box.
@@ -1518,7 +1506,7 @@ class Frame
     
 
     # this class accesses the buttons in the document as a collection
-    # it would normally only be accessed by the Watir::Container#buttons method
+    # it would normally only be accessed by the FireWatir::Container#buttons method
     #
     class Buttons < ElementCollections
         def element_class; Button; end
@@ -1536,7 +1524,7 @@ class Frame
 
 
     # this class accesses the file fields in the document as a collection
-    # it would normally only be accessed by the Watir::Container#file_fields method
+    # it would normally only be accessed by the FireWatir::Container#file_fields method
     #
     class FileFields< ElementCollections
         def element_class; FileField; end
@@ -1554,7 +1542,7 @@ class Frame
 
 
     # this class accesses the check boxes in the document as a collection
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#checkboxes method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#checkboxes method
     #
     class CheckBoxes < ElementCollections
         def element_class; CheckBox; end  
@@ -1569,7 +1557,7 @@ class Frame
     end
 
     # this class accesses the radio buttons in the document as a collection
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#radios method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#radios method
     #
     class Radios < ElementCollections
         def element_class; Radio; end
@@ -1584,7 +1572,7 @@ class Frame
     end
 
     # this class accesses the select boxes  in the document as a collection
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#select_lists method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#select_lists method
     #
     class SelectLists < ElementCollections
         include CommonCollection
@@ -1593,7 +1581,7 @@ class Frame
     end
 
     # this class accesses the links in the document as a collection
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#links method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#links method
     #
     class Links < ElementCollections
         include CommonCollection
@@ -1610,7 +1598,7 @@ class Frame
     end
 
     # this class accesses the imnages in the document as a collection
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#images method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#images method
     #
     class Images < ElementCollections
         def element_class; Image; end 
@@ -1628,7 +1616,7 @@ class Frame
     end
 
     # this class accesses the text fields in the document as a collection
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#text_fields method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#text_fields method
     #
     class TextFields < ElementCollections
         def element_class; TextField; end
@@ -1640,7 +1628,7 @@ class Frame
     end
 
     # this class accesses the hidden fields in the document as a collection
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#hiddens method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#hiddens method
     class Hiddens < ElementCollections
         def element_class; Hidden; end
         def length
@@ -1649,7 +1637,7 @@ class Frame
     end
 
     # this class accesses the text fields in the document as a collection
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#tables method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#tables method
     #
     class Tables < ElementCollections
         include CommonCollection
@@ -1664,7 +1652,7 @@ class Frame
     end
 
     # this class accesses the labels in the document as a collection
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#labels method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#labels method
     #
     class Labels < ElementCollections
         include CommonCollection
@@ -1679,7 +1667,7 @@ class Frame
     end
 	
     # this class accesses the p tags in the document as a collection
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#ps method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#ps method
     #
 	class Pres < ElementCollections
 		include CommonCollection
@@ -1693,7 +1681,7 @@ class Frame
 	end
 
     # this class accesses the p tags in the document as a collection
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#ps method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#ps method
     #
     class Ps < ElementCollections
         include CommonCollection
@@ -1709,7 +1697,7 @@ class Frame
     end
 
     # this class accesses the spans in the document as a collection
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#spans method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#spans method
     #
     class Spans < ElementCollections
         include CommonCollection
@@ -1725,7 +1713,7 @@ class Frame
     end
 
     # this class accesses the divs in the document as a collection
-    # Normally a user would not need to create this object as it is returned by the Watir::Container#divs method
+    # Normally a user would not need to create this object as it is returned by the FireWatir::Container#divs method
     #
     class Divs < ElementCollections
         include CommonCollection
