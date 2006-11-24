@@ -15,10 +15,10 @@
 #
 # Is includable for classes that have @container, document and ole_inner_elements
 
-require 'watir/exceptions'
+require 'firewatir/exceptions'
 
 module Container 
-    include Watir::Exception
+    include FireWatir::Exception
         
     # Shifted from IE class to here. So that it can be used by both the browsers
     # TODO: the following constants should be able to be specified by object (not class)
@@ -98,13 +98,25 @@ module Container
     #   ie.frame(:name , 'main_frame')
     #   ie.frame('main_frame')        # in this case, just a name is supplied
     public
-    def_creator_with_default :frame, :name
+    def frame(how, what = nil)
+        if(what == nil)
+            what = how
+            how = :name
+        end
+        Frame.new(self, how, what)
+    end
 
     # this method is used to access a form.
     # available ways of accessing it are, :index , :name, :id, :method, :action, :xpath
     #  * how        - symbol - WHat mecahnism we use to find the form, one of the above. NOTE if what is not supplied this parameter is the NAME of the form
     #  * what   - String - the text associated with the symbol
-    def_creator_with_default :form, :name
+    def form(how , what = nil)
+        if(what == nil)
+            what = how
+            how = :name
+        end    
+        Form.new(self, how, what)
+    end
 
     # This method is used to get a table from the page. 
     # :index (1 based counting)and :id are supported. 
@@ -117,7 +129,9 @@ module Container
     #                  - :index
     #                  - :xpath
     #   * what  - string the thing we are looking for, ex. id, index or xpath query, of the object we are looking for
-    def_creator :table
+    def table(how, what = nil)
+        Table.new(self, how, what)
+    end
 
     # this is the main method for accessing the tables iterator. It returns a Tables object
     #
@@ -136,7 +150,9 @@ module Container
     #    :xpath    - find the table cell using xpath query.
     # 
     # returns a TableCell Object
-    def_creator :cell, :TableCell
+    def cell(how, what=nil)
+      TableCell.new(self, how, what)
+    end
 
     # this method accesses a table row. 
     # how - symbol - how we access the row, valid values are
@@ -144,7 +160,9 @@ module Container
     #    :xpath    - find the table row using xpath query.
     # 
     # returns a TableRow object
-    def_creator :row, :TableRow
+    def row(how, what=nil)
+        TableRow.new(self, how, what)
+    end
 
     # This is the main method for accessing a button. Often declared as an <input type = submit> tag.
     #  *  how   - symbol - how we access the button 
@@ -176,7 +194,14 @@ module Container
     #
     #    ie.button('Click Me')                          # access the button with a value of Click Me
     #    ie.button(:xpath, "//input[@value='Click Me']/")     # access the button with a value of Click Me
-    def_creator_with_default :button, :value
+    def button(how, what = nil)
+        locate if defined?(locate)
+        if(what == nil)
+            what = how
+            how = :value
+        end    
+        Button.new(self, how, what)
+    end    
 
     # this is the main method for accessing the buttons iterator. It returns a Buttons object
     #
@@ -205,7 +230,10 @@ module Container
     #    ie.file_field(:name, 'upload')                   # access the file upload field with a name of upload
     #    ie.file_field(:index, 2)                         # access the second file upload on the page ( 1 based, so the first field is accessed with :index,1)
     #
-    def_creator :file_field, :FileField
+    def file_field(how, what = nil)
+        locate if defined?(locate)
+        FileField.new(self, how, what)
+    end    
     
     # this is the main method for accessing the file_fields iterator. It returns a FileFields object
     #
@@ -241,7 +269,10 @@ module Container
     #    ie.text_field(:index, 2)                          # access the second text field on the page ( 1 based, so the first field is accessed with :index,1)
     #    ie.text_field(:xpath, "//textarea[@id='user_name']/")    ## access the text field with an ID of user_name
 
-    def_creator :text_field, :TextField
+    def text_field(how, what = nil)
+        locate if defined?(locate)
+        TextField.new(self, how, what)
+    end    
 
     # this is the method for accessing the text_fields iterator. It returns a Text_Fields object
     #
@@ -271,6 +302,7 @@ module Container
     #    ie.hidden(:index, 2)                         # access the second hidden field on the page ( 1 based, so the first field is accessed with :index,1)
     #    ie.hidden(:xpath, "//input[@type='hidden' and @id='session_value']/")    # access the hidden field with an ID of session_id
     def hidden(how, what)
+        locate if defined?(locate)
         return Hidden.new(self, how, what)
     end
 
@@ -282,6 +314,7 @@ module Container
     #   ie.hiddens[1].to_s                             # goto the first hidden field on the page                                   
     #   ie.hiddens.length                              # show how many hidden fields are on the page.
     def hiddens
+        locate if defined?(locate)
         return Hiddens.new(self)
     end
 
@@ -309,6 +342,7 @@ module Container
     #    ie.select_list(:index, 2)                         # access the second select box on the page ( 1 based, so the first field is accessed with :index,1)
     #    ie.select(:xpath, "//select[@id='currency']/")    # access the select box with an id of currency 
     def select_list(how, what) 
+        locate if defined?(locate)
         return SelectList.new(self, how, what)
     end
 
@@ -320,6 +354,7 @@ module Container
     #   ie.select_lists[1].to_s                             # goto the first select boxes on the page                                   
     #   ie.select_lists.length                              # show how many select boxes are on the page.
     def select_lists
+        locate if defined?(locate)
         return SelectLists.new(self)
     end
     
@@ -360,6 +395,7 @@ module Container
     #    ie.checkbox(:name ,'email_frequency', 'weekly')     # access the check box with a name of email_frequency and a value of 'weekly'
     #    ie.checkbox(:xpath, "//input[@name='email_frequency' and @value='daily']/")     # access the checkbox with a name of email_frequency and a value of 'daily'
     def checkbox(how, what, value = nil) 
+        locate if defined?(locate)
         return CheckBox.new(self, how, what, ["checkbox"], value) 
     end
 
@@ -410,6 +446,7 @@ module Container
     #    ie.radio(:name ,'email_frequency', 'weekly')     # access the radio button with a name of email_frequency and a value of 'weekly'
     #    ie.radio(:xpath, "//input[@name='email_frequency' and @value='daily']/")     # access the radio button with a name of email_frequency and a value of 'daily'
     def radio(how, what, value = nil) 
+        locate if defined?(locate)
         return Radio.new(self, how, what, ["radio"], value) 
     end
 
@@ -454,6 +491,7 @@ module Container
     #   ie.link(:afterText, 'Click->')      # access the link that immediately follows the text Click->
     #   ie.link(:xpath, "//a[contains(.,'Click Me')]/")      # access the link with Click Me as its text
     def link(how, what) 
+        locate if defined?(locate)
         return Link.new(self, how, what)
     end
 
@@ -494,7 +532,10 @@ module Container
     #   ie.image(:alt , "A Picture")        # access an image using the alt text
     #   ie.image(:xpath, "//img[@alt='A Picture']/")    # access an image using the alt text
     #   
-    def_creator :image
+    def image(how, what = nil)
+        locate if defined?(locate)
+        Image.new(self, how, what)
+    end    
     
     # This is the main method for accessing the images collection. Returns an Images object
     #
@@ -533,6 +574,7 @@ module Container
     #   ie.div(:xpath, "//div[@id='list']/")    # access the first div whose id is 'list'
     #   
     def div(how, what)
+        locate if defined?(locate)
         return Div.new(self, how, what)
     end
 
@@ -565,6 +607,7 @@ module Container
     #   ie.span(:title , "A Picture")        # access a span using the tooltip text. See http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/title_1.asp?frame=true
     #   
     def span(how, what)
+        locate if defined?(locate)
         return Span.new(self, how, what)
     end
 
@@ -598,6 +641,7 @@ module Container
     #   ie.p(:title , "A Picture")        # access a p tag using the tooltip text. See http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/title_1.asp?frame=true
     #   
     def p(how, what)
+        locate if defined?(locate)
         return P.new(self, how, what)
     end
 
@@ -631,6 +675,7 @@ module Container
     #   ie.pre(:title , "A Picture")        # access a pre tag using the tooltip text. See http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/title_1.asp?frame=true
     #   
     def pre(how, what)
+        locate if defined?(locate)
         return Pre.new(self, how, what)
     end
 
@@ -664,6 +709,7 @@ module Container
     #   ie.label(:for, "text_1")              # access a the label that is associated with the object that has an id of text_1
     #   
     def label(how, what)
+        locate if defined?(locate)
         return Label.new(self, how, what)
     end
 
@@ -743,41 +789,8 @@ module Container
         value = value.to_s if value
         log "getting object - how is #{how} what is #{what} types = #{types} value = #{value}"
            
-        if($Browser == "Firefox")
-            elements = ole_inner_elements
-            o = elements.locate_input_element(how, what, types, value = nil)
-        else
-            elements = ole_inner_elements
-            
-            object_index = 1
-            elements.each do |object|
-                next if o
-                element = Element.new(object)
-                #puts "The value of type is : #{element.type}"
-                if types.include?(element.type)
-                    if how == :index
-                        attribute = object_index
-                    else
-                        begin
-                            attribute = element.send(how)
-                        rescue NoMethodError
-                            raise MissingWayOfFindingObjectException, 
-                            "#{how} is an unknown way of finding a <INPUT> element (#{what})"
-                        end
-                    end
-                    if what.matches(attribute) 
-                        if value
-                            if element.value == value
-                                o = object
-                            end
-                        else
-                            o = object
-                        end
-                    end
-                    object_index += 1
-                end
-            end
-        end
+        elements = ole_inner_elements
+        o = elements.locate_input_element(how, what, types, value)
         return o
     end
 
@@ -817,49 +830,60 @@ module Container
     DOCUMENT_VAR = "document"
     BODY_VAR    = "body"
     
-    def read_socket()
-        recieved_more_data = false
-        return_value = ""
+    def read_socket(socket = $jssh_socket)
+        return_value = "" 
         data = ""
-        
-        s = Kernel.select([$jssh_socket] , nil , nil, 1)
+        #puts Thread.list
+        s = Kernel.select([socket] , nil , nil, 1)
 
         if(s != nil)
             for stream in s[0]
-                data = $jssh_socket.recv(256)
+                data = stream.recv(1024)
                 #puts "data is : #{data}"
-                while( data.length == 256)
-                    recieved_more_data = true
+                while(data[data.length - 3..data.length - 1] != "\n> ")
                     return_value += data
-                    data = $jssh_socket.recv(256)
-                    #puts "data is : #{data}"
+                    data = stream.recv(1024)
+                    #puts "data length is : #{data.length}"
                 end
             end
         end
         
-        # If recieved data is less than 256 characters or for last data 
+        # If recieved data is less than 1024 characters or for last data 
         # we read in the above loop 
         return_value += data
 
         # Get the command prompt inserted by JSSH
-        s = Kernel.select([$jssh_socket] , nil , nil, 1)
+        #s = Kernel.select([socket] , nil , nil, 0.3)
             
-        if(s != nil)
-        for stream in s[0]
-            return_value += $jssh_socket.recv(256)
-            end
-        end
+        #if(s != nil)
+        #    for stream in s[0]
+        #        return_value += socket.recv(1024)
+        #    end
+        #end
     
         length = return_value.length 
         #puts "Return value before removing command prompt is : #{return_value}"
         
         # Remove the command prompt. Every result returned by JSSH has "\n> " at the end.
-        if length <= 3
+        if length <= 3 
             return_value = ""
-        else
+        elsif(return_value[0..2] == "\n> ")    
+            return_value = return_value[3..length-1]
+        else    
+            #return_value = return_value[0..length-3]
             return_value = return_value[0..length-4]
         end 
         #puts "Return value after removing command prompt is : #{return_value}"
+        socket.flush
+        
+        # make sure that command prompt doesn't get there.
+        if(return_value[return_value.length - 3..return_value.length - 1] == "\n> ")
+            return_value = return_value[0..return_value.length - 4]
+        end    
+        if(return_value[0..2] == "\n> ")
+            return_value = return_value[3..return_value.length - 1]
+        end   
+        #puts "return value is : #{return_value}"
         return return_value
     end
 
