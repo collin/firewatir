@@ -307,8 +307,7 @@ class Frame
     # many of the methods available to this object are inherited from the Element class
     #
     class Table < Element
-        include Container
- 
+        
         # Returns the table object containing anElement
         #   * container  - an instance of an IE object
         #   * anElement  - a FireWatir object (TextField, Button, etc.)
@@ -324,7 +323,7 @@ class Frame
         #   * how         - symbol - how we access the table
         #   * what         - what we use to access the table - id, name index etc 
         def initialize(container, how, what)
-            @container = container
+            @container = Element.new(nil)
             @how = how
             @what = what
             super nil
@@ -379,96 +378,100 @@ class Frame
 
         # returns the properties of the object in a string
         # raises an ObjectNotFound exception if the object cannot be found
-        def to_s
-            assert_exists
-            r = string_creator
-            r=r + table_string_creator
-            return r.join("\n")
-        end
+        #def to_s
+        #    assert_exists
+        #    r = string_creator
+        #    r=r + table_string_creator
+        #    return r.join("\n")
+        #end
 
         # iterates through the rows in the table. Yields a TableRow object
-        def each
-            assert_exists
-            1.upto( @o.getElementsByTagName("TR").length) { |i|  yield TableRow.new(@container, :direct, row(i) )    }
-        end
+        #def each
+        #    assert_exists
+        #    1.upto( @o.getElementsByTagName("TR").length) { |i|  yield TableRow.new(@container, :direct, row(i) )    }
+        #end
  
         # Returns a row in the table
         #   * index         - the index of the row
-        def [](index)
-            assert_exists
-            return TableRow.new(@container, :direct, row(index))
-        end
+        #def [](index)
+        #    assert_exists
+
+        #end
 
         # This method returns the number of rows in the table.
         # Raises an UnknownObjectException if the table doesnt exist.
         def row_count 
             assert_exists
             #return table_body.children.length
-            return @o.getElementsByTagName("TR").length
+            return @o.get_rows.length
         end
 
         # This method returns the number of columns in a row of the table.
         # Raises an UnknownObjectException if the table doesn't exist.
         #   * index         - the index of the row
-        def column_count(index=1) 
-            assert_exists
-            row(index).cells.length
-        end
+        #def column_count(index=1) 
+        #    assert_exists
+        #    row(index).cells.length
+        #end
 
         # This method returns the table as a 2 dimensional array. Dont expect too much if there are nested tables, colspan etc.
         # Raises an UnknownObjectException if the table doesn't exist.
         def to_a
             assert_exists
             y = []
-            table_rows = @o.getElementsByTagName("TR")
+            table_rows = @o.get_rows()
             for row in table_rows
                 x = []
-                for td in row.getElementsbyTagName("TD")
-                    x << td.innerText.strip
+                row.each do |td|
+                    x << td.to_s.strip
                 end
                 y << x
             end
             return y
         end
 
-        def table_body(index = 1)
-            return @o.getElementsByTagName('TBODY')[index]
-        end
-        private :table_body
+        #def table_body(index = 1)
+        #    return @o.getElementsByTagName('TBODY')[index]
+        #end
+        #private :table_body
 
         # returns a FireWatir object
-        def body(how, what)
-            return TableBody.new(@container, how, what, self)
-        end
+        #def body(how, what)
+        #    return TableBody.new(@container, how, what, self)
+        #end
 
         # returns a FireWatir object
-        def bodies
-            assert_exists
-            return TableBodies.new(@container, @o)
-        end
+        #def bodies
+        #    assert_exists
+        #    return TableBodies.new(@container, @o)
+        #end
    
         # returns an ole object
-        def row(index) 
-            return @o.invoke("rows")[(index-1).to_s]
-        end
-        private :row
+        #def row(index) 
+        #    return @o.invoke("rows")[(index-1).to_s]
+        #end
+        #private :row
 
         # Returns an array containing all the text values in the specified column
         # Raises an UnknownCellException if the specified column does not exist in every
         # Raises an UnknownObjectException if the table doesn't exist.
         # row of the table
         #   * columnnumber  - column index to extract values from
-        def column_values(columnnumber)
-            return (1..row_count).collect {|idx| self[idx][columnnumber].text}
-        end
+        #def column_values(columnnumber)
+        #    return (1..row_count).collect {|idx| self[idx][columnnumber].text}
+        #end
         
         # Returns an array containing all the text values in the specified row
         # Raises an UnknownObjectException if the table doesn't exist.
         #   * rownumber  - row index to extract values from
-        def row_values(rownumber)
-            return (1..column_count(rownumber)).collect {|idx| self[rownumber][idx].text}
-        end
+        #def row_values(rownumber)
+        #    return (1..column_count(rownumber)).collect {|idx| self[rownumber][idx].text}
+        #end
 
+        def rows
+            assert_exists
+            @o.get_rows()
+        end
     end
 
     # this class is a collection of the table body objects that exist in the table
@@ -870,15 +873,18 @@ class Frame
         INPUT_TYPES = ["select-one", "select-multiple"]
         
         attr_accessor :o
+        
+        #def each
 
+        #end
         # This method clears the selected items in the select box
         def clearSelection
             assert_exists
             #highlight( :set)
             wait = false
-            for i in 0..@o.length.to_i - 1 do
-                #@o.each do |selectBoxItem|
-                selectBoxItem = @o.options["#{i}"]
+            for i in 0..@o.length - 1 do
+            #@o.each do |selectBoxItem|
+                selectBoxItem = @o.options[i]
                 if selectBoxItem.selected
                     selectBoxItem.selected = false
                     wait = true
@@ -912,9 +918,7 @@ class Frame
             highlight( :set )
             doBreak = false
             #@container.log "Setting box #{@o.name} to #{attribute} #{value} "
-            for i in 0..@o.length.to_i - 1 do
-            #@o.each do |option| # items in the list
-                option = @o.options["#{i}"]
+            @o.each do |option| # items in the list
                 if value.matches( option.invoke(attribute.to_s))
                     if option.selected
                         doBreak = true
@@ -942,11 +946,7 @@ class Frame
             assert_exists
             #@container.log "There are #{@o.length} items"
             returnArray = []
-            for i in 0..@o.length.to_i - 1 do
-                #@o.each { |thisItem| returnArray << thisItem.text }
-                thisItem = @o.options["#{i}"]
-                returnArray << thisItem.text
-            end   
+            @o.each { |thisItem| returnArray << thisItem.text }
             return returnArray 
         end
         
@@ -956,9 +956,7 @@ class Frame
             assert_exists
             returnArray = []
             #@container.log "There are #{@o.length} items"
-            for i in 0..@o.length.to_i - 1 do
-                #@o.each do |thisItem|
-                thisItem = @o.options["#{i}"]
+            @o.each do |thisItem|
                 if thisItem.selected
                     #@container.log "Item ( #{thisItem.text} ) is selected"
                     returnArray << thisItem.text 
@@ -1007,9 +1005,7 @@ class Frame
                     "Option does not support attribute #{@how}"
             end
             #puts @select_list.o.length
-            for i in 0..@select_list.o.length.to_i - 1 do
-            #@select_list.o.each do |option| # items in the list
-                option = @select_list.o.options["#{i}"]
+            @select_list.o.each do |option| # items in the list
                 if value.matches( option.invoke(attribute.to_s))
                     @option = option
                     break

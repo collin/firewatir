@@ -250,7 +250,6 @@ module FireWatir
         FIRST_ORDERED_NODE_TYPE = 9
         
         def initialize(requireSocket = true)
-                   
         end
 
         def goto(url)
@@ -263,7 +262,36 @@ module FireWatir
 
             wait()
         end
-       
+      
+        def back()
+            set_browser_document()
+            $jssh_socket.send("if(#{BROWSER_VAR}.canGoBack) #{BROWSER_VAR}.goBack()\n", 0)
+            read_socket();
+            wait()
+            
+            set_browser_document()
+            set_browser_document()
+        end
+
+        def forward()
+            set_browser_document()
+            $jssh_socket.send("if(#{BROWSER_VAR}.canGoForward) #{BROWSER_VAR}.goForward()\n", 0)
+            read_socket();
+            wait()
+
+            set_browser_document()
+        end
+        
+
+        def reload()
+            set_browser_document()
+            $jssh_socket.send("#{BROWSER_VAR}.relaod();\n", 0)
+            read_socket();
+            wait()
+
+            set_browser_document()
+        end
+        
         def set_defaults
             
             # JSSH listens on port 9997. Create a new socket to connect to port 9997.
