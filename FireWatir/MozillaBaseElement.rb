@@ -626,7 +626,7 @@
         # raises an ObjectNotFound exception if the object cannot be found
         def_wrap :class_name, :className
 
-        # Return the outer html of the object - see http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/outerhtml.asp?frame=true
+        # Return the outer html of the object
         def_wrap :html, :outerHTML
         
         #return the inner text of the object

@@ -555,7 +555,7 @@ module Container
         return PopUp.new(self)
     end
 
-    # This is the main method for accessing divs. http://msdn.microsoft.com/workshop/author/dhtml/reference/objects/div.asp?frame=true
+    # This is the main method for accessing divs. http://www.xulplanet.com/references/objref/HTMLDivElement.html 
     #  *  how   - symbol - how we access the div, valid values are
     #    :index      - finds the item using its index
     #    :id         - finds the item using id attribute
@@ -570,7 +570,7 @@ module Container
     # 
     #   ie.div(:id, /list/)                 # access the first div that matches list.
     #   ie.div(:index,2)                    # access the second div on the page
-    #   ie.div(:title , "A Picture")        # access a div using the tooltip text. See http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/title_1.asp?frame=true
+    #   ie.div(:title , "A Picture")        # access a div using the tooltip text. See http://www.xulplanet.com/references/objref/HTMLDivElement.html
     #   ie.div(:xpath, "//div[@id='list']/")    # access the first div whose id is 'list'
     #   
     def div(how, what)
@@ -590,7 +590,7 @@ module Container
         return Divs.new(self)
     end
 
-    # This is the main method for accessing span tags - http://msdn.microsoft.com/workshop/author/dhtml/reference/objects/span.asp?frame=true
+    # This is the main method for accessing span tags 
     #  *  how   - symbol - how we access the span, valid values are
     #    :index      - finds the item using its index
     #    :id         - finds the item using its id attribute
@@ -604,7 +604,7 @@ module Container
     # 
     #   ie.span(:id, /list/)                 # access the first span that matches list.
     #   ie.span(:index,2)                    # access the second span on the page
-    #   ie.span(:title , "A Picture")        # access a span using the tooltip text. See http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/title_1.asp?frame=true
+    #   ie.span(:title , "A Picture")        # access a span using the tooltip text.
     #   
     def span(how, what)
         locate if defined?(locate)
@@ -625,7 +625,7 @@ module Container
         return Spans.new(self)
     end
 
-    # This is the main method for accessing p tags - http://msdn.microsoft.com/workshop/author/dhtml/reference/objects/p.asp?frame=true
+    # This is the main method for accessing p tags - http://www.xulplanet.com/references/objref/HTMLParagraphElement.html
     #  *  how   - symbol - how we access the p, valid values are
     #    :index      - finds the item using its index
     #    :id         - finds the item using its id attribute
@@ -638,7 +638,7 @@ module Container
     # 
     #   ie.p(:id, /list/)                 # access the first p tag  that matches list.
     #   ie.p(:index,2)                    # access the second p tag on the page
-    #   ie.p(:title , "A Picture")        # access a p tag using the tooltip text. See http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/title_1.asp?frame=true
+    #   ie.p(:title , "A Picture")        # access a p tag using the tooltip text. See http://www.xulplanet.com/references/objref/HTMLParagraphElement.html
     #   
     def p(how, what)
         locate if defined?(locate)
@@ -659,7 +659,7 @@ module Container
         return Ps.new(self)
     end
 
-    # This is the main method for accessing pre tags - http://msdn.microsoft.com/workshop/author/dhtml/reference/objects/pre.asp?frame=true
+    # This is the main method for accessing pre tags - http://www.xulplanet.com/references/objref/HTMLPreElement.html
     #  *  how   - symbol - how we access the pre, valid values are
     #    :index      - finds the item using its index
     #    :id         - finds the item using its id attribute
@@ -672,7 +672,7 @@ module Container
     # 
     #   ie.pre(:id, /list/)                 # access the first pre tag  that matches list.
     #   ie.pre(:index,2)                    # access the second pre tag on the page
-    #   ie.pre(:title , "A Picture")        # access a pre tag using the tooltip text. See http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/title_1.asp?frame=true
+    #   ie.pre(:title , "A Picture")        # access a pre tag using the tooltip text.
     #   
     def pre(how, what)
         locate if defined?(locate)
@@ -693,7 +693,7 @@ module Container
         return Pres.new(self)
     end
 
-    # This is the main method for accessing labels. http://msdn.microsoft.com/workshop/author/dhtml/reference/objects/label.asp?frame=true
+    # This is the main method for accessing labels. http://www.xulplanet.com/references/objref/HTMLLabelElement.html
     #  *  how   - symbol - how we access the label, valid values are
     #    :index      - finds the item using its index
     #    :id         - finds the item using its id attribute

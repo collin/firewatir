@@ -265,7 +265,7 @@ class Frame
         def self.tag; TAG; end
     end
 
-    # this class is used to deal with Div tags in the html page. http://msdn.microsoft.com/workshop/author/dhtml/reference/objects/div.asp?frame=true
+    # this class is used to deal with Div tags in the html page. http://www.xulplanet.com/references/objref/HTMLDivElement.html 
     # It would not normally be created by users
     class Div < NonControlElement 
         TAG = 'DIV'
@@ -278,7 +278,7 @@ class Frame
         def self.tag; TAG; end
     end
 
-    # Accesses Label element on the html page - http://msdn.microsoft.com/workshop/author/dhtml/reference/objects/label.asp?frame=true
+    # Accesses Label element on the html page - http://www.xulplanet.com/references/objref/HTMLLabelElement.html
     class Label < NonControlElement
         TAG = 'LABEL'
 
