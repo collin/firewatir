@@ -834,9 +834,11 @@ module Container
         return_value = "" 
         data = ""
         #puts Thread.list
-        s = Kernel.select([socket] , nil , nil, 1)
-
-        if(s != nil)
+        s = nil
+        while(s == nil) do
+            s = Kernel.select([socket] , nil , nil, 1)
+        end
+        #if(s != nil)
             for stream in s[0]
                 data = stream.recv(1024)
                 #puts "data is : #{data}"
@@ -846,7 +848,7 @@ module Container
                     #puts "data length is : #{data.length}"
                 end
             end
-        end
+        #end
         
         # If recieved data is less than 1024 characters or for last data 
         # we read in the above loop 

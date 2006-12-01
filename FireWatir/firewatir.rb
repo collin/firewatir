@@ -404,6 +404,16 @@ module FireWatir
             return read_socket()
         end
 
+        def maximize()
+            $jssh_socket.send("#{WINDOW_VAR}.maximize();\n", 0)
+            read_socket()
+        end
+
+        def minimize()
+            $jssh_socket.send("#{WINDOW_VAR}.minimize();\n", 0)
+            read_socket()
+        end
+
         def wait(no_sleep = false)
             #puts "In wait function "
             isLoadingDocument = ""
