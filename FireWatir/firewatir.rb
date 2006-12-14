@@ -120,8 +120,6 @@
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), 'watir', 'win32ole')
 
 require 'logger'
-require 'firewatir/winClicker'
-require 'firewatir/WindowHelper'
 require 'firewatir/exceptions'
 require 'container'
 require 'MozillaBaseElement.rb'

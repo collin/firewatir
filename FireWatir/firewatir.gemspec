@@ -1,7 +1,6 @@
 $__firewatir_source_patterns = [
     'container.rb', 'firewatir.rb', 'htmlelements.rb',
-    'MozillaBaseElement.rb','firewatir/*.rb', 'firewatir/AutoItX3.dll',
-    'unittests/*.rb', 'unittests/html/*.html', 'unittests/html/images/*.*' 
+    'MozillaBaseElement.rb','firewatir/*.rb','unittests/*.rb', 'unittests/html/*.html', 'unittests/html/images/*.*' 
     ]
 
 $LOAD_PATH.unshift File.dirname(__FILE__)
@@ -24,7 +23,7 @@ spec = Gem::Specification.new do |s|
   s.author = 'Angrez Singh'
   s.homepage = 'http://code.google.com/p/firewatir'
 
-  s.platform = Gem::Platform::WIN32
+  s.platform = Gem::Platform::DARWIN
   s.requirements << 'Mozilla Firefox browser 1.5 or later.'
   s.require_path = '.'    
   s.autorequire = 'firewatir'
