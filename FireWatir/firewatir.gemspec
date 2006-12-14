@@ -23,7 +23,7 @@ spec = Gem::Specification.new do |s|
   s.author = 'Angrez Singh'
   s.homepage = 'http://code.google.com/p/firewatir'
 
-  s.platform = Gem::Platform::DARWIN
+  s.platform = Gem::Platform::WIN32
   s.requirements << 'Mozilla Firefox browser 1.5 or later.'
   s.require_path = '.'    
   s.autorequire = 'firewatir'
