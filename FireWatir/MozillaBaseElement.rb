@@ -256,7 +256,7 @@
             if(value == nil)
                 jssh_command += "var value = null;"
             else
-                jssh_command += "var value = #{value};"
+                jssh_command += "var value = \"#{value}\";"
             end
             #jssh_command += "elements.length;"
             if(@@current_element_object == "")
