@@ -29,8 +29,8 @@ class TC_Images < Test::Unit::TestCase
         assert(    $ff.image(:id , /squ/ ).exists?  )
         
         assert( !  $ff.image(:src, "missingsrc.gif").exists?  )
-        
-        assert(    $ff.image(:src, "file:///#{$myDir}/html/images/triangle.jpg").exists?  )
+         
+        assert(    $ff.image(:src, "images/triangle.jpg").exists?  )
         assert(    $ff.image(:src , /triangle/ ).exists?  )
         
         assert(    $ff.image(:alt , "circle" ).exists?  )

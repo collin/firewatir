@@ -47,6 +47,7 @@
         FIRST_ORDERED_NODE_TYPE = 9
         @@current_element_object = ""
         @@current_level = 0 
+        @@current_js_object = nil
         # Has the elements array changed.
         @@has_changed = false 
         attr_accessor :element_name
@@ -296,7 +297,11 @@
                                     }     
                                     else
                                     {
-                                        attribute = element.#{how};
+                                        attribute = element.getAttribute(\"#{how}\");
+                                        if(attribute == \"\" || attribute == null)
+                                        {
+                                            attribute = element.#{how};
+                                        }
                                     }
                                     if(attribute == \"\") o = 'NoMethodError';
                                     var found = false;"
@@ -627,7 +632,7 @@
         def_wrap :class_name, :className
 
         # Return the outer html of the object
-        def_wrap :html, :outerHTML
+        def_wrap :html, :innerHTML
         
         #return the inner text of the object
         #def_wrap :text
@@ -701,27 +706,69 @@
             assert_enabled
 
             highlight(:set)
-            
-            case element_type
+            @@current_js_object = Element.new("#{element_object}")
+            #case element_type
+            #    when "HTMLAnchorElement", "HTMLImageElement"
+            #        jssh_command = "var event = document.createEvent(\"MouseEvents\");"
+            #        # Info about initMouseEvent at: http://www.xulplanet.com/references/objref/MouseEvent.html        
+            #        jssh_command += "event.initMouseEvent('click',true,true,null,1,0,0,0,0,false,false,false,false,0,null);"
+            #        jssh_command += "#{element_object}.dispatchEvent(event);\n"
+
+            #        #$jssh_socket.send("#{jssh_command}", 0)
+            #        #read_socket()
+            #    when "HTMLDivElement", "HTMLSpanElement"
+            #        fireEvent("onclick", false)
+            #    else
+            #        jssh_command = "#{element_object}.click();\n";
+            #        #$jssh_socket.send("#{jssh_command}", 0)
+            #        #read_socket()
+            #end
+            #@@current_element_object = ''
+            #@@current_level = 0
+        end
+       
+        # Function that clicks on button or link or any element that triggers a javascript pop up
+        # The functions are redefined so that it doesn't causes the JSSH to get blocked. Also this 
+        # will make Firewatir cross platform.
+        def click_js_popup_creator_button
+            #puts @@current_js_object.element_name
+            #puts @@current_js_object.element_type
+            case @@current_js_object.element_type
                 when "HTMLAnchorElement", "HTMLImageElement"
                     jssh_command = "var event = document.createEvent(\"MouseEvents\");"
                     # Info about initMouseEvent at: http://www.xulplanet.com/references/objref/MouseEvent.html        
                     jssh_command += "event.initMouseEvent('click',true,true,null,1,0,0,0,0,false,false,false,false,0,null);"
-                    jssh_command += "#{element_object}.dispatchEvent(event);\n"
+                    jssh_command += "#{@@current_js_object.element_name}.dispatchEvent(event);\n"
 
                     $jssh_socket.send("#{jssh_command}", 0)
-                    #read_socket()
+                    read_socket()
                 when "HTMLDivElement", "HTMLSpanElement"
-                    fireEvent("onclick", false)
+                    $jssh_socket.send("typeof(#{element_object}.#{event.downcase});\n", 0)
+                    isDefined = read_socket()
+                    #puts "is method there : #{isDefined}"
+                    if(isDefined != "undefined")
+                        if(element_type == "HTMLSelectElement")
+                            jssh_command = "var event = #{DOCUMENT_VAR}.createEvent(\"HTMLEvents\");
+                                            event.initEvent(\"change\", true, true);
+                                            #{element_object}.dispatchEvent(event);"
+                            jssh_command.gsub!(/\n/, "")
+                            $jssh_socket.send("#{jssh_command}\n", 0)
+                            read_socket()
+                        else
+                            $jssh_socket.send("#{element_object}.#{event.downcase}();\n", 0)
+                            read_socket()
+                        end    
+                    end
                 else
-                    jssh_command = "#{element_object}.click();\n";
+                    jssh_command = "#{@@current_js_object.element_name}.click();\n";
                     $jssh_socket.send("#{jssh_command}", 0)
-                    #read_socket()
+                    read_socket()
             end
             @@current_element_object = ''
             @@current_level = 0
+            @@current_js_object = nil
         end
-       
+
         def each
             if(element_type == "HTMLSelectElement")
                 $jssh_socket.send("#{element_object}.options.length;\n", 0)

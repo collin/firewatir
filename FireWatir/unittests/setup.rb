@@ -10,8 +10,7 @@ topdir = File.join(File.dirname(__FILE__), '..')
 Dir.chdir topdir do
   $all_tests = Dir["unittests/*_test.rb"]
 end
-
-$non_core_tests = [ "javascript" ].collect {|x| "unittests/#{x}_test.rb"}
+$non_core_tests = [  ].collect {|x| "unittests/#{x}_test.rb"}
 
 $core_tests = $all_tests - $non_core_tests
 

@@ -349,32 +349,67 @@ module FireWatir
         # Firefox.attach(:title, 'Google') 
         # TODO: Add support to attach using url. Currently only Title is supported.
         def attach(how, what)
-            find_window(what)
+            find_window(how, what)
         end
 
-        def find_window(title)
+        def find_window(how, what)
             jssh_command = "getWindows().length;";
             $jssh_socket.send("#{jssh_command}\n", 0)
             @@total_windows = read_socket()
             #puts "total windows are : " + @@total_windows.to_s
 
-            jssh_command =  "var windows = getWindows(); var window_number = 0;"
-            jssh_command += "for(var i = 0; i < windows.length; i++)"
-            jssh_command += "{"
-            jssh_command += "   var title = windows[i].getBrowser().contentDocument.title;"
-            jssh_command += "   if(title == \"#{title}\")"
-            jssh_command += "   {"
-            jssh_command += "       window_number = i;"
-            jssh_command += "       break;"
-            jssh_command += "   }"
-            jssh_command += "}"
-            jssh_command += "window_number;"
+            jssh_command =  "var windows = getWindows(); var window_number = 0;var found = false;
+                             for(var i = 0; i < windows.length; i++)
+                             {
+                                var attribute = '';
+                                if(\"#{how}\" == \"url\")
+                                {
+                                    attribute = windows[i].getBrowser().contentDocument.URL;
+                                }
+                                if(\"#{how}\" == \"title\")
+                                {
+                                    attribute = windows[i].getBrowser().contentDocument.title;
+                                }"
+            if(what.class == Regexp)                    
+                # Construct the regular expression because we can't use it directly by converting it to string.
+                # If reg ex is /Google/i then its string conversion will be (?i-mx:Google) so we can't use it.
+                # Construct the regular expression again from the string conversion.
+                oldRegExp = what.to_s
+                newRegExp = "/" + what.source + "/"
+                flags = oldRegExp.slice(2, oldRegExp.index(':') - 2)
 
+                for i in 0..flags.length do
+                    flag = flags[i, 1]
+                    if(flag == '-')
+                        break;
+                    else
+                        newRegExp << flag
+                    end
+                end
+                
+                jssh_command += "var regExp = new RegExp(#{newRegExp});
+                                 found = regExp.test(attribute);"
+            else
+                jssh_command += "found = (attribute == \"#{what}\");"
+            end
+            
+            jssh_command +=     "if(found)
+                                {
+                                    window_number = i;
+                                    break;
+                                }
+                            }
+                            window_number;"
+                            
+            jssh_command.gsub!(/\n/, "")
+            #puts "jssh_command is : #{jssh_command}"
             $jssh_socket.send("#{jssh_command}\n", 0)
             window_number = read_socket()
             #puts "window number is : " + window_number.to_s
 
-            if(window_number.to_i > 0)
+            if(window_number.to_i == 0)
+               raise NoMatchingWindowFoundException.new("Unable to locate window, using #{how} and #{what}")  
+            elsif(window_number.to_i > 0)
                 @@window_stack.push(@@current_window)
                 @@current_window = window_number.to_i
                 set_browser_document()
@@ -431,6 +466,25 @@ module FireWatir
         end
  
         def click_jspopup_button(button)
+            button = button.downcase
+            jssh_command = "var win = #{BROWSER_VAR}.contentWindow;"
+            if(button =~ /ok/i)
+                jssh_command += "win.alert = function(param) { return true; };
+                                 win.confirm = function(param) { return true; };"
+            elsif(button =~ /cancel/i)
+                jssh_command += "win.alert = function(param) { return false; };
+                                 win.confirm = function(param) { return false; };"
+            end
+            jssh_command.gsub!("\n", "")
+            $jssh_socket.send("#{jssh_command}\n", 0)
+            read_socket()
+            element = Element.new(nil)                                    
+            element.click_js_popup_creator_button()                                
+            $jssh_socket.send("\n", 0)
+            read_socket()
+        end
+
+        def aclick_jspopup_button(button)
             #winclicker = WinClicker.new
 
             #if button =~ /ok/i

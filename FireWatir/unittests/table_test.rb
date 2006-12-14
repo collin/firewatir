@@ -79,16 +79,17 @@ class TC_Tables < Test::Unit::TestCase
     assert_equal("Google", link.innerText)
   end
   
-  def atest_cell_directly
+  def test_cell_directly
     assert( $ff.cell(:id, 'cell1').exists? )
     assert(! $ff.cell(:id, 'no_exist').exists? )
     assert_equal( "Row 1 Col1",  $ff.cell(:id, 'cell1').to_s.strip )
     
     # not really cell directly, but just to show another way of geting the cell
     assert_equal( "Row 1 Col1",  $ff.table(:index,1)[1][1].to_s.strip )
+    assert_equal(2, $ff.cell(:id, "cell_with_colspan").colspan)
   end
   
-  def atest_row_directly
+  def test_row_directly
     assert( $ff.row(:id, 'row1').exists? )  
     assert(! $ff.row(:id, 'no_exist').exists? )
     
