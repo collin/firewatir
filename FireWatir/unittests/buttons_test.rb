@@ -26,20 +26,20 @@ class TC_Buttons < Test::Unit::TestCase
     #    s = nil
     #end
     
-    def atest_Button_to_s
+    def test_Button_to_s
         # i think the tests for to_s should be dropped. The output is not in a nice format to be tested, and the
         # individual properties are tested in the test_properties method
         
-        b4 = ['name              b4',
-        'type              button',
-        'id                b5',
-        'value             Disabled Button',
-        'disabled          true']
-        b1 = ['name              b1',
-        'type              button',
-        'id                b2',
-        'value             Click Me',
-        'disabled          false']
+        b4 = ['name:         b4',
+        'type:         button',
+        'id:           b5',
+        'value:        Disabled Button',
+        'disabled:     true']
+        b1 = ['name:         b1',
+        'type:         button',
+        'id:           b2',
+        'value:        Click Me',
+        'disabled:     false']
         
         assert_equal(b4, $ff.button(:name, "b4").to_s)
         assert_equal(b1, $ff.button(:caption, "Click Me").to_s)

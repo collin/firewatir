@@ -49,25 +49,25 @@ class TC_CheckBox < Test::Unit::TestCase
        assert_false($ff.button(:value , "foo").enabled?)
     end
 
-    def atest_CheckBox_Exists
-       assert($ff.checkbox(:name, "box1").exists?)   
-       assert_false($ff.checkbox(:name, "missing").exists?)   
+    #def test_CheckBox_Exists
+    #  assert($ff.checkbox(:name, "box1").exists?)   
+    # assert_false($ff.checkbox(:name, "missing").exists?)   
+    #
+    #   assert($ff.checkbox(:name, "box4" , 1).exists?)   
+    #  assert_false($ff.checkbox(:name, "box4" , 22).exists?)   
+    #end
 
-       assert($ff.checkbox(:name, "box4" , 1).exists?)   
-       assert_false($ff.checkbox(:name, "box4" , 22).exists?)   
-    end
-
-    def atest_checkbox_Enabled
-       assert_raises(UnknownObjectException) { $ff.checkbox(:name, "noName").enabled? }  
-       assert_raises(UnknownObjectException) { $ff.checkbox(:id, "noName").enabled? }  
-       assert_raises(UnknownObjectException) { $ff.checkbox(:name, "box4" , 6).enabled? }  
-
-       assert($ff.checkbox(:name, "box1").enabled?)   
-       assert_false($ff.checkbox(:name, "box2").enabled?)   
-
-       assert($ff.checkbox(:name, "box4", 4).enabled?)   
-       assert_false($ff.checkbox(:name, "box4" , 5 ).enabled?)   
-    end
+    #def test_checkbox_Enabled
+    #  assert_raises(UnknownObjectException) { $ff.checkbox(:name, "noName").enabled? }  
+    #   assert_raises(UnknownObjectException) { $ff.checkbox(:id, "noName").enabled? }  
+    #  assert_raises(UnknownObjectException) { $ff.checkbox(:name, "box4" , 6).enabled? }  
+    #
+    #   assert($ff.checkbox(:name, "box1").enabled?)   
+    #    assert_false($ff.checkbox(:name, "box2").enabled?)   
+    #
+    #   assert($ff.checkbox(:name, "box4", 4).enabled?)   
+    #  assert_false($ff.checkbox(:name, "box4" , 5 ).enabled?)   
+    #end
 
     def test_checkbox_isSet
        assert_raises(UnknownObjectException ) { $ff.checkbox(:name, "noName").isSet? }  

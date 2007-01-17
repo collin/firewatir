@@ -126,45 +126,45 @@ class TC_Tables < Test::Unit::TestCase
     end
   end 
   
-  def atest_table_body
-    assert_equal( 1, $ff.table(:index,1).bodies.length )
-    assert_equal( 3, $ff.table(:id, 'body_test' ).bodies.length )
-    
-    count = 1
-    $ff.table(:id, 'body_test').bodies.each do |n|
-      
-      # do something better here!
+  #def test_table_body
+  #  assert_equal( 1, $ff.table(:index,1).bodies.length )
+  #  assert_equal( 3, $ff.table(:id, 'body_test' ).bodies.length )
+  #  
+  #  count = 1
+  #  $ff.table(:id, 'body_test').bodies.each do |n|
+  #    
+  #    # do something better here!
       # n.flash # this line commented out to speed up the test
       
-      case count 
-      when 1 
-        compare_text = "This text is in the FRST TBODY."
-      when 2 
-        compare_text = "This text is in the SECOND TBODY."
-      when 3 
-        compare_text = "This text is in the THIRD TBODY."
-      end
-      
-      assert_equal(compare_text, n[1][1].to_s.strip )   # this is the 1st cell of the first row of this particular body
-      
-      count += 1
-    end
-    assert_equal( count - 1, $ff.table(:id, 'body_test').bodies.length )
-    
-    assert_equal( "This text is in the THIRD TBODY." ,$ff.table(:id, 'body_test' ).body(:index,3)[1][1].to_s.strip ) 
-    
-    # iterate through all the rows in a table body
-    count = 1
-    $ff.table(:id, 'body_test').body(:index, 2).each do | row |
-      # row.flash    # this line commented out, to speed up the tests
-      if count == 1
-        assert_equal('This text is in the SECOND TBODY.', row[1].text.strip )
-      elsif count == 1 # BUG: Huh?
-        assert_equal('This text is also in the SECOND TBODY.', row[1].text.strip )
-      end
-      count+=1
-    end
-  end
+  #    case count 
+  #    when 1 
+  #      compare_text = "This text is in the FRST TBODY."
+  #    when 2 
+  #      compare_text = "This text is in the SECOND TBODY."
+  #    when 3 
+  #      compare_text = "This text is in the THIRD TBODY."
+  #    end
+  #    
+  #    assert_equal(compare_text, n[1][1].to_s.strip )   # this is the 1st cell of the first row of this particular body
+  #    
+  #    count += 1
+  #  end
+  #  assert_equal( count - 1, $ff.table(:id, 'body_test').bodies.length )
+  #  
+  #  assert_equal( "This text is in the THIRD TBODY." ,$ff.table(:id, 'body_test' ).body(:index,3)[1][1].to_s.strip ) 
+  #  
+  #  # iterate through all the rows in a table body
+  #  count = 1
+  #  $ff.table(:id, 'body_test').body(:index, 2).each do | row |
+  #    # row.flash    # this line commented out, to speed up the tests
+  #    if count == 1
+  #      assert_equal('This text is in the SECOND TBODY.', row[1].text.strip )
+  #    elsif count == 1 # BUG: Huh?
+  #      assert_equal('This text is also in the SECOND TBODY.', row[1].text.strip )
+  #    end
+  #    count+=1
+  #  end
+  #end
   
   def test_table_container
     assert_nothing_raised { $ff.table(:id, 't1').html }
@@ -265,7 +265,7 @@ class TC_Tables_Buttons < Test::Unit::TestCase
     end
   end
   
-#  def atest_table_from_element
+#  def test_table_from_element
 #    button = $ff.button(:id, "b1")
 #    table = Table.create_from_element($ff, button)
     
@@ -280,7 +280,7 @@ class TC_Table_Columns < Test::Unit::TestCase
     $ff.goto($htmlRoot + "simple_table_columns.html")
   end
   
-#  def atest_get_columnvalues_single_column
+#  def test_get_columnvalues_single_column
 #    assert_equal(["R1C1", "R2C1", "R3C1"], $ff.table(:index, 1).column_values(1))
 #  end
 
@@ -290,25 +290,25 @@ class TC_Table_Columns < Test::Unit::TestCase
     assert_equal(3, $ff.table(:index, 3)[4][1].colspan)
   end
 
-#  def atest_get_columnvalues_multiple_column
+#  def test_get_columnvalues_multiple_column
 #    assert_equal(["R1C1", "R2C1", "R3C1"], $ff.table(:index, 2).column_values(1))
 #    assert_equal(["R1C3", "R2C3", "R3C3"], $ff.table(:index, 2).column_values(3))
 #  end
 
-#  def atest_get_columnvalues_with_colspan
+#  def test_get_columnvalues_with_colspan
 #    assert_equal(["R1C1", "R2C1", "R3C1", "R4C1", "R5C1", "R6C2"], $ff.table(:index, 3).column_values(1))
 #   (2..4).each{|x|assert_raises(UnknownCellException){$ff.table(:index, 3).column_values(x)}}
 #  end
 
-#  def atest_get_rowvalues_full_row
+#  def test_get_rowvalues_full_row
 #    assert_equal(["R1C1", "R1C2", "R1C3"], $ff.table(:index, 3).row_values(1))
 #  end
 
-#  def atest_get_rowvalues_with_colspan
+#  def test_get_rowvalues_with_colspan
 #    assert_equal(["R2C1", "R2C2"], $ff.table(:index, 3).row_values(2))
 #  end
 
-#  def atest_getrowvalues_with_rowspan
+#  def test_getrowvalues_with_rowspan
 #    assert_equal(["R5C1", "R5C2", "R5C3"], $ff.table(:index, 3).row_values(5))
 #    assert_equal(["R6C2", "R6C3"], $ff.table(:index, 3).row_values(6))
 #  end

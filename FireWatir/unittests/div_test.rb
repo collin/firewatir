@@ -1,5 +1,5 @@
 # feature tests for Divs, Spans and P's
-# revision: $Revision: 1086 $
+# revision: $Revision: 1.0 $
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') if $0 == __FILE__
 require 'unittests/setup'
@@ -45,20 +45,20 @@ class TC_Divs < Test::Unit::TestCase
     assert_equal("div2",       $ff.div(:index , 2).id)
   end
   
-  def atest_div_iterator
-    assert_equal( 7 , $ff.divs.length)
-    assert_equal( "div1" , $ff.divs[1].id )
-    
-    index =1
-    $ff.divs.each do |s|
-      # puts "each - div= " + s.to_s
-      assert_equal($ff.div(:index, index ).name , s.name )
-      assert_equal($ff.div(:index, index ).id , s.id )
-      assert_equal($ff.div(:index, index ).class_name , s.class_name )
-      index +=1
-    end
-    assert_equal(index-1, $ff.divs.length)   # -1 as we add 1 at the end of the loop
-  end
+  #def test_div_iterator
+  #  assert_equal( 7 , $ff.divs.length)
+  #  assert_equal( "div1" , $ff.divs[1].id )
+  #  
+  #  index =1
+  #  $ff.divs.each do |s|
+  #    # puts "each - div= " + s.to_s
+  #    assert_equal($ff.div(:index, index ).name , s.name )
+  #   assert_equal($ff.div(:index, index ).id , s.id )
+  #    assert_equal($ff.div(:index, index ).class_name , s.class_name )
+  #    index +=1
+  #  end
+  #  assert_equal(index-1, $ff.divs.length)   # -1 as we add 1 at the end of the loop
+  #end
   
   def test_objects_in_div
     assert($ff.div(:id, 'buttons1').button(:index,1).exists? )
@@ -114,20 +114,20 @@ class TC_Divs < Test::Unit::TestCase
     assert_equal("span2",      $ff.span(:index , 2).id)
   end
   
-  def atest_span_iterator
-    assert_equal(7, $ff.spans.length)
-    assert_equal("span1", $ff.spans[1].id)
-    
-    index = 1
-    $ff.spans.each do |s|
-      # puts "each - span = " + s.to_s
-      assert_equal($ff.span(:index, index ).name , s.name )
-      assert_equal($ff.span(:index, index ).id , s.id )
-      assert_equal($ff.span(:index, index ).class_name , s.class_name )
-      index += 1
-    end
-    assert_equal(index - 1, $ff.spans.length)   # -1 as we add 1 at the end of the loop
-  end
+  #def test_span_iterator
+  #  assert_equal(7, $ff.spans.length)
+  #  assert_equal("span1", $ff.spans[1].id)
+  #  
+  #  index = 1
+  #  $ff.spans.each do |s|
+  #    # puts "each - span = " + s.to_s
+  #    assert_equal($ff.span(:index, index ).name , s.name )
+  #    assert_equal($ff.span(:index, index ).id , s.id )
+  #    assert_equal($ff.span(:index, index ).class_name , s.class_name )
+  #    index += 1
+  #  end
+  #  assert_equal(index - 1, $ff.spans.length)   # -1 as we add 1 at the end of the loop
+  #end
   
   def test_objects_in_span
     assert($ff.span(:id, 'buttons1').button(:index,1).exists? )
@@ -157,7 +157,7 @@ class TC_Divs < Test::Unit::TestCase
     assert_raises( UnknownObjectException) {$ff.p(:id , 'missing').class_name }
     assert_raises( UnknownObjectException) {$ff.p(:id , 'missing').text }
     assert_raises( UnknownObjectException) {$ff.p(:id , 'missing').title }
-    #assert_raises( UnknownObjectException) {$ff.p(:id , 'missing').to_s }
+    assert_raises( UnknownObjectException) {$ff.p(:id , 'missing').to_s }
     assert_raises( UnknownObjectException) {$ff.p(:id , 'missing').disabled }
     
     assert_equal(  'redText' , $ff.p(:index,1).class_name)
@@ -165,16 +165,16 @@ class TC_Divs < Test::Unit::TestCase
     assert_equal(  'This text is in a p with an id of number2' , $ff.p(:index,2).text)
   end
   
-  def atest_p_iterator
-    assert_equal( 3, $ff.ps.length)
-    assert_equal( 'italicText', $ff.ps[2].class_name)
-    assert_equal( 'number3', $ff.ps[3].id)
-    
-    count=1
-    $ff.ps.each do |p|
-      assert_equal('number'+count.to_s , p.id)
-      count+=1
-    end
-    assert_equal( count-1 ,  $ff.ps.length)
+  #def test_p_iterator
+  #  assert_equal( 3, $ff.ps.length)
+  #  assert_equal( 'italicText', $ff.ps[2].class_name)
+  #  assert_equal( 'number3', $ff.ps[3].id)
+  #  
+  #  count=1
+  #  $ff.ps.each do |p|
+  #    assert_equal('number'+count.to_s , p.id)
+  #    count+=1
+  #  end
+  #  assert_equal( count-1 ,  $ff.ps.length)
+  #end
   end
-end

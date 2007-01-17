@@ -30,7 +30,7 @@ class TC_Images < Test::Unit::TestCase
         
         assert( !  $ff.image(:src, "missingsrc.gif").exists?  )
          
-        assert(    $ff.image(:src, "images/triangle.jpg").exists?  )
+        assert(    $ff.image(:src, /images\/triangle.jpg/).exists?  )
         assert(    $ff.image(:src , /triangle/ ).exists?  )
         
         assert(    $ff.image(:alt , "circle" ).exists?  )
@@ -68,18 +68,18 @@ class TC_Images < Test::Unit::TestCase
     end
     
     # TODO: Need to see alternative for this in Mozilla
-    def atest_imageHasLoaded
-        assert_raises(UnknownObjectException ) { $ff.image(:name, "no_image_with_this").hasLoaded? }
-        assert_raises(UnknownObjectException ) { $ff.image(:id, "no_image_with_this").hasLoaded? }
-        assert_raises(UnknownObjectException ) { $ff.image(:src, "no_image_with_this").hasLoaded? }
-        assert_raises(UnknownObjectException ) { $ff.image(:alt, "no_image_with_this").hasLoaded? }
-        
-        assert( ! $ff.image(:name, "themissingimage").hasLoaded?  )
-        assert( $ff.image(:name, "circle").hasLoaded?  )
-        
-        assert( $ff.image(:alt, "circle").hasLoaded?  )
-        assert( $ff.image(:alt, /cir/ ).hasLoaded?  )
-    end
+    #def test_imageHasLoaded
+    #    assert_raises(UnknownObjectException ) { $ff.image(:name, "no_image_with_this").hasLoaded? }
+    #    assert_raises(UnknownObjectException ) { $ff.image(:id, "no_image_with_this").hasLoaded? }
+    #    assert_raises(UnknownObjectException ) { $ff.image(:src, "no_image_with_this").hasLoaded? }
+    #    assert_raises(UnknownObjectException ) { $ff.image(:alt, "no_image_with_this").hasLoaded? }
+    #    
+    #    assert( ! $ff.image(:name, "themissingimage").hasLoaded?  )
+    #    assert( $ff.image(:name, "circle").hasLoaded?  )
+    #    
+    #    assert( $ff.image(:alt, "circle").hasLoaded?  )
+    #    assert( $ff.image(:alt, /cir/ ).hasLoaded?  )
+    #end
     
     def test_image_properties
         # TODO: Need to see alternative for this in Mozilla
@@ -118,12 +118,12 @@ class TC_Images < Test::Unit::TestCase
         assert_equal( ""      , $ff.image(:index, 2).alt) 
         assert_equal('square_image', $ff.image(:id, 'square').title)
 
-        # TODO: to string tests -- output should be verified!
-        $ff.image(:name  , "circle").to_s
-        $ff.image(:index , 2).to_s
+        # to string tests -- output should be verified!
+        puts $ff.image(:name  , "circle").to_s
+        puts  $ff.image(:index , 2).to_s
     end
     
-    #def aatest_image_iterator
+    #def test_image_iterator
     #    assert_equal(6 , $ff.images.length)
     #    assert_equal("" , $ff.images[2].name )
     #    assert_equal("square", $ff.images[2].id )
@@ -142,10 +142,10 @@ class TC_Images < Test::Unit::TestCase
     #    assert_equal( index-1 , $ff.images.length )
     #end
     
-    def atest_save_local_image
-        $ff.images[1].save(build_windows_path("sample.img.dat"))
-        assert(File.compare(@saved_img_path, $ff.images[1].src.gsub(/^file:\/\/\//, '')))
-    end
+    #def test_save_local_image
+    #   $ff.images[1].save(build_windows_path("sample.img.dat"))
+    #    assert(File.compare(@saved_img_path, $ff.images[1].src.gsub(/^file:\/\/\//, '')))
+    #end
     
     def clean_saved_image
         File.delete(@saved_img_path) if (File.exists?(@saved_img_path))

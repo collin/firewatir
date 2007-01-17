@@ -4,7 +4,7 @@
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') if $0 == __FILE__
 require 'unittests/setup'
 
-class TC_Hidden_Fields < Test::Unit::TestCase
+class TC_Hidden_Fields_XPath < Test::Unit::TestCase
     def setup
         $ff.goto($htmlRoot + "forms3.html")
     end

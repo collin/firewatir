@@ -63,29 +63,23 @@ class TC_Fields < Test::Unit::TestCase
         assert_equal("Hello World", $ff.text_field(:name, "text1").value)  
     end
     
-    def atest_text_field_to_s
+    def test_text_field_to_s
         expected = [
-            build_to_s_regex("name", "text1"),
-            build_to_s_regex("type", "text"),
-            build_to_s_regex("id", ""),
-            build_to_s_regex("value", "Hello World"),
-            build_to_s_regex("disabled", "false"),
-            build_to_s_regex("length", "0"),
-            build_to_s_regex("max length", ""),
-            build_to_s_regex("read only", "false")
-        ]
-        items = $ff.text_field(:index, 1).to_s.split(/\n/)
-        expected.each_with_index{|regex, x| assert(regex =~ items[x]) }
-        #expected[1] = build_to_s_regex("id", "text2")
-        #expected[2] = build_to_s_regex("name", "")
-        #expected[3] = build_to_s_regex("value", "goodbye all")
-        #items = $ff.text_field(:index, 2).to_s.split(/\n/)
-        #expected.each_with_index{|regex, x| assert(regex =~ items[x]) }
+            "name:         text1",
+            "type:         text",
+            "id:           ",
+            "value:        Hello World",
+            "disabled:     false" ]
+           #"length:       0",
+           #"max length:   ",
+           #"read only:    false
+        #]
+        assert_equal(expected, $ff.text_field(:index, 1).to_s)
+        expected[0] = "name:         "
+        expected[2] = "id:           text2"
+        expected[3] = "value:        goodbye all"
+        assert_equal(expected, $ff.text_field(:index, 2).to_s)
         assert_raises(UnknownObjectException) { $ff.text_field(:index, 999).to_s }  
-    end
-    
-    def build_to_s_regex(lhs, rhs)
-        Regexp.new("^#{lhs}: +#{rhs}$")
     end
     
     def test_text_field_append

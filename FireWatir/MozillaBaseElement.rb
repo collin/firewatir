@@ -1,7 +1,7 @@
 =begin
   license
   ---------------------------------------------------------------------------
-  Copyright (c) 2005-2006, Angrez Singh, Abhishek Goliya
+  Copyright (c) 2006-2007, Angrez Singh
   
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
@@ -13,7 +13,7 @@
   notice, this list of conditions and the following disclaimer in the
   documentation and/or other materials provided with the distribution.
   
-  3. Neither the names Angrez Singh, Abhishek Goliya nor the names of contributors to
+  3. Neither the names Angrez Singh nor the names of contributors to
   this software may be used to endorse or promote products derived from this
   software without specific prior written permission.
   
@@ -45,13 +45,31 @@
         NUMBER_TYPE = 1
         # To get single node value
         FIRST_ORDERED_NODE_TYPE = 9
+        # This stores the name of the variable which stores the current element in JSSH  
         @@current_element_object = ""
-        @@current_level = 0 
+        # This stores the level to which we have gone finding element inside another element.
+        # This is just to make sure that every element has unique name in JSSH.
+        @@current_level = 0
+        # This stores the name of the element that is about to trigger an Javascript pop up.
         @@current_js_object = nil
+        # This stores the name of the variable which stores the current frame.
+        @@current_frame_name = ""
         # Has the elements array changed.
         @@has_changed = false 
+
         attr_accessor :element_name
         attr_accessor :element_type
+        #
+        # Description:
+        #    Creates new instance of element. If argument is not nil and is of type string this
+        #    sets the element_name and element_type property of the object. These properties can
+        #   be accessed using element_object and element_type methods respectively.
+        #
+        #   Used internally by Firewatir.
+        # 
+        # Input:
+        #   element - Name of the variable with which the element is referenced in JSSh.
+        #
         def initialize(element)
             if(element != nil && element.class == String)
                 @element_name = element
@@ -99,6 +117,7 @@
                             return_value = true if return_value == \"true\"
                         end
                         @@current_element_object = ''
+                        @@current_frame_name = ''
                         @@current_level = 0
                         return return_value
                     end"
@@ -122,6 +141,7 @@
                             end    
                         
                             @@current_element_object = ''
+                            @@current_frame_name = ''
                             @@current_level = 0
                             return return_value
                         rescue
@@ -130,21 +150,44 @@
                         
                     end"
         end
-        
-        # Return an array with many of the properties, in a format to be used by the to_s method
+       
+        #
+        # Description:
+        #   Returns an array of the properties of an element, in a format to be used by the to_s method
+        #   Currently only following properties are returned.
+        #   name, type, id, value, disabled.
+        #   Used internally by to_s method.
+        # 
+        # Output:
+        #   Array with values of the following properties:
+        #   name, type, id, value, disabled.
+        #
+        # TODO: Add support for specific properties for specific elements like href for anchor element.
+        #
         def string_creator
             n = []
-            n <<   "name:".ljust(TO_S_SIZE) +       self.name.to_s
-            n <<   "type:".ljust(TO_S_SIZE) + self.type
-            n <<   "id:".ljust(TO_S_SIZE) +         self.id.to_s
-            n <<   "value:".ljust(TO_S_SIZE) +      self.value.to_s
-            n <<   "disabled:".ljust(TO_S_SIZE) +   self.disabled.to_s
+            $jssh_socket.send("#{element_object}.name; \n", 0)
+            n << "name:".ljust(TO_S_SIZE) +  read_socket()
+            $jssh_socket.send("#{element_object}.type; \n", 0)
+            n << "type:".ljust(TO_S_SIZE) + read_socket()
+            $jssh_socket.send("#{element_object}.id; \n", 0)
+            n << "id:".ljust(TO_S_SIZE) + read_socket()
+            $jssh_socket.send("#{element_object}.value; \n", 0)
+            n << "value:".ljust(TO_S_SIZE) + read_socket()
+            $jssh_socket.send("#{element_object}.disabled; \n", 0)
+            n << "disabled:".ljust(TO_S_SIZE) + read_socket()
             return n
         end
         
-        # This method is responsible for setting and clearing the colored highlighting on the currently active element.
-        # use :set   to set the highlight
-        #   :clear  to clear the highlight
+        #
+        # Description:
+        #   Sets and clears the colored highlighting on the currently active element.
+        #
+        # Input:
+        #   set_or_clear - this can have following two values 
+        #   :set - To set the color of the element.
+        #   :clear - To clear the color of the element.
+        #
         def highlight(set_or_clear)
             if set_or_clear == :set
                 #puts "element_name is : #{element_object}"
@@ -168,9 +211,15 @@
                 end
             end
         end
-       
-        public
-        
+        protected :highlight
+
+        #
+        # Description:
+        #   Returns array of rows for a given table. Returns nil if calling element is not of table type.
+        #
+        # Output:
+        #   Array of row elements in an table or nil
+        #
         def get_rows()
             #puts "#{element_object} and #{element_type}"
             if(element_type == "HTMLTableElement")
@@ -183,13 +232,31 @@
                 end
                 return return_array
             else
-                puts "Element must be of table type to execute this function."
+                puts "Trying to access rows for Element of type #{element_type}. Element must be of table type to execute this function."
+                return nil
             end
         end
-        
-        # Function to locate the element. Re-implemented here so that we don't have to 
-        # make small round-trips via socket to JSSh. Instead write the logic for locating
-        # the element in JavaScript and send it to JSSh.
+        protected :get_rows
+       
+        #
+        # Description:
+        #   Locates the element on the page depending upon the parameters passed. Logic for locating the element is written 
+        #   in JavaScript and then send to JSSh; so that we don't make small round-trips via socket to JSSh. This is done to 
+        #   improve the performance for locating the element.
+        #
+        # Input:
+        #   tag - Tag name of the element to be located like "input", "a" etc. This is case insensitive.
+        #   how - The attribute by which you want to locate the element like id, name etc. You can use any attribute-value pair
+        #         that uniquely identifies that element on the page. If there are more that one element that have identical
+        #         attribute-value pair then first element that is found while traversing the DOM will be returned.
+        #   what - The value of the attribute specified by how.
+        #   types - Used if that HTML element to be located has different type like input can be of type image, button etc.
+        #           Default value is nil
+        #   value - This is used only in case of radio buttons where they have same name but different value.
+        #
+        # Output:
+        #   Returns nil if unable to locate the element, else return the element.
+        #
         def locate_tagged_element(tag, how, what, types = nil, value = nil)
             #puts caller(0)
             jssh_command = ""
@@ -378,6 +445,7 @@
             #puts jssh_command 
             $jssh_socket.send("#{jssh_command};\n", 0)
             @@current_element_object = element_name = read_socket();          
+            @@current_frame_name = ""
             #puts "element name in find control is : #{element_name}"
             @@current_level = @@current_level + 1
             if(element_name != "")
@@ -386,24 +454,153 @@
                 return nil
             end
         end
+        protected :locate_tagged_element
         
-        # Mozilla browser directly supports XPath query on its DOM. So need need to create
-        # the DOM tree as we did with IE.
-        # Refer: http://developer.mozilla.org/en/docs/DOM:document.evaluate
+        #
+        # Description:
+        #   Locates frame element. Logic for locating the frame is written in JavaScript so that we don't make small
+        #   round trips to JSSh using socket. This is done to improve the performance for locating the element.
+        #
+        # Input:
+        #   how - The attribute for locating the frame. You can use any attribute-value pair that uniquely identifies
+        #         the frame on the page. If there are more than one frames that have identical attribute-value pair
+        #         then first frame that is found while traversing the DOM will be returned.
+        #   what - Value of the attribute specified by how
+        #
+        # Output:
+        #   Nil if unable to locate frame, else return the Frame element.
+        #
+        def locate_frame(how, what)
+            # Get all the frames the are there on the page.
+            jssh_command = ""
+            if(@@current_frame_name == "")
+                jssh_command = "var frameset = #{WINDOW_VAR}.frames;
+                                var elements_frames = new Array();
+                                for(var i = 0; i < frameset.length; i++)
+                                {
+                                    var frames = frameset[i].frames;
+                                    for(var j = 0; j < frames.length; j++)
+                                    {
+                                        elements_frames.push(frames[j].frameElement);    
+                                    }
+                                }"
+            else
+                jssh_command = "var frames = #{@@current_frame_name}.contentWindow.frames;
+                                var elements_frames_#{@@current_level} = new Array();
+                                for(var i = 0; i < frames.length; i++)
+                                {
+                                    elements_frames_#{@@current_level}.push(frames[i].frameElement);
+                                }"
+            end
+                            
+            jssh_command +="    var element_name = ''; var object_index = 1;var attribute = '';
+                                var element = '';"
+            if(@@current_frame_name == "")
+                jssh_command += "for(var i = 0; i < elements_frames.length; i++)
+                                 {
+                                    element = elements_frames[i];"
+            else
+                jssh_command += "for(var i = 0; i < elements_frames_#{@@current_level}.length; i++)
+                                 {
+                                    element = elements_frames_#{@@current_level}[i];"
+            end
+            jssh_command += "       if(\"index\" == \"#{how}\")
+                                    {
+                                        attribute = object_index; object_index += 1;
+                                    }
+                                    else
+                                    {
+                                        attribute = element.getAttribute(\"#{how}\");
+                                        if(attribute == \"\" || attribute == null)
+                                        {
+                                            attribute = element.#{how};
+                                        }
+                                    }
+                                    var found = false;"
+            if(what.class == Regexp)                        
+                # Construct the regular expression because we can't use it directly by converting it to string.
+                # If reg ex is /Google/i then its string conversion will be (?i-mx:Google) so we can't use it.
+                # Construct the regular expression again from the string conversion.
+                oldRegExp = what.to_s
+                newRegExp = "/" + what.source + "/"
+                flags = oldRegExp.slice(2, oldRegExp.index(':') - 2)
+
+                for i in 0..flags.length do
+                    flag = flags[i, 1]
+                    if(flag == '-')
+                        break;
+                    else
+                        newRegExp << flag
+                    end
+                end
+                #puts "old reg ex is #{what} new reg ex is #{newRegExp}"
+                jssh_command += "   var regExp = new RegExp(#{newRegExp});
+                                    found = regExp.test(attribute);"
+            elsif(how == :index)
+                jssh_command += "   found = (attribute == #{what});"
+            else                        
+                jssh_command += "   found = (attribute == \"#{what}\");"
+            end
+
+            jssh_command +=     "   if(found)
+                                    {"
+            if(@@current_frame_name == "")
+                jssh_command += "       element_name = \"elements_frames[\" + i + \"]\";
+                                        #{DOCUMENT_VAR} = elements_frames[i].contentDocument; "
+            else
+                jssh_command += "       element_name = \"elements_frames_#{@@current_level}[\" + i + \"]\";
+                                        #{DOCUMENT_VAR} = elements_frames_#{@@current_level}[i].contentDocument; "
+            end
+            jssh_command += "           break;
+                                    }
+                                }
+                                element_name;"
+            
+            jssh_command.gsub!("\n", "")
+            #puts "jssh_command for finding frame is : #{jssh_command}"
+            
+            $jssh_socket.send("#{jssh_command};\n", 0)
+            @@current_frame_name = element_name = read_socket()
+            @@current_level = @@current_level + 1
+            #puts "element_name for frame is : #{element_name}"
+
+            if(element_name != "")
+                return Element.new(element_name)
+            else
+                return nil
+            end    
+        end
+        protected :locate_frame
+
+        public
+
+        # 
+        # Description:
+        #   Returns array of elements that matches a given XPath query.
+        #   Mozilla browser directly supports XPath query on its DOM. So no need to create the DOM tree as WATiR does for IE.
+        #   Refer: http://developer.mozilla.org/en/docs/DOM:document.evaluate
+        #
+        # Input:
+        #   xpath - The xpath expression or query.
+        #
+        # Output:
+        #   Array of elements that matched the xpath expression provided as parameter.
+        #
         def elements_by_xpath(xpath)
+            rand_no = random(1000)
             jssh_command = "var xpathResult = #{DOCUMENT_VAR}.evaluate(\"count(#{xpath})\", #{DOCUMENT_VAR}, null, #{NUMBER_TYPE}, null); xpathResult.numberValue;"
             $jssh_socket.send("#{jssh_command}\n", 0);
             node_count = read_socket()
             #puts "value of count is : #{node_count}"
 
-            jssh_command = "var element_xpath = new Array(" + node_count + ");"
+            jssh_command = "var element_xpath_#{rand_no} = new Array(" + node_count + ");"
 
             jssh_command += "var result = #{DOCUMENT_VAR}.evaluate(\"#{xpath}\", #{DOCUMENT_VAR}, null, #{ORDERED_NODE_ITERATOR_TYPE}, null); 
                              var iterate = result.iterateNext();
                              var count = 0;
                              while(iterate)
                              {
-                                element_xpath[count] = iterate;
+                                element_xpath_#{rand_no}[count] = iterate;
                                 iterate = result.iterateNext();
                                 count++;
                              }"
@@ -417,62 +614,75 @@
             elements = Array.new(node_count.to_i)
 
             for i in 0..elements.length - 1 do
-                elements[i] = Element.new("element_xpath[#{i}]")
+                elements[i] = Element.new("element_xpath_#{rand_no}[#{i}]")
             end
 
             return elements;
         end
 
+        #
+        # Description:
+        #   Returns first element found while traversing the DOM; that matches an given XPath query.
+        #   Mozilla browser directly supports XPath query on its DOM. So no need to create the DOM tree as WATiR does for IE.
+        #   Refer: http://developer.mozilla.org/en/docs/DOM:document.evaluate
+        #
+        # Input:
+        #   xpath - The xpath expression or query.
+        #
+        # Output:
+        #   First element in DOM that matched the XPath expression or query.
+        #
         def element_by_xpath(xpath)
-            $jssh_socket.send("var element_xpath = null; element_xpath = #{DOCUMENT_VAR}.evaluate(\"#{xpath}\", #{DOCUMENT_VAR}, null, #{FIRST_ORDERED_NODE_TYPE}, null).singleNodeValue; element_xpath;\n", 0)             
+            rand_no = rand(1000)
+            $jssh_socket.send("var element_xpath_#{rand_no} = null; element_xpath_#{rand_no} = #{DOCUMENT_VAR}.evaluate(\"#{xpath}\", #{DOCUMENT_VAR}, null, #{FIRST_ORDERED_NODE_TYPE}, null).singleNodeValue; element_xpath_#{rand_no};\n", 0)             
             result = read_socket()
             #puts "result is : #{result}"
             if(result == "null" || result == "" || result.include?("exception"))
                 return nil
             else
-                @@current_element_object = "element_xpath"
+                @@current_element_object = "element_xpath_#{rand_no}"
                 @@current_level += 1
-                return Element.new("element_xpath")
+                return Element.new("element_xpath_#{rand_no}")
             end
         end
 
-        # This function returns the name of the element with which we can access it in JSSh.
+        #
+        # Description:
+        #   Returns the name of the element with which we can access it in JSSh.
+        #   Used internally by Firewatir to execute methods, set properties or return property value for the element.
+        #
+        # Output:
+        #   Name of the variable with which element is referenced in JSSh
+        #
         def element_object
             #puts caller.join("\n")
             #puts "In element_object element name is : #{element_name}"
             return @element_name if @element_name != nil
             return @o.element_name if @o != nil
         end
-        
-        # This function returns the type of element. For e.g.: HTMLAnchorElement
+        private :element_object
+
+        #
+        # Description:
+        #   Returns the type of element. For e.g.: HTMLAnchorElement. used internally by Firewatir
+        #
+        # Output:
+        #   Type of the element.
+        #
         def element_type
             return @o.element_type if @o != nil
             return @element_type
         end
+        protected :element_type # Because it is used by get_rows which is protected we can't have private accessor here.
         
-        # This function returns all the elements that are there in the page document.
-        def all
-            #puts "Element name in all : #{element_object}"
-            if(element_object == BODY_VAR)
-                # Standard way of accessing all elements is getElementsByTagName('*'). document.all is IE specific. 
-                $jssh_socket.send("var elements = #{element_object}.ownerDocument.getElementsByTagName('*'); \n", 0) #elements.length;\n", 0)
-                #length = read_socket().to_i
-                
-                # Make use of correct document while getting the elements.
-                #$jssh_socket.send("doc = #{element_object}.ownerDocument; \n", 0);
-                read_socket();
-                #puts "length returned by JSSh is : #{length}"
-                # Return a array of numbers equal to length.
-                #returnArray = Array.new
-                #for i in 0..length-1
-                #    returnArray.push(Element.new("elements[#{i}]"))
-                #end
-                #returnArray
-                Element.new("elements")
-            end
-        end
-        
-        # This function fires event on an element.
+        #
+        # Description:
+        #   Fires the provided event for an element and by default waits for the action to get completed.
+        #
+        # Input:
+        #   event - Event to be fired like "onclick", "onchange" etc.
+        #   wait - Whether to wait for the action to get completed or not. By default its true.
+        #
         def fireEvent(event, wait = true)
             #puts "here in fire event function. Event is : #{event}"
             #puts "typeof(#{element_object}.#{event.downcase}); \n"
@@ -494,46 +704,79 @@
                 end    
             end
             @@current_element_object = ''
+            @@current_frame_name = ''
             @@current_level = 0
         end
         
-        # This function returns the value of any attribute of an element.
+        # 
+        # Description:
+        #   Returns the value of the specified attribute of an element.
+        #
         def attribute_value(attribute_name)
             
             #puts attribute_name
             assert_exists()
             $jssh_socket.send("#{element_object}.getAttribute(\"#{attribute_name}\");\n" , 0)
             return_value = read_socket()
+            # Try once again to get the value of the attribute using property syntax
+            if(return_value == "" || return_value == "null")
+                $jssh_socket.send("#{element_object}.#{attribute_name};\n", 0)
+                return_value = read_socket()
+            end
+            
             @@current_element_object = ''
+            @@current_frame_name = ''
             @@current_level = 0
             return return_value
         end
         
-        # This function checks if element exists or not.
+        #
+        # Description:
+        #   Checks if element exists or not. Raises UnknownObjectException if element doesn't exists.
+        #
         def assert_exists
             unless exists?
                 raise UnknownObjectException.new("Unable to locate object, using #{@how} and #{@what}")
             end
         end
         
-        # This function checks if element is enabled or not.
+        #
+        # Description:
+        #   Checks if element is enabled or not. Raises ObjectDisabledException if object is disabled and 
+        #   you are trying to use the object.
+        #
         def assert_enabled
             unless enabled?
                 raise ObjectDisabledException, "object #{@how} and #{@what} is disabled"
             end                
         end
-        
+       
+        #
+        # Description:
+        #   First checks if element exists or not. Then checks if element is enabled or not.
+        #
+        # Output:
+        #   Returns true if element exists and is enabled, else returns false.
+        #
         def enabled?
             assert_exists
             $jssh_socket.send("#{element_object}.disabled;\n", 0)
             value = read_socket()
-            @@current_element_object = '' 
+            @@current_element_object = ''
+            @@current_frame_name = ''
             @@current_level = 0
             return true if(value == "false") 
             return false if(value == "true") 
             return value
         end
-        
+       
+        #
+        # Description:
+        #   Checks if element exists or not. If element is not located yet then first locates the element.
+        #
+        # Output:
+        #   True if element exists, false otherwise.
+        #
         def exists?
             #puts "element is : #{element_object}"
             # If elements array has changed locate the element again. So that the element name points to correct element.
@@ -544,7 +787,8 @@
                 #puts "not locating the element again"
                 return true
             end    
-            @@current_element_object = '' 
+            @@current_element_object = ''
+            @@current_frame_name = ''
             @@current_level = 0
             if(element_object == nil || element_object == "")
                 return false
@@ -553,7 +797,14 @@
             end    
         end
         
-        def text(reset = true)
+        #
+        # Description:
+        #   Returns the text of the element.
+        #
+        # Output:
+        #   Text of the element.
+        #
+        def text()
             assert_exists
            
             if(element_type == "HTMLOptionElement")
@@ -576,87 +827,72 @@
             #    return_value = false if returnValue == "false"
             #    return_value = true if returnValue == "true"
             #end
-            @@current_element_object = '' if reset
-            @@current_level = 0 if reset
+            @@current_element_object = ''
+            @@current_frame_name = ''
+            @@current_level = 0
             return return_value
         end
         alias innerText text
         
-        def ole_inner_elements
-            assert_exists
-            $jssh_socket.send("var inner_elements = #{element_object}.getElementsByTagName('*'); inner_elements.length;\n", 0)
-            length = read_socket().to_i;
-            
-            returnArray = Array.new
-            for i in 0..length - 1
-                returnArray.push(Element.new("inner_elements[#{i}]"))
-            end
-            returnArray
-        end
-        private :ole_inner_elements
-
-        def document
-            assert_exists
-            return element_object
-        end
-        
-        # returns the name of the element (as defined in html)
+        # Returns the name of the element (as defined in html)
         def_wrap :name
-        # returns the id of the element
+        # Returns the id of the element
         def_wrap :id
-        # returns whether the element is disabled
+        # Returns whether the element is disabled
         def_wrap :disabled 
         alias disabled? disabled
-        # returns the state of the element
+        # Returns the state of the element
         def_wrap :checked
-        #alias checked? checked
-        # returns the value of the element
+        # Returns the value of the element
         def_wrap :value
-        # returns the title of the element
+        # Returns the title of the element
         def_wrap :title
-        
+        # Returns the value of 'alt' attribute in case of Image element.
         def_wrap :alt
+        # Returns the value of 'href' attribute in case of Anchor element.
         def_wrap :src
-        
-        # returns the type of the element
-        def_wrap :type # input elements only        
-
-        # returns the url the link points to
-        def_wrap :href # link only
-
-        # return the ID of the control that this label is associated with
-        def_wrap :for, :htmlFor # label only
-        
-        # returns the class name of the element
-        # raises an ObjectNotFound exception if the object cannot be found
+        # Returns the type of the element. Use in case of Input element only.
+        def_wrap :type         
+        # Returns the url the Anchor element points to. 
+        def_wrap :href
+        # Return the ID of the control that this label is associated with
+        def_wrap :for, :htmlFor 
+        # Returns the class name of the element
         def_wrap :class_name, :className
-
-        # Return the outer html of the object
+        # Return the html of the object
         def_wrap :html, :innerHTML
         
-        #return the inner text of the object
-        #def_wrap :text
-        
-        
-        # Display basic details about the object. Sample output for a button is shown.
-        # Raises UnknownObjectException if the object is not found.
+        #
+        # Description:
+        #   Display basic details about the object. Sample output for a button is shown.
+        #   Raises UnknownObjectException if the object is not found.
         #      name      b4
         #      type      button
         #      id         b5
         #      value      Disabled Button
         #      disabled   true
+        #
+        # Output:
+        #   Array with value of properties shown above.
+        #
         def to_s
             #puts "here in to_s"
             assert_exists
             if(element_type == "HTMLTableCellElement")
-                return text(false)
-            end
-            @@current_element_object = '' 
-            @@current_level = 0
-            return string_creator #.join("\n")
+                return text()
+            else
+                result = string_creator #.join("\n")
+                @@current_element_object = ''
+                @@current_frame_name = ''
+                @@current_level = 0
+                return result
+            end    
         end
         
-        # Function to fire click events on elements.  
+        #
+        # Description:
+        #   Function to fire click event on elements.  
+        #
         def click
             assert_exists
             assert_enabled
@@ -691,51 +927,78 @@
             wait()
         end
        
+        #
+        # Description:
+        #   Wait for the browser to get loaded, after the event is being fired.
+        #
         def wait
             ff = FireWatir::Firefox.new
             ff.wait()
             @@current_element_object = ''
+            @@current_frame_name = ''
             @@current_level = 0
         end
 
-        # Function that doesn't wait after clicking. Useful when click function opens a new
-        # javascript pop up. Creates a new socket and then clicks the button. Old socket remains
-        # as it is. So that processing can be continued.
+        #
+        # Description:
+        #   Function is used for click events that generates javascript pop up.
+        #   Doesn't fires the click event immediately instead, it stores the state of the object. User then tells which button
+        #   is to be clicked in case a javascript pop up comes after clicking the element. Depending upon the button to be clicked
+        #   the functions 'alert' and 'confirm' are re-defined in JavaScript to return appropriate values either true or false. Then the
+        #   re-defined functions are send to jssh which then fires the click event of the element using the state
+        #   stored above. So the click event is fired in the second statement. Therefore, if you are using this function you
+        #   need to call 'click_js_popup_button()' function in the next statement to actually trigger the click event.
+        #   
+        #   Typical Usage:
+        #       ff.button(:id, "button").click_no_wait()
+        #       ff.click_js_popup_button("OK")
+        #
         def click_no_wait
             assert_exists
             assert_enabled
 
             highlight(:set)
             @@current_js_object = Element.new("#{element_object}")
-            #case element_type
-            #    when "HTMLAnchorElement", "HTMLImageElement"
-            #        jssh_command = "var event = document.createEvent(\"MouseEvents\");"
-            #        # Info about initMouseEvent at: http://www.xulplanet.com/references/objref/MouseEvent.html        
-            #        jssh_command += "event.initMouseEvent('click',true,true,null,1,0,0,0,0,false,false,false,false,0,null);"
-            #        jssh_command += "#{element_object}.dispatchEvent(event);\n"
-
-            #        #$jssh_socket.send("#{jssh_command}", 0)
-            #        #read_socket()
-            #    when "HTMLDivElement", "HTMLSpanElement"
-            #        fireEvent("onclick", false)
-            #    else
-            #        jssh_command = "#{element_object}.click();\n";
-            #        #$jssh_socket.send("#{jssh_command}", 0)
-            #        #read_socket()
-            #end
-            #@@current_element_object = ''
-            #@@current_level = 0
         end
-       
-        # Function that clicks on button or link or any element that triggers a javascript pop up
-        # The functions are redefined so that it doesn't causes the JSSH to get blocked. Also this 
-        # will make Firewatir cross platform.
+     
+        #
+        # Description:
+        #   Function to click specified button on the javascript pop up. Currently you can only click
+        #   either OK or Cancel button.
+        #   Functions alert and confirm are redefined so that it doesn't causes the JSSH to get blocked. Also this 
+        #   will make Firewatir cross platform.
+        #
+        # Input:
+        #   button to be clicked
+        #
+        def click_js_popup(button = "OK")
+            jssh_command = "var win = #{BROWSER_VAR}.contentWindow;"
+            if(button =~ /ok/i)
+                jssh_command += "win.alert = function(param) { return true; };
+                                 win.confirm = function(param) { return true; };"
+            elsif(button =~ /cancel/i)
+                jssh_command += "win.alert = function(param) { return false; };
+                                 win.confirm = function(param) { return false; };"
+            end
+            jssh_command.gsub!("\n", "")
+            $jssh_socket.send("#{jssh_command}\n", 0)
+            read_socket()
+            click_js_popup_creator_button()
+            $jssh_socket.send("\n", 0)
+            read_socket()
+        end
+
+        #
+        # Description:
+        #   Clicks on button or link or any element that triggers a javascript pop up.
+        #   Used internally by function click_js_popup.
+        #
         def click_js_popup_creator_button
             #puts @@current_js_object.element_name
             #puts @@current_js_object.element_type
             case @@current_js_object.element_type
                 when "HTMLAnchorElement", "HTMLImageElement"
-                    jssh_command = "var event = document.createEvent(\"MouseEvents\");"
+                    jssh_command = "var event = #{DOCUMENT_VAR}.createEvent(\"MouseEvents\");"
                     # Info about initMouseEvent at: http://www.xulplanet.com/references/objref/MouseEvent.html        
                     jssh_command += "event.initMouseEvent('click',true,true,null,1,0,0,0,0,false,false,false,false,0,null);"
                     jssh_command += "#{@@current_js_object.element_name}.dispatchEvent(event);\n"
@@ -765,10 +1028,18 @@
                     read_socket()
             end
             @@current_element_object = ''
+            @@current_frame_name = ''
             @@current_level = 0
             @@current_js_object = nil
         end
-
+        private :click_js_popup_creator_button
+        
+        #
+        # Description:
+        #   Iterate over options if element is of Select type.
+        #   Iterate over rows if element is of Table type.
+        #   Iterate over cells if element is of TableRow type.
+        #
         def each
             if(element_type == "HTMLSelectElement")
                 $jssh_socket.send("#{element_object}.options.length;\n", 0)
@@ -794,7 +1065,13 @@
             end
         end
 
-        # Used by select list object. 
+        # 
+        # Description:
+        #   Gets all the options of the select list element.
+        #
+        # Output:
+        #   Array of option elements.
+        #
         def options
             assert_exists
             #puts "element name in options is : #{element_object}"
@@ -811,7 +1088,13 @@
             end    
         end
 
-        # Used by Table row object.
+        #
+        # Description:
+        #   Gets all the cells of the row of a table.
+        #
+        # Output:
+        #   Array of table cell elements.
+        #
         def cells
             assert_exists
             #puts "element name in cells is : #{element_object}"
@@ -825,12 +1108,23 @@
                 return return_array
             else
                 puts "The element must be of table row type to execute this function."
+                return nil
             end
         end
 
-        # This method returns the number of columns in a row of the table.
-        # Raises an UnknownObjectException if the table doesn't exist.
-        #   * index         - the index of the row
+        # 
+        # Description:
+        #   This method returns the number of columns in a row of the table.
+        #   If the element is of type tablerow then, cell count of that row element is returned.
+        #   else if element is of type table then, cell count of the row specified by the index 
+        #   is returned. By default index is 1.
+        # 
+        # Input:
+        #   index - the index of the row. By default value of index is 1. 
+        #
+        # Output:
+        #   Cell count.
+        #
         def column_count(index=1) 
             assert_exists
             if(element_type == "HTMLTableRowElement")
@@ -838,13 +1132,26 @@
                 return read_socket().to_i
             elsif(element_type == "HTMLTableElement")
                 # Return the number of columns in first row.
-                $jssh_socket.send("#{element_object}.rows[0].cells.length;\n", 0)
+                $jssh_socket.send("#{element_object}.rows[#{index-1}].cells.length;\n", 0)
                 return read_socket().to_i
             else
                 puts "Element must be of table or table row type to execute this function"
             end
         end
         
+        #
+        # Description:
+        #   Depending on the element type, it returns the value of the element at the specified index i.e. key.
+        #   If element is of type select then,the  option element at the specified index is returned. 
+        #   If element is of type table then, the row element at the specified index is returned. 
+        #   If element is of type tablerow then, the table cell element at the specified index is returned. 
+        # 
+        # Input:
+        #   key - the index of the element to be returned.
+        #
+        # Output:
+        #   Element at the specified index.
+        #
         def [](key)
             assert_exists
             #puts "element object is : #{element_object}"
@@ -866,20 +1173,36 @@
             end
         end
         
-        # Function to set the value of file in HTMLInput file control.
+        #
+        # Description:
+        #   Sets the value of file in HTMLInput file field control.
+        #
+        # Input:
+        #   setPath - location of the file to be uploaded.
+        #
         def setFileFieldValue(setPath)
-            jssh_command = "textBox = #{DOCUMENT_VAR}.getBoxObjectFor(#{element_object}).firstChild;"
+            jssh_command = "var textBox = #{DOCUMENT_VAR}.getBoxObjectFor(#{element_object}).firstChild;"
             jssh_command += "textBox.value = \"#{setPath}\";\n";
             
             #puts jssh_command
             $jssh_socket.send("#{jssh_command}", 0)
             read_socket()
             @@current_element_object = ''
+            @@current_frame_name = ''
             @@current_level = 0
         end
-        
-        # This method will trap all the function calls for an element & fires them again 
-        # through JSSh & element name.
+        protected :setFileFieldValue
+
+        #
+        # Description:
+        #   Traps all the function calls for an element that is not defined and fires them again
+        #   as it is to the jssh. This can be used in case the element supports properties or methods
+        #   that are not defined in the corresponding element class or in the base class(Element).
+        #
+        # Input:
+        #   methodId - Id of the method that is called.
+        #   *args - arguments sent to the methods.
+        #
 	    def method_missing(methId, *args)
 	        methodName = methId.id2name
 	        #puts "method name is : #{methodName}"
@@ -964,6 +1287,7 @@
 		        #puts "return value is : #{returnValue}"
 		        
                 @@current_element_object = ''
+                @@current_frame_name = ''
                 @@current_level = 0
 
 		        if(method_type == "boolean")
@@ -977,34 +1301,13 @@
 		    end
 	    end
     end
-    
-    # Class for body element.
-    class Body < Element
-    end
-    
-    # Class for page document.
+
+    #
+    # Description:
+    #   Class for returning the document element.
+    #
     class Document < Element
-        def getElementsByTagName(tag)
-            jssh_command = "var elements = #{DOCUMENT_VAR}.getElementsByTagName('#{tag}');"
-            #puts "helrlej"
-            jssh_command += "elements.length;\n"
-            
-            $jssh_socket.send("#{jssh_command}", 0)
-            length = read_socket().to_i
-            
-            #puts "JSSh command is : #{jssh_command}"
-            #puts "Number of elements with #{tag} tag is : #{length}"
-            # Return a array of numbers equal to length.
-            returnArray = Array.new
-            for i in 0..length - 1
-                returnArray.push(Element.new("elements[#{i}]"))
-            end
-            returnArray
-                
-        end
-        
-        def body
-            Body.new("#{BODY_VAR}")
+        def initialize(document_name)
+            Element.new(document_name)
         end
     end
-    

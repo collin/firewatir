@@ -66,18 +66,18 @@ class TC_Images_XPath < Test::Unit::TestCase
     
 
     # TODO: Need to see alternative for this in Mozilla
-    def aatest_imageHasLoaded
-        assert_raises(UnknownObjectException ) { $ff.image(:xpath , "//img[@name='no_image_with_this']").hasLoaded? }
-        assert_raises(UnknownObjectException ) { $ff.image(:xpath , "//img[@id='no_image_with_this']").hasLoaded? }
-        assert_raises(UnknownObjectException ) { $ff.image(:xpath , "//img[@src='no_image_with_this']").hasLoaded? }
-        assert_raises(UnknownObjectException ) { $ff.image(:xpath , "//img[@alt='no_image_with_this']").hasLoaded? }
-        
-        assert_false( $ff.image(:xpath , "//img[@name='themissingimage']").hasLoaded?  )
-        assert( $ff.image(:xpath , "//img[@name='circle']").hasLoaded?  )
-        
-        assert( $ff.image(:xpath , "//img[@alt='circle']").hasLoaded?  )
-        # assert( $ff.image(:alt, /cir/ ).hasLoaded?  )
-    end
+    #def test_imageHasLoaded
+    #    assert_raises(UnknownObjectException ) { $ff.image(:xpath , "//img[@name='no_image_with_this']").hasLoaded? }
+    #    assert_raises(UnknownObjectException ) { $ff.image(:xpath , "//img[@id='no_image_with_this']").hasLoaded? }
+    #    assert_raises(UnknownObjectException ) { $ff.image(:xpath , "//img[@src='no_image_with_this']").hasLoaded? }
+    #    assert_raises(UnknownObjectException ) { $ff.image(:xpath , "//img[@alt='no_image_with_this']").hasLoaded? }
+    #    
+    #    assert_false( $ff.image(:xpath , "//img[@name='themissingimage']").hasLoaded?  )
+    #    assert( $ff.image(:xpath , "//img[@name='circle']").hasLoaded?  )
+    #    
+    #    assert( $ff.image(:xpath , "//img[@alt='circle']").hasLoaded?  )
+    #    # assert( $ff.image(:alt, /cir/ ).hasLoaded?  )
+    #end
     
     def test_image_properties
         # TODO: Need to see alternative for this in Mozilla

@@ -28,12 +28,12 @@ spec = Gem::Specification.new do |s|
   s.require_path = '.'    
   s.autorequire = 'firewatir'
 
-  s.has_rdoc = false
-  #  s.rdoc_options << 
-  #       '--title' << 'Watir API Reference' <<
-  #		'--accessor' << 'def_wrap=R,def_wrap_guard=R,def_creator=R,def_creator_with_default=R' <<
+  s.has_rdoc = true #false
+    s.rdoc_options << 
+         '--title' << 'FireWatir API Reference' <<
+  		'--accessor' << 'def_wrap=R,def_wrap_guard=R,def_creator=R,def_creator_with_default=R' <<
   #		'--main' << 'ReadMe' << 
-  #		'--exclude' << 'unittests|camel_case.rb|testUnitAddons.rb'
+  		'--exclude' << 'unittests|camel_case.rb|testUnitAddons.rb'
   #s.extra_rdoc_files = 'readme.rb'
 
   s.test_file  = 'unittests/mozilla_all_tests.rb'

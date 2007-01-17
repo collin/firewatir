@@ -1,28 +1,59 @@
-# This module contains the factory methods that are used to access most html objects
-#
-# For example, to access a button on a web page that has the following html
-#  <input type = button name= 'b1' value='Click Me' onClick='javascript:doSomething()'>
-#
-# the following watir code could be used
-#
-#  ie.button(:name, 'b1').click
-#
-# or
-#
-#  ie.button(:value, 'Click Me').to_s
-#
-# there are many methods available to the Button object
-#
-# Is includable for classes that have @container, document and ole_inner_elements
+=begin
+    #
+    # This module contains the factory methods that are used to access most html objects
+    #
+    # For example, to access a button on a web page that has the following html
+    #  <input type = button name= 'b1' value='Click Me' onClick='javascript:doSomething()'>
+    #
+    # the following Firewatir code could be used
+    #
+    #  ff.button(:name, 'b1').click
+    #
+    # or
+    #
+    #  ff.button(:value, 'Click Me').to_s
+    # 
+    # One can use any attribute to uniquely identify an element including the user defined attributes
+    # that is rendered on the HTML screen. Though, Attribute used to access an element depends on the type of element,
+    # attributes used frequently to address an element are listed below
+    #
+    #    :index      - find the item using the index in the container ( a container can be a document, 
+    #    		a TableCell, a Span, a Div or a P)
+    #                  index is 1 based
+    #    :name       - find the item using the name attribute
+    #    :id         - find the item using the id attribute
+    #    :value      - find the item using the value attribute
+    #    :caption    - same as value
+    #    :xpath      - finds the item using xpath query
+    #
+    # Typical Usage
+    #
+    #    ff.button(:id,    'b_1')                       # access the button with an ID of b_1
+    #    ff.button(:name,  'verify_data')               # access the button with a name of verify_data
+    #    ff.button(:value, 'Login')                     # access the button with a value (the text displayed on the button) of Login
+    #    ff.button(:caption, 'Login')                   # same as above
+    #    ff.button(:value, /Log/)                       # access the button that has text matching /Log/
+    #    ff.button(:index, 2)                           # access the second button on the page ( 1 based, so the first button is accessed with :index,1)
+    #
+=end
 
 require 'firewatir/exceptions'
-
+    
 module Container 
     include FireWatir::Exception
-        
-    # Shifted from IE class to here. So that it can be used by both the browsers
-    # TODO: the following constants should be able to be specified by object (not class)
 
+    # IP Address of the machine where the script is to be executed. Default to localhost.
+    MACHINE_IP = "127.0.0.1"
+    # Name of the variable with which window is identified in JSSh.
+    WINDOW_VAR = "window"
+    # Name of the variable with which browser is identified in JSSh.
+    BROWSER_VAR = "browser"
+    # Name of the variable with which document is identified in JSSh.
+    DOCUMENT_VAR = "document"
+    # Name of the variable with which body is identified in JSSh.
+    BODY_VAR    = "body"
+
+        
     # The delay when entering text on a web page when speed = :slow.
     DEFAULT_TYPING_SPEED = 0.01
 
@@ -31,584 +62,525 @@ module Container
 
     # The default color for highlighting objects as they are accessed.
     DEFAULT_HIGHLIGHT_COLOR = "yellow"
-    
-    # Note: @container is the container of this object, i.e. the container 
-    # of this container. 
-    # In other words, for ie.table().this_thing().text_field().set, 
-    # container of this_thing is the table.
-
-    # This is used to change the typing speed when entering text on a page.
-    attr_accessor :typingspeed
-    # The color we want to use for the active object. This can be any valid web-friendly color.
-    attr_accessor :activeObjectHighLightColor
-
-    def copy_test_config(container) # only used by form and frame
-        @typingspeed = container.typingspeed      
-        @activeObjectHighLightColor = container.activeObjectHighLightColor      
-    end    
-    private :copy_test_config
-
-    # Write the specified string to the log.
-    def log(what)
-        @container.logger.debug(what) if @logger
-    end
-
-    # Wait until Internet Explorer has finished loading the page.
-    def wait(no_sleep = false)
-        @container.wait(no_sleep)
-    end
-
-    # Determine the how and what when defaults are possible.
-    def process_default(default_attribute, how, what)
-        if what == nil
-            what = how
-            how = default_attribute 
-        end
-        return how, what
-    end 
-    private :process_default
-
+                    
+    public
     #
-    #           Factory Methods
+    # Description:
+    #    Used to access a frame element. Usually an <frame> or <iframe> HTML tag.
     #
-
-    private
-    def self.def_creator(method_name, klass_name = nil)
-        klass_name ||= method_name.to_s.capitalize
-        class_eval "def #{method_name}(how, what)
-                        #{klass_name}.new(self, how, what)
-                    end"
-    end
-
-    def self.def_creator_with_default(method_name, default_symbol)
-        klass_name = method_name.to_s.capitalize
-        class_eval "def #{method_name}(how, what = nil)
-                        how, what = process_default :#{default_symbol}, how, what
-                        #{klass_name}.new(self, how, what)
-                    end"
-    end
-                
-    # this method is the main way of accessing a frame 
-    #   *  how   - how the frame is accessed. This can also just be the name of the frame
-    #   *  what  - what we want to access.
+    # Input:
+    #   - how - The attribute used to identify the framet.
+    #   - what - The value of that attribute. 
+    #   If only one parameter is supplied, "how" is by default taken as name and the 
+    #   parameter supplied becomes the value of the name attribute.
     #
     # Typical usage:
     #
-    #   ie.frame(:index, 1) 
-    #   ie.frame(:name , 'main_frame')
-    #   ie.frame('main_frame')        # in this case, just a name is supplied
-    public
+    #   ff.frame(:index, 1) 
+    #   ff.frame(:name , 'main_frame')
+    #   ff.frame('main_frame')        # in this case, just a name is supplied.
+    #
+    # Output:
+    #   Frame object.
+    #
     def frame(how, what = nil)
         if(what == nil)
             what = how
             how = :name
         end
-        Frame.new(self, how, what)
+        Frame.new(how, what)
     end
 
-    # this method is used to access a form.
-    # available ways of accessing it are, :index , :name, :id, :method, :action, :xpath
-    #  * how        - symbol - WHat mecahnism we use to find the form, one of the above. NOTE if what is not supplied this parameter is the NAME of the form
-    #  * what   - String - the text associated with the symbol
-    def form(how , what = nil)
-        if(what == nil)
-            what = how
-            how = :name
-        end    
-        Form.new(self, how, what)
-    end
-
-    # This method is used to get a table from the page. 
-    # :index (1 based counting)and :id are supported. 
-    #  NOTE :name is not supported, as the table tag does not have a name attribute. It is not part of the DOM.
-    # :index can be used when there are multiple tables on a page. 
-    # :xpath can be used to select table using XPath query.
-    # The first form can be accessed with :index 1, the second :index 2, etc. 
-    #   * how - symbol - the way we look for the table. Supported values are
-    #                  - :id
-    #                  - :index
-    #                  - :xpath
-    #   * what  - string the thing we are looking for, ex. id, index or xpath query, of the object we are looking for
-    def table(how, what = nil)
-        Table.new(self, how, what)
-    end
-
-    # this is the main method for accessing the tables iterator. It returns a Tables object
+    #
+    # Description:
+    #   Used to access a form element. Usually an <form> HTML tag.
+    #
+    # Input:
+    #   - how - The attribute used to identify the form.
+    #   - what - The value of that attribute. 
+    #   If only one parameter is supplied, "how" is by default taken as name and the 
+    #   parameter supplied becomes the value of the name attribute.
     #
     # Typical usage:
     #
-    #   ie.tables.each { |t| puts t.to_s }            # iterate through all the tables on the page
-    #   ie.tables[1].to_s                             # goto the first table on the page                                   
-    #   ie.tables.length                              # show how many tables are on the page. Tables that are nested will be included in this
-    def tables
-        return Tables.new(self)
+    #   ff.form(:index, 1) 
+    #   ff.form(:name , 'main_form')
+    #   ff.form('main_form')        # in this case, just a name is supplied.
+    #
+    # Output:
+    #   Form object.
+    #
+    def form(how, what=nil)   
+       if(what == nil)
+            what = how
+            how = :name
+        end    
+        Form.new(how, what)
+    end
+    
+    #
+    # Description:
+    #   Used to access a table. Usually an <table> HTML tag. 
+    #
+    # Input:
+    #   - how - The attribute used to identify the table.
+    #   - what - The value of that attribute. 
+    #
+    # Typical usage:
+    #
+    #   ff.table(:index, 1) #index starts from 1.
+    #   ff.table(:id, 'main_table')
+    #
+    # Output:
+    #   Table object.
+    #
+    def table(how, what)
+        Table.new(how, what)
     end
 
-    # this method accesses a table cell. 
-    # how - symbol - how we access the cell, valid values are
-    #    :id       - find the table cell with given id.
-    #    :xpath    - find the table cell using xpath query.
+    #
+    # Description:
+    #   Gets the tables iterator. It returns a Tables object 
+    #
+    # Typical usage:
+    #
+    #   ff.tables.each { |t| puts t.to_s }            # iterate through all the tables on the page
+    #   ff.tables[1].to_s                             # goto the first table on the page                                   
+    #   ff.tables.length                              # show how many tables are on the page. Tables that are nested will be included in this
+    #   TODO: implement tables iterator.
+    #
+    #def tables
+    #    return Tables.new(self)
+    #end
+    
+    #
+    # Description:
+    #   Used to access a table cell. Usually an <td> HTML tag. 
+    #
+    # Input:
+    #   - how - The attribute used to identify the cell.
+    #   - what - The value of that attribute. 
     # 
-    # returns a TableCell Object
+    # Typical Usage:
+    #   ff.cell(:id, 'tb_cell')
+    #   ff.cell(:index, 1)
+    #
+    # Output:
+    #    TableCell Object
+    #
     def cell(how, what=nil)
-      TableCell.new(self, how, what)
+      TableCell.new(how, what)
     end
 
-    # this method accesses a table row. 
-    # how - symbol - how we access the row, valid values are
-    #    :id       - find the table row with given id.
-    #    :xpath    - find the table row using xpath query.
     # 
-    # returns a TableRow object
+    # Description:
+    #   Used to access a table row. Usually an <tr> HTML tag. 
+    # 
+    # Input:
+    #   - how - The attribute used to identify the row.
+    #   - what - The value of that attribute. 
+    #
+    # Typical Usage:
+    #   ff.row(:id, 'tb_row')
+    #   ff.row(:index, 1)
+    #
+    # Output: 
+    #   TableRow object
+    #
     def row(how, what=nil)
-        TableRow.new(self, how, what)
+        TableRow.new(how, what)
     end
-
-    # This is the main method for accessing a button. Often declared as an <input type = submit> tag.
-    #  *  how   - symbol - how we access the button 
-    #  *  what  - string, int, re or xpath query , what we are looking for, 
-    # Returns a Button object.
+    
+    # 
+    # Description:
+    #   Used to access a button element. Usually an <input type = "button"> HTML tag.
+    # 
+    # Input:
+    #   - how - The attribute used to identify the row.
+    #   - what - The value of that attribute. 
+    # 
+    # Typical Usage:
+    #    ff.button(:id,    'b_1')                       # access the button with an ID of b_1
+    #    ff.button(:name,  'verify_data')               # access the button with a name of verify_data
     #
-    # Valid values for 'how' are
+    #    if only a single parameter is supplied,  then :value is used as 'how' and parameter supplied is used as what. 
     #
-    #    :index      - find the item using the index in the container ( a container can be a document, a TableCell, a Span, a Div or a P
-    #                  index is 1 based
-    #    :name       - find the item using the name attribute
-    #    :id         - find the item using the id attribute
-    #    :value      - find the item using the value attribute ( in this case the button caption)
-    #    :caption    - same as value
-    #    :beforeText - finds the item immediately before the specified text
-    #    :afterText  - finds the item immediately after the specified text
-    #    :xpath      - finds the item using xpath query
+    #    ff.button('Click Me')                          # access the button with a value of Click Me
     #
-    # Typical Usage
+    # Output:
+    #   Button element.
     #
-    #    ie.button(:id,    'b_1')                       # access the button with an ID of b_1
-    #    ie.button(:name,  'verify_data')               # access the button with a name of verify_data
-    #    ie.button(:value, 'Login')                     # access the button with a value (the text displayed on the button) of Login
-    #    ie.button(:caption, 'Login')                   # same as above
-    #    ie.button(:value, /Log/)                       # access the button that has text matching /Log/
-    #    ie.button(:index, 2)                           # access the second button on the page ( 1 based, so the first button is accessed with :index,1)
-    #
-    # if only a single parameter is supplied,  then :value is used 
-    #
-    #    ie.button('Click Me')                          # access the button with a value of Click Me
-    #    ie.button(:xpath, "//input[@value='Click Me']/")     # access the button with a value of Click Me
     def button(how, what = nil)
         locate if defined?(locate)
         if(what == nil)
             what = how
             how = :value
         end    
-        Button.new(self, how, what)
+        Button.new(how, what)
     end    
 
-    # this is the main method for accessing the buttons iterator. It returns a Buttons object
+    # 
+    # Description:
+    #   Used for accessing the buttons iterator. It returns a Buttons object
     #
     # Typical usage:
     #
-    #   ie.buttons.each { |b| puts b.to_s }            # iterate through all the buttons on the page
-    #   ie.buttons[1].to_s                             # goto the first button on the page                                   
-    #   ie.buttons.length                              # show how many buttons are on the page. 
-    def buttons
-        return Buttons.new(self)
-    end
+    #   ff.buttons.each { |b| puts b.to_s }            # iterate through all the buttons on the page
+    #   ff.buttons.length                              # show how many buttons are on the page. 
+    #   
+    # TODO: Implement buttons iterator.
+    #
+    #def buttons
+    #    return Buttons.new(self)
+    #end
 
-    # This is the main method for accessing a file field. Usually an <input type = file> HTML tag.  
-    #  *  how   - symbol - how we access the field , valid values are
-    #    :index      - find the file field using index
-    #    :id         - find the file field using id attribute
-    #    :name       - find the file field using name attribute
-    #    :xpath      - find the file field using xpath query
-    #  *  what  - string, int, re or xpath query , what we are looking for, 
+    # 
+    # Description:
+    #   Used for accessing a file field. Usually an <input type = file> HTML tag.  
+    #  
+    # Input:
+    #   - how - Attribute used to identify the file field element
+    #   - what - Value of that attribute. 
     #
-    # returns a FileField object
+    # Typical Usage:
+    #    ff.file_field(:id,   'up_1')                     # access the file upload fff.d with an ID of up_1
+    #    ff.file_field(:name, 'upload')                   # access the file upload fff.d with a name of upload
     #
-    # Typical Usage
+    # Output:
+    #   FileField object
     #
-    #    ie.file_field(:id,   'up_1')                     # access the file upload field with an ID of up_1
-    #    ie.file_field(:name, 'upload')                   # access the file upload field with a name of upload
-    #    ie.file_field(:index, 2)                         # access the second file upload on the page ( 1 based, so the first field is accessed with :index,1)
     #
     def file_field(how, what = nil)
         locate if defined?(locate)
-        FileField.new(self, how, what)
+        FileField.new(how, what)
     end    
     
     # this is the main method for accessing the file_fields iterator. It returns a FileFields object
     #
     # Typical usage:
     #
-    #   ie.file_fields.each { |f| puts f.to_s }            # iterate through all the file fields on the page
-    #   ie.file_fields[1].to_s                             # goto the first file field on the page                                   
-    #   ie.file_fields.length                              # show how many file fields are on the page. 
-    def file_fields
-        return FileFields.new(self)
-    end
+    #   ff.file_fields.each { |f| puts f.to_s }            # iterate through all the file fields on the page
+    #   ff.file_fields[1].to_s                             # goto the first file field on the page                                   
+    #   ff.file_fields.length                              # show how many file fields are on the page. 
+    # TODO: Implement the iterator.
+    #def file_fields
+    #    return FileFields.new(self)
+    #end
 
-    # This is the main method for accessing a text field. Usually an <input type = text> HTML tag. or a text area - a  <textarea> tag
-    #  *  how   - symbol - how we access the field , :index, :id, :name etc
-    #  *  what  - string, int or re , what we are looking for, 
     #
-    # returns a TextField object
+    # Description:
+    #   Used for accessing a text field. Usually an <input type = text> HTML tag. or a text area - a  <textarea> tag
     #
-    # Valid values for 'how' are
+    # Input:
+    #   - how - Attribute used to identify the text field element.
+    #   - what - Value of that attribute. 
     #
-    #    :index      - find the item using the index in the container ( a container can be a document, a TableCell, a Span, a Div or a P
-    #                  index is 1 based
-    #    :name       - find the item using the name attribute
-    #    :id         - find the item using the id attribute
-    #    :beforeText - finds the item immediately before the specified text
-    #    :afterText  - finds the item immediately after the specified texti
-    #    :xpath      - find the item using xpath query 
+    # Typical Usage:
     #
-    # Typical Usage
+    #    ff.text_field(:id,   'user_name')                 # access the text field with an ID of user_name
+    #    ff.text_field(:name, 'address')                   # access the text field with a name of address
     #
-    #    ie.text_field(:id,   'user_name')                 # access the text field with an ID of user_name
-    #    ie.text_field(:name, 'address')                   # access the text field with a name of address
-    #    ie.text_field(:index, 2)                          # access the second text field on the page ( 1 based, so the first field is accessed with :index,1)
-    #    ie.text_field(:xpath, "//textarea[@id='user_name']/")    ## access the text field with an ID of user_name
-
+    # Output:
+    #   TextField object.
+    #
     def text_field(how, what = nil)
         locate if defined?(locate)
-        TextField.new(self, how, what)
+        TextField.new(how, what)
     end    
 
+    #
     # this is the method for accessing the text_fields iterator. It returns a Text_Fields object
     #
     # Typical usage:
     #
-    #   ie.text_fields.each { |t| puts t.to_s }            # iterate through all the text fields on the page
-    #   ie.text_fields[1].to_s                             # goto the first text field on the page                                   
-    #   ie.text_fields.length                              # show how many text field are on the page.
-    def text_fields
-        return TextFields.new(self)
-    end
+    #   ff.text_fields.each { |t| puts t.to_s }            # iterate through all the text fields on the page
+    #   ff.text_fields[1].to_s                             # goto the first text fields on the page                                   
+    #   ff.text_fields.length                              # show how many text fields are on the page.
+    # TODO:Implement the iterator.
+    #def text_fields
+    #    return TextFields.new(self)
+    #end
 
-    # This is the main method for accessing a hidden field. Usually an <input type = hidden> HTML tag
-    #  *  how   - symbol - how we access the field , valid values are
-    #    :index      - find the item using index
-    #    :id         - find the item using id attribute
-    #    :name       - find the item using name attribute
-    #    :xpath      - find the item using xpath query etc
-    #  *  what  - string, int or re , what we are looking for, 
+    # 
+    # Description:
+    #   Used to access hidden field element. Usually an <input type = hidden> HTML tag
     #
-    # returns a Hidden object
+    # Input:
+    #   - how - Attribute used to identify the hidden element.
+    #   - what - Value of that attribute. 
     #
-    # Typical usage
+    # Typical Usage:
     #
-    #    ie.hidden(:id, 'session_id')                 # access the hidden field with an ID of session_id
-    #    ie.hidden(:name, 'temp_value')               # access the hidden field with a name of temp_value
-    #    ie.hidden(:index, 2)                         # access the second hidden field on the page ( 1 based, so the first field is accessed with :index,1)
-    #    ie.hidden(:xpath, "//input[@type='hidden' and @id='session_value']/")    # access the hidden field with an ID of session_id
+    #    ff.hidden(:id,   'user_name')                 # access the hidden element with an ID of user_name
+    #    ff.hidden(:name, 'address')                   # access the hidden element with a name of address
+    #
+    # Output:
+    #   Hidden object.
+    #
     def hidden(how, what)
         locate if defined?(locate)
-        return Hidden.new(self, how, what)
+        return Hidden.new(how, what)
     end
 
     # this is the method for accessing the hiddens iterator. It returns a Hiddens object
     #
     # Typical usage:
     #
-    #   ie.hiddens.each { |t|  puts t.to_s }           # iterate through all the hidden fields on the page
-    #   ie.hiddens[1].to_s                             # goto the first hidden field on the page                                   
-    #   ie.hiddens.length                              # show how many hidden fields are on the page.
-    def hiddens
-        locate if defined?(locate)
-        return Hiddens.new(self)
-    end
+    #   ff.hiddens.each { |t|  puts t.to_s }           # iterate through all the hidden fields on the page
+    #   ff.hiddens[1].to_s                             # goto the first hidden fields on the page                                   
+    #   ff.hiddens.length                              # show how many hidden fields are on the page.
+    # TODO: Implement the iterator.
+    #def hiddens
+    #    locate if defined?(locate)
+    #    return Hiddens.new(self)
+    #end
 
-    # This is the main method for accessing a selection list. Usually a <select> HTML tag.
-    #  *  how   - symbol - how we access the selection list , :index, :id, :name etc
-    #  *  what  - string, int or re , what we are looking for, 
     #
-    # returns a SelectList object
+    # Description:
+    #   Used to access select list element. Usually an <select> HTML tag.
     #
-    # Valid values for 'how' are
+    # Input:
+    #   - how - Attribute used to identify the select element.
+    #   - what - Value of that attribute. 
     #
-    #    :index      - find the item using the index in the container ( a container can be a document, a TableCell, a Span, a Div or a P
-    #                  index is 1 based
-    #    :name       - find the item using the name attribute
-    #    :id         - find the item using the id attribute
-    #    :beforeText - finds the item immediately before the specified text
-    #    :afterText  - finds the item immediately after the specified text
-    #    :xpath      - finds the item using xpath query
+    # Typical Usage:
     #
-    # Typical usage
+    #    ff.select_list(:id,   'user_name')                 # access the select list with an ID of user_name
+    #    ff.select_list(:name, 'address')                   # access the select list with a name of address
     #
-    #    ie.select_list(:id, 'currency')                   # access the select box with an id of currency
-    #    ie.select_list(:name, 'country')                  # access the select box with a name of country
-    #    ie.select_list(:name, /n_/ )                      # access the first select box whose name matches n_
-    #    ie.select_list(:index, 2)                         # access the second select box on the page ( 1 based, so the first field is accessed with :index,1)
-    #    ie.select(:xpath, "//select[@id='currency']/")    # access the select box with an id of currency 
+    # Output:
+    #   Select List object.
+    #
     def select_list(how, what) 
         locate if defined?(locate)
-        return SelectList.new(self, how, what)
+        return SelectList.new(how, what)
     end
 
     # this is the method for accessing the select lists iterator. Returns a SelectLists object
     #
     # Typical usage:
     #
-    #   ie.select_lists.each { |s| puts s.to_s }            # iterate through all the select boxes on the page
-    #   ie.select_lists[1].to_s                             # goto the first select boxes on the page                                   
-    #   ie.select_lists.length                              # show how many select boxes are on the page.
-    def select_lists
-        locate if defined?(locate)
-        return SelectLists.new(self)
-    end
+    #   ff.select_lists.each { |s| puts s.to_s }            # iterate through all the select boxes on the page
+    #   ff.select_lists[1].to_s                             # goto the first select boxes on the page                                   
+    #   ff.select_lists.length                              # show how many select boxes are on the page.
+    # TODO: Impelement the iterator.
+    #def select_lists
+    #    locate if defined?(locate)
+    #    return SelectLists.new(self)
+    #end
     
-    # This is the main method for accessing a check box. Usually an <input type = checkbox> HTML tag.
     #
-    #  *  how   - symbol - how we access the check box , :index, :id, :name etc
-    #  *  what  - string, int or re , what we are looking for, 
-    #  *  value - string - when  there are multiple objects with different value attributes, this can be used to find the correct object
+    # Description:
+    #   Used to access checkbox element. Usually an <input type = checkbox> HTML tag.
     #
-    # returns a CheckBox object
+    # Input:
+    #   - how - Attribute used to identify the check box element.
+    #   - what - Value of that attribute. 
     #
-    # Valid values for 'how' are
+    # Typical Usage:
     #
-    #    :index      - find the item using the index in the container ( a container can be a document, a TableCell, a Span, a Div or a P
-    #                  index is 1 based
-    #    :name       - find the item using the name attribute
-    #    :id         - find the item using the id attribute
-    #    :beforeText - finds the item immediately before the specified text
-    #    :afterText  - finds the item immediately after the specified text
-    #    :xpath      - finds the item that matches xpath query
+    #   ff.checkbox(:id,   'user_name')                 # access the checkbox element with an ID of user_name
+    #   ff.checkbox(:name, 'address')                   # access the checkbox element with a name of address
+    #   In many instances, checkboxes on an html page have the same name, but are identified by different values. An example is shown next.
     #
-    # Typical usage
+    #   <input type = checkbox name = email_frequency value = 'daily' > Daily Email
+    #   <input type = checkbox name = email_frequency value = 'Weekly'> Weekly Email
+    #   <input type = checkbox name = email_frequency value = 'monthly'>Monthly Email
     #
-    #    ie.checkbox(:id, 'send_email')                   # access the check box with an id of send_mail
-    #    ie.checkbox(:name, 'send_copy')                  # access the check box with a name of send_copy
-    #    ie.checkbox(:name, /n_/ )                        # access the first check box whose name matches n_
-    #    ie.checkbox(:index, 2)                           # access the second check box on the page ( 1 based, so the first field is accessed with :index,1)
+    #   FireWatir can access these using the following:
     #
-    # In many instances, checkboxes on an html page have the same name, but are identified by different values. An example is shown next.
+    #   ff.checkbox(:id, 'day_to_send' , 'monday' )         # access the check box with an id of day_to_send and a value of monday
+    #   ff.checkbox(:name ,'email_frequency', 'weekly')     # access the check box with a name of email_frequency and a value of 'weekly'
     #
-    #  <input type = checkbox name = email_frequency value = 'daily' > Daily Email
-    #  <input type = checkbox name = email_frequency value = 'Weekly'> Weekly Email
-    #  <input type = checkbox name = email_frequency value = 'monthly'>Monthly Email
+    # Output:
+    #   Checkbox object.
     #
-    # Watir can access these using the following:
-    #
-    #    ie.checkbox(:id, 'day_to_send' , 'monday' )         # access the check box with an id of day_to_send and a value of monday
-    #    ie.checkbox(:name ,'email_frequency', 'weekly')     # access the check box with a name of email_frequency and a value of 'weekly'
-    #    ie.checkbox(:xpath, "//input[@name='email_frequency' and @value='daily']/")     # access the checkbox with a name of email_frequency and a value of 'daily'
     def checkbox(how, what, value = nil) 
         locate if defined?(locate)
-        return CheckBox.new(self, how, what, ["checkbox"], value) 
+        return CheckBox.new(how, what, ["checkbox"], value) 
     end
 
     # this is the method for accessing the check boxes iterator. Returns a CheckBoxes object
     #
     # Typical usage:
     #
-    #   ie.checkboxes.each { |c| puts c.to_s }           # iterate through all the check boxes on the page
-    #   ie.checkboxes[1].to_s                             # goto the first check box on the page                                   
-    #   ie.checkboxes.length                              # show how many check boxes are on the page.
-    def checkboxes
-        return CheckBoxes.new(self)
-    end
+    #   ff.checkboxes.each { |c| puts c.to_s }           # iterate through all the check boxes on the page
+    #   ff.checkboxes[1].to_s                             # goto the first check box on the page                                   
+    #   ff.checkboxes.length                              # show how many check boxes are on the page.
+    # TODO: Implement the iterator.
+    #def checkboxes
+    #    return CheckBoxes.new(self)
+    #end
 
-    # This is the main method for accessing a radio button. Usually an <input type = radio> HTML tag.
-    #  *  how   - symbol - how we access the radio button, :index, :id, :name etc
-    #  *  what  - string, int or regexp , what we are looking for, 
-    #  *  value - string - when  there are multiple objects with different value attributes, this can be used to find the correct object
+    
     #
-    # returns a Radio object
+    # Description:
+    #   Used to access radio button element. Usually an <input type = radio> HTML tag.
     #
-    # Valid values for 'how' are
+    # Input:
+    #   - how - Attribute used to identify the radio button element.
+    #   - what - Value of that attribute. 
     #
-    #    :index      - find the item using the index in the container ( a container can be a document, a TableCell, a Span, a Div or a P
-    #                  index is 1 based
-    #    :name       - find the item using the name attribute
-    #    :id         - find the item using the id attribute
-    #    :beforeText - finds the item immediately before the specified text
-    #    :afterText  - finds the item immediately after the specified text
-    #    :xpath      - finds the item that matches xpath query
+    # Typical Usage:
     #
-    # Typical usage
+    #   ff.radio(:id,   'user_name')                 # access the radio button element with an ID of user_name
+    #   ff.radio(:name, 'address')                   # access the radio button element with a name of address
+    #   In many instances, radio buttons on an html page have the same name, but are identified by different values. An example is shown next.
     #
-    #    ie.radio(:id, 'send_email')                   # access the radio button with an id of currency
-    #    ie.radio(:name, 'send_copy')                  # access the radio button with a name of country
-    #    ie.radio(:name, /n_/ )                        # access the first radio button whose name matches n_
-    #    ie.radio(:index, 2)                           # access the second radio button on the page ( 1 based, so the first field is accessed with :index,1)
+    #   <input type = radio name = email_frequency value = 'daily' > Daily Email
+    #   <input type = radio name = email_frequency value = 'Weekly'> Weekly Email
+    #   <input type = radio name = email_frequency value = 'monthly'>Monthly Email
     #
-    # In many instances, radio buttons on an html page have the same name, but are identified by different values. An example is shown next.
+    #   FireWatir can access these using the following:
     #
-    #  <input type = radio  name = email_frequency value = 'daily' > Daily Email
-    #  <input type = radio  name = email_frequency value = 'Weekly'> Weekly Email
-    #  <input type = radio  name = email_frequency value = 'monthly'>Monthly Email
+    #   ff.radio(:id, 'day_to_send' , 'monday' )         # access the radio button with an id of day_to_send and a value of monday
+    #   ff.radio(:name ,'email_frequency', 'weekly')     # access the radio button with a name of email_frequency and a value of 'weekly'
     #
-    # Watir can access these using the following:
+    # Output:
+    #   Radio button object.
     #
-    #    ie.radio(:id, 'day_to_send' , 'monday' )         # access the radio button with an id of day_to_send and a value of monday
-    #    ie.radio(:name ,'email_frequency', 'weekly')     # access the radio button with a name of email_frequency and a value of 'weekly'
-    #    ie.radio(:xpath, "//input[@name='email_frequency' and @value='daily']/")     # access the radio button with a name of email_frequency and a value of 'daily'
     def radio(how, what, value = nil) 
         locate if defined?(locate)
-        return Radio.new(self, how, what, ["radio"], value) 
+        return Radio.new(how, what, ["radio"], value) 
     end
 
     # This is the method for accessing the radio buttons iterator. Returns a Radios object
     #
     # Typical usage:
     #
-    #   ie.radios.each { |r| puts r.to_s }            # iterate through all the radio buttons on the page
-    #   ie.radios[1].to_s                             # goto the first radio button on the page                                   
-    #   ie.radios.length                              # show how many radio buttons are on the page.
-    #
-    def radios
-        return Radios.new(self)
-    end
+    #   ff.radios.each { |r| puts r.to_s }            # iterate through all the radio buttons on the page
+    #   ff.radios[1].to_s                             # goto the first radio button on the page                                   
+    #   ff.radios.length                              # show how many radio buttons are on the page.
+    # TODO: Implement the iterator.
+    #def radios
+    #    return Radios.new(self)
+    #end
     
-    # This is the main method for accessing a link.
-    #  *  how   - symbol - how we access the link, :index, :id, :name , :beforetext, :afterText, :title , :text , :url
-    #  *  what  - string, int or re , what we are looking for
     #
-    # returns a Link object
+    # Description:
+    #   Used to access link element. Usually an <a> HTML tag.
     #
-    # Valid values for 'how' are
+    # Input:
+    #   - how - Attribute used to identify the link element.
+    #   - what - Value of that attribute. 
     #
-    #    :index      - find the item using the index in the container ( a container can be a document, a TableCell, a Span, a Div or a P
-    #                  index is 1 based
-    #    :name       - find the item using the name attribute
-    #    :id         - find the item using the id attribute
-    #    :beforeText - finds the item immediately before the specified text
-    #    :afterText  - finds the item immediately after the specified text
-    #    :url        - finds the link based on the url. This must be the full path to the link, so is best used with a regular expression
-    #    :text       - finds a link using the innerText of the link, ie the Text that is displayed to the user
-    #    :title      - finds the item using the tool tip text
-    #    :xpath      - finds the item that matches xpath query    
+    # Typical Usage:
     #
-    # Typical Usage
-    # 
-    #   ie.link(:url, /login/)              # access the first link whose url matches login. We can use a string in place of the regular expression
-    #                                       # but the complete path must be used, ie.link(:url, 'http://myserver.com/my_path/login.asp')
-    #   ie.link(:index,2)                   # access the second link on the page
-    #   ie.link(:title , "Picture")         # access a link using the tool tip
-    #   ie.link(:text, 'Click Me')          # access the link that has Click Me as its text
-    #   ie.link(:afterText, 'Click->')      # access the link that immediately follows the text Click->
-    #   ie.link(:xpath, "//a[contains(.,'Click Me')]/")      # access the link with Click Me as its text
+    #    ff.link(:id,   'user_name')                 # access the link element with an ID of user_name
+    #    ff.link(:name, 'address')                   # access the link element with a name of address
+    #
+    # Output:
+    #   Link object.
+    #
     def link(how, what) 
         locate if defined?(locate)
-        return Link.new(self, how, what)
+        return Link.new(how, what)
     end
 
     # This is the main method for accessing the links collection. Returns a Links object
     #
     # Typical usage:
     #
-    #   ie.links.each { |l| puts l.to_s }            # iterate through all the links on the page
-    #   ie.links[1].to_s                             # goto the first link on the page                                   
-    #   ie.links.length                              # show how many links are on the page.
-    #
-    def links
-        return Links.new(self)
-    end
+    #   ff.links.each { |l| puts l.to_s }            # iterate through all the links on the page
+    #   ff.links[1].to_s                             # goto the first link on the page                                   
+    #   ff.links.length                              # show how many links are on the page.
+    # TODO: Implement the iterator.
+    #def links
+    #    return Links.new(self)
+    #end
 
-    # This is the main method for accessing images - normally an <img src="image.gif"> HTML tag.
-    #  *  how   - symbol - how we access the image, :index, :id, :name, :src, :title or :alt are supported
-    #  *  what  - string or regexp - what we are looking for 
     #
-    # returns an Image object
+    # Description:
+    #   Used to access image element. Usually an <img> HTML tag.
     #
-    # Valid values for 'how' are
+    # Input:
+    #   - how - Attribute used to identify the image element.
+    #   - what - Value of that attribute. 
     #
-    #    :index      - find the item using the index in the container ( a container can be a document, a TableCell, a Span, a Div or a P
-    #                  index is 1 based
-    #    :name       - find the item using the name attribute
-    #    :id         - find the item using the id attribute
-    #    :alt        - finds the item using the alt text (tool tip)
-    #    :src        - finds the item using the src tag. This must be the fully qualified name, so is best used with a regular expression
-    #    :xpath      - finds the item that matches xpath query
-    #    :title      - finds the item using the title (tool tip)
+    # Typical Usage:
     #
-    # Typical Usage
-    # 
-    #   ie.image(:src, /myPic/)             # access the first image that matches myPic. We can use a string in place of the regular expression
-    #                                       # but the complete path must be used, ie.image(:src, 'http://myserver.com/my_path/my_image.jpg')
-    #   ie.image(:index,2)                  # access the second image on the page
-    #   ie.image(:alt , "A Picture")        # access an image using the alt text
-    #   ie.image(:xpath, "//img[@alt='A Picture']/")    # access an image using the alt text
-    #   
+    #    ff.image(:id,   'user_name')                 # access the image element with an ID of user_name
+    #    ff.image(:name, 'address')                   # access the image element with a name of address
+    #
+    # Output:
+    #   Image object.
+    #
     def image(how, what = nil)
         locate if defined?(locate)
-        Image.new(self, how, what)
+        Image.new(how, what)
     end    
     
     # This is the main method for accessing the images collection. Returns an Images object
     #
     # Typical usage:
     #
-    #   ie.images.each { |i| puts i.to_s }            # iterate through all the images on the page
-    #   ie.images[1].to_s                             # goto the first image on the page                                   
-    #   ie.images.length                              # show how many images are on the page.
-    #
-    def images
-        return Images.new(self)
-    end
+    #   ff.images.each { |i| puts i.to_s }            # iterate through all the images on the page
+    #   ff.images[1].to_s                             # goto the first image on the page                                   
+    #   ff.images.length                              # show how many images are on the page.
+    # TODO: Implement the iterator.
+    #def images
+    #    return Images.new(self)
+    #end
 
     # This is the main method for accessing JavaScript popups.
     # returns a PopUp object
-    def popup         # BUG this should not be on the container object!        
-        return PopUp.new(self)
-    end
+    #def popup         # BUG this should not be on the container object!        
+    #    return PopUp.new(self)
+    #end
 
-    # This is the main method for accessing divs. http://www.xulplanet.com/references/objref/HTMLDivElement.html 
-    #  *  how   - symbol - how we access the div, valid values are
-    #    :index      - finds the item using its index
-    #    :id         - finds the item using id attribute
-    #    :title      - finds the item using title attribute
-    #    :xpath      - finds the item that matches xpath query
     #
-    #  *  what  - string, integer, re or xpath query , what we are looking for, 
+    # Description:
+    #   Used to access div element. Usually an <div> HTML tag.
     #
-    # returns an Div object
+    # Input:
+    #   - how - Attribute used to identify the dive element.
+    #   - what - Value of that attribute. 
     #
-    # Typical Usage
-    # 
-    #   ie.div(:id, /list/)                 # access the first div that matches list.
-    #   ie.div(:index,2)                    # access the second div on the page
-    #   ie.div(:title , "A Picture")        # access a div using the tooltip text. See http://www.xulplanet.com/references/objref/HTMLDivElement.html
-    #   ie.div(:xpath, "//div[@id='list']/")    # access the first div whose id is 'list'
-    #   
+    # Typical Usage:
+    #
+    #    ff.div(:id,   'user_name')                 # access the div element with an ID of user_name
+    #    ff.div(:name, 'address')                   # access the div element with a name of address
+    #
+    # Output:
+    #   Div object.
+    #
     def div(how, what)
         locate if defined?(locate)
-        return Div.new(self, how, what)
+        return Div.new(how, what)
     end
 
     # this is the main method for accessing the divs iterator. Returns a Divs collection
     #
     # Typical usage:
     #
-    #   ie.divs.each { |d| puts d.to_s }            # iterate through all the divs on the page
-    #   ie.divs[1].to_s                             # goto the first div on the page                                   
-    #   ie.divs.length                              # show how many divs are on the page.
-    #
-    def divs
-        return Divs.new(self)
-    end
+    #   ff.divs.each { |d| puts d.to_s }            # iterate through all the divs on the page
+    #   ff.divs[1].to_s                             # goto the first div on the page                                   
+    #   ff.divs.length                              # show how many divs are on the page.
+    # TODO: Implement the iterator.
+    #def divs
+    #    return Divs.new(self)
+    #end
 
-    # This is the main method for accessing span tags 
-    #  *  how   - symbol - how we access the span, valid values are
-    #    :index      - finds the item using its index
-    #    :id         - finds the item using its id attribute
-    #    :name       - finds the item using its name attribute
+    
     #
-    #  *  what  - string, integer or re , what we are looking for, 
+    # Description:
+    #   Used to access a span. Usually an <span> HTML tag. 
     #
-    # returns a Span object
-    #
-    # Typical Usage
+    # Input:
+    #   - how - The attribute used to identify the span.
+    #   - what - The value of that attribute. 
     # 
-    #   ie.span(:id, /list/)                 # access the first span that matches list.
-    #   ie.span(:index,2)                    # access the second span on the page
-    #   ie.span(:title , "A Picture")        # access a span using the tooltip text.
+    # Typical usage:
+    #   ff.span(:id, /list/)                 # access the first span that matches list.
+    #   ff.span(:index,2)                    # access the second span on the page
+    #   ff.span(:title , "A Picture")        # access a span using the tooltip text.
+    #
+    # Output:
+    #    Span Object
     #   
     def span(how, what)
         locate if defined?(locate)
-        return Span.new(self, how, what)
+        return Span.new(how, what)
     end
 
     # this is the main method for accessing the spans iterator. 
@@ -617,32 +589,36 @@ module Container
     #
     # Typical usage:
     #
-    #   ie.spans.each { |s| puts s.to_s }            # iterate through all the spans on the page
-    #   ie.spans[1].to_s                             # goto the first span on the page                                   
-    #   ie.spans.length                              # show how many spans are on the page.
-    #
-    def spans
-        return Spans.new(self)
-    end
+    #   ff.spans.each { |s| puts s.to_s }            # iterate through all the spans on the page
+    #   ff.spans[1].to_s                             # goto the first span on the page                                   
+    #   ff.spans.length                              # show how many spans are on the page.
+    # TODO: Implement the span iterator.
+    #def spans
+    #    return Spans.new(self)
+    #end
 
-    # This is the main method for accessing p tags - http://www.xulplanet.com/references/objref/HTMLParagraphElement.html
-    #  *  how   - symbol - how we access the p, valid values are
-    #    :index      - finds the item using its index
-    #    :id         - finds the item using its id attribute
-    #    :name       - finds the item using its name attribute
-    #  *  what  - string, integer or re , what we are looking for, 
+    
     #
-    # returns a P object
+    # Description:
+    #   Used to access a paragraph. Usually an <p> HTML tag. For more details on this visit 
+    # 	See http://www.xulplanet.com/references/objref/HTMLParagraphElement.html.
     #
+    # Input:
+    #   - how - The attribute used to identify the paragraph.
+    #   - what - The value of that attribute. 
+    # 
     # Typical Usage
     # 
-    #   ie.p(:id, /list/)                 # access the first p tag  that matches list.
-    #   ie.p(:index,2)                    # access the second p tag on the page
-    #   ie.p(:title , "A Picture")        # access a p tag using the tooltip text. See http://www.xulplanet.com/references/objref/HTMLParagraphElement.html
-    #   
+    #   ff.p(:id, /list/)                 # access the first p tag  that matches list.
+    #   ff.p(:index,2)                    # access the second p tag on the page
+    #   ff.p(:title , "A Picture")        # access a p tag using the tooltip text.
+    #
+    # Output:
+    # 	Paragraph object.
+    #
     def p(how, what)
         locate if defined?(locate)
-        return P.new(self, how, what)
+        return P.new(how, what)
     end
 
     # this is the main method for accessing the ps iterator. 
@@ -651,66 +627,71 @@ module Container
     #
     # Typical usage:
     #
-    #   ie.ps.each { |p| puts p.to_s }            # iterate through all the p tags on the page
-    #   ie.ps[1].to_s                             # goto the first p tag on the page                                   
-    #   ie.ps.length                              # show how many p tags are on the page.
-    #
-    def ps
-        return Ps.new(self)
-    end
+    #   ff.ps.each { |p| puts p.to_s }            # iterate through all the p tags on the page
+    #   ff.ps[1].to_s                             # goto the first p tag on the page                                   
+    #   ff.ps.length                              # show how many p tags are on the page.
+    # TODO: implement paragraph iterator
+    # def ps
+    
+    # return Ps.new(self)
+    # end
 
-    # This is the main method for accessing pre tags - http://www.xulplanet.com/references/objref/HTMLPreElement.html
-    #  *  how   - symbol - how we access the pre, valid values are
-    #    :index      - finds the item using its index
-    #    :id         - finds the item using its id attribute
-    #    :name       - finds the item using its name attribute
-    #  *  what  - string, integer or re , what we are looking for, 
     #
-    # returns a Pre object
+    # Description:
+    #   Used to access a pre element. Usually a <pre> HTML tag. For more details on this element 
+    #   visit http://www.xulplanet.com/references/objref/HTMLPreElement.html.
     #
+    # Input:
+    #   - how - The attribute used to identify the pre tag.
+    #   - what - The value of that attribute. 
+    # 
     # Typical Usage
     # 
-    #   ie.pre(:id, /list/)                 # access the first pre tag  that matches list.
-    #   ie.pre(:index,2)                    # access the second pre tag on the page
-    #   ie.pre(:title , "A Picture")        # access a pre tag using the tooltip text.
-    #   
+    #   ff.pre(:id, /list/)                 # access the first pre tag  that matches list.
+    #   ff.pre(:index,2)                    # access the second pre tag on the page
+    #
+    # Output:
+    # 	Pre object.
+    #
     def pre(how, what)
         locate if defined?(locate)
-        return Pre.new(self, how, what)
+        return Pre.new(how, what)
     end
 
-    # this is the main method for accessing the ps iterator. 
+    # this is the main method for accessing the pres iterator. 
     # 
     # Returns a Pres object
     #
     # Typical usage:
     #
-    #   ie.pres.each { |pre| puts pre.to_s }            # iterate through all the pre tags on the page
-    #   ie.pres[1].to_s                             # goto the first pre tag on the page                                   
-    #   ie.pres.length                              # show how many pre tags are on the page.
+    #   ff.pres.each { |pre| puts pre.to_s }        # iterate through all the pre tags on the page
+    #   ff.pres[1].to_s                             # goto the first pre tag on the page                                   
+    #   ff.pres.length                              # show how many pre tags are on the page.
+    #   TODO: implement pres iterator. 
     #
-    def pres
-        return Pres.new(self)
-    end
-
-    # This is the main method for accessing labels. http://www.xulplanet.com/references/objref/HTMLLabelElement.html
-    #  *  how   - symbol - how we access the label, valid values are
-    #    :index      - finds the item using its index
-    #    :id         - finds the item using its id attribute
-    #    :for        - finds the item which has an object associated with it.
-    #  *  what  - string, integer or re , what we are looking for, 
+    # def pres
+    #    return Pres.new(self)
+    # end
+	
     #
-    # returns a Label object
+    # Description:
+    # 	Used to access label. Usually a <label> HTML tag. For more information on this 
+    # 	tag visit http://www.xulplanet.com/references/objref/HTMLLabelElement.html.
     #
-    # Typical Usage
+    # Inputs:	
+    #   - how - The attribute used to identify the label.
+    #   - what - The value of that attribute. 
     # 
-    #   ie.label(:id, /list/)                 # access the first span that matches list.
-    #   ie.label(:index,2)                    # access the second label on the page
-    #   ie.label(:for, "text_1")              # access a the label that is associated with the object that has an id of text_1
-    #   
+    # Typical Usage:
+    #   ff.label(:id, /list/)                # access the first label that matches list.
+    #   ff.label(:index,2)                   # access the second label on the page
+    #   ff.label(:for, "txt_1")              # access a the label that is associated with the object that has an id of txt_1
+    #
+    # Output:
+    #	Label object
     def label(how, what)
         locate if defined?(locate)
-        return Label.new(self, how, what)
+        return Label.new(how, what)
     end
 
     # this is the main method for accessing the labels iterator. It returns a Labels object
@@ -719,116 +700,64 @@ module Container
     #
     # Typical usage:
     #
-    #   ie.labels.each { |l| puts l.to_s }            # iterate through all the labels on the page
-    #   ie.labels[1].to_s                             # goto the first label on the page                                   
-    #   ie.labels.length                              # show how many labels are on the page.
-    #
-    def labels
-        return Labels.new(self)
-    end
+    #   ff.labels.each { |l| puts l.to_s }            # iterate through all the labels on the page
+    #   ff.labels[1].to_s                             # goto the first label on the page                                   
+    #   ff.labels.length                              # show how many labels are on the page.
+    #	TODO: implement the labels iterator. 
+    #   def labels
+    #    return Labels.new(self)
+    #   end
 
-    #--
-    #
-    # Searching for Page Elements
-    # Not for external consumption
+    # Description:
+    #	Searching for Page Elements. Not for external consumption.
     #        
-    #++
     def ole_inner_elements
         return document.body.all 
     end
     private :ole_inner_elements
 
-    # This method shows the available objects on the current page.
-    # This is usually only used for debugging or writing new test scripts.
-    # This is a nice feature to help find out what HTML objects are on a page
-    # when developing a test case using Watir.
-    def show_all_objects
-        puts "-----------Objects in  page -------------" 
-        doc = document
-        s = ""
-        props = ["name" ,"id" , "value" , "alt" , "src"]
-        doc.all.each do |n|
-            begin
-                s += n.invoke("type").to_s.ljust(16)
-            rescue
-                next
-            end
-            props.each do |prop|
-                begin
-                    p = n.invoke(prop)
-                    s += "  " + "#{prop}=#{p}".to_s.ljust(18)
-                rescue
-                    # this object probably doesnt have this property
-                end
-            end
-            s += "\n"
-        end
-        puts s
-    end
-
     # 
-    #                Locator Methods
+    # Description:
+    #	This method shows the available objects on the current page.
+    # 	This is usually only used for debugging or writing new test scripts.
+    # 	This is a nice feature to help find out what HTML objects are on a page
+    # 	when developing a test case using FireWatir.
+    # 	TODO: implemtnt iteration of all the objects on screen.
     #
-
-    # Returns the specified ole object for input elements on a web page.
-    #
-    # This method is used internally by Watir and should not be used externally. It cannot be marked as private because of the way mixins and inheritance work in watir
-    #
-    #   * how - symbol - the way we look for the object. Supported values are
-    #                  - :name
-    #                  - :id
-    #                  - :index
-    #                  - :value etc
-    #   * what  - string that we are looking for, ex. the name, or id tag attribute or index of the object we are looking for.
-    #   * types - what object types we will look at. 
-    #   * value - used for objects that have one name, but many values. ex. radio lists and checkboxes
-    def locate_input_element(how, what, types, value = nil)
-        o = nil
-        how = :value if how == :caption
-        what = what.to_i if how == :index
-        value = value.to_s if value
-        log "getting object - how is #{how} what is #{what} types = #{types} value = #{value}"
-           
-        elements = ole_inner_elements
-        o = elements.locate_input_element(how, what, types, value)
-        return o
-    end
-
-    # returns the ole object for the specified element
-    def locate_tagged_element(tag, how, what)        
-        elements = document.getElementsByTagName(tag)
-        what = what.to_i if how == :index
-        how = :href if how == :url
-        o = nil
-        count = 1
-        elements.each do |object|
-            next if o
-            element = Element.new(object)
-            if how == :index
-                attribute = count                        
-            else
-                begin
-                    attribute = element.send(how)
-                rescue NoMethodError
-                    raise MissingWayOfFindingObjectException, 
-                        "#{how} is an unknown way of finding a <#{tag}> element (#{what})"
-                end
-            end
-            o = object if what.matches(attribute)
-            count += 1
-        end # do
-        return o
-    end  
+    #def show_all_objects
+    #    puts "-----------Objects in  page -------------" 
+    #    doc = document
+    #    s = ""
+    #    props = ["name" ,"id" , "value" , "alt" , "src"]
+    #    doc.all.each do |n|
+    #        begin
+    #            s += n.invoke("type").to_s.ljust(16)
+    #        rescue
+    #            next
+    #        end
+    #        props.each do |prop|
+    #            begin
+    #                p = n.invoke(prop)
+    #                s += "  " + "#{prop}=#{p}".to_s.ljust(18)
+    #            rescue
+    #                # this object probably doesnt have this property
+    #            end
+    #        end
+    #        s += "\n"
+    #    end
+    #    puts s
+    #end
     
     #
-    # Angrez:
-    # Added few more functions to be used by Mozilla browser.
+    # Description:
+    #  Reads the javascript execution result from the jssh socket. 
     #
-    MACHINE_IP = "127.0.0.1"
-    WINDOW_VAR = "window"
-    BROWSER_VAR = "browser"
-    DOCUMENT_VAR = "document"
-    BODY_VAR    = "body"
+    # Input:
+    # 	- socket - It is the jssh socket, the  only point of comminication between the browser and firewatir scripts.
+    # 
+    # Output:	
+    #	The javascript execution result as string.	
+    #
     
     def read_socket(socket = $jssh_socket)
         return_value = "" 
@@ -849,8 +778,8 @@ module Container
                 end
             end
         #end
-        
-        # If recieved data is less than 1024 characters or for last data 
+
+        # If received data is less than 1024 characters or for last data 
         # we read in the above loop 
         return_value += data
 
@@ -866,7 +795,7 @@ module Container
         length = return_value.length 
         #puts "Return value before removing command prompt is : #{return_value}"
         
-        # Remove the command prompt. Every result returned by JSSH has "\n> " at the end.
+	# Remove the command prompt. Every result returned by JSSH has "\n> " at the end.
         if length <= 3 
             return_value = ""
         elsif(return_value[0..2] == "\n> ")    

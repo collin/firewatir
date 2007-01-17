@@ -110,7 +110,7 @@ class TC_Links < Test::Unit::TestCase
         assert_equal( "link_title" , $ff.link(:index, 8).title)
     end
     
-    #def aatest_link_iterator
+    #def test_link_iterator
     #    assert_equal(9, $ff.links.length )
     #    assert_equal("Link Using a name" , $ff.links[7].text)
     #    
@@ -124,10 +124,10 @@ class TC_Links < Test::Unit::TestCase
     #    end
     #end
     
-    def atest_div_xml_bug
-        $ff.goto($htmlRoot + "div_xml.html")
-        assert_nothing_raised {$ff.link(:text, 'Create').exists? }   
-    end
+    #def test_div_xml_bug
+    #    $ff.goto($htmlRoot + "div_xml.html")
+    #    assert_nothing_raised {$ff.link(:text, 'Create').exists? }   
+    #end
 end
 
 #class TC_Frame_Links < Test::Unit::TestCase
@@ -137,7 +137,7 @@ end
 #        $ff.goto($htmlRoot + "frame_links.html")
 #    end
 
-#    def aatest_new_frame_link_exists
+#    def test_new_frame_link_exists
 #        assert(exists?{$ff.frame("buttonFrame").link(:text, "test1")})   
 #    end
 #    def xtest_missing_frame_links_dont_exist        
