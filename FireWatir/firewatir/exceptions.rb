@@ -1,7 +1,7 @@
 module FireWatir
   module Exception
 
-    # Root class for all Watir Exceptions
+    # Root class for all FireWatir Exceptions
     class FireWatirException < RuntimeError  
         def initialize(message="")
             super(message)
