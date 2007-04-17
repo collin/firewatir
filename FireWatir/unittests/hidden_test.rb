@@ -65,21 +65,21 @@ class TC_Hidden_Fields < Test::Unit::TestCase
         #assert_equal("333"  , $ff.text_field(:name ,"vis2").value )
         
         # iterators
-        #assert_equal(2, $ff.hiddens.length)
-        #count =1
-        #$ff.hiddens.each do |h|
-        #    case count
-        #    when 1
-        #        assert_equal( "", h.id)
-        #        assert_equal( "hid1", h.name)
-        #    when 2
-        #        assert_equal( "", h.name)
-        #        assert_equal( "hidden_1", h.id)
-        #    end
-        #    count+=1
-        #end
+        assert_equal(2, $ff.hiddens.length)
+        count =1
+        $ff.hiddens.each do |h|
+            case count
+            when 1
+                assert_equal( "", h.id)
+                assert_equal( "hid1", h.name)
+            when 2
+                assert_equal( "", h.name)
+                assert_equal( "hidden_1", h.id)
+            end
+            count+=1
+        end
         
-        #assert_equal("hid1" , $ff.hiddens[1].name )
-        #assert_equal("hidden_1" , $ff.hiddens[2].id )
+        assert_equal("hid1" , $ff.hiddens[1].name )
+        assert_equal("hidden_1" , $ff.hiddens[2].id )
     end
 end

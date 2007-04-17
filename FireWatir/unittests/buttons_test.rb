@@ -1,4 +1,4 @@
-# feature tests for Buttons
+# feature tests for Buttons of type <input type = "button">
 # revision: $Revision: 1.0 $
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') if $0 == __FILE__
@@ -16,11 +16,11 @@ class TC_Buttons < Test::Unit::TestCase
     end
     
     #def test_Spinner
-     #   s = Spinner.new
-     #   i = 0
-     #   while(i < 100)
-     #       sleep 0.05
-     #       print s.next
+    #   s = Spinner.new
+    #   i = 0
+    #   while(i < 100)
+    #       sleep 0.05
+    #       print s.next
     #        i+=1
     #    end
     #    s = nil
@@ -121,14 +121,60 @@ class TC_Buttons < Test::Unit::TestCase
         assert_false($ff.button(:id, "b5").enabled?)   
         
         assert_raises(UnknownObjectException , "UnknownObjectException was supposed to be thrown" ) {   $ff.button(:name, "noName").enabled?  }  
+     end
+
+     def test_button2
+        assert($ff.button(:caption, "Click Me2").exists?)   
+       
+        assert($ff.button(:caption, "Disabled Button2").exists?) 
+        assert($ff.button(:caption, "Sign In").exists?)
+        
+        assert_equal("b6"  , $ff.button(:id, "b7").name ) 
+        assert_equal("b7"  , $ff.button(:name, "b6").id ) 
+        assert_equal("Click Me2"  , $ff.button(:id, "b7").value  ) 
+        assert_equal(false  , $ff.button(:id, "b7").disabled  ) 
+        assert_equal("italic_button"  , $ff.button(:name, "b6").class_name  ) 
+        
+        assert_equal("b8"  , $ff.button(:id, "b9").name ) 
+        assert_equal("b9"  , $ff.button(:name, "b8").id ) 
+        assert_equal("Disabled Button2"  , $ff.button(:id, "b9").value  ) 
+        assert_equal(false  , $ff.button(:id, "b9").enabled?) 
+        assert_equal(""  , $ff.button(:name, "b8").class_name  ) 
+        assert_equal("Sign In", $ff.button(:caption, "Sign In").value)
+        
+        assert($ff.button(:caption, "Click Me").enabled?)   
+      
+        assert_false($ff.button(:caption, "Disabled Button2").enabled?)   
+        
+        
+        assert_raises(ObjectDisabledException , "ObjectDisabledException was supposed to be thrown" ) {   $ff.button(:caption, "Disabled Button2").click   }  
+        
+        $ff.button(:caption, "Click Me2").click
+        assert($ff.text.include?("PASS")) 
+
+     end
+    
+    def test_frame
+        goto_frames_page()
+        f = $ff.frame("buttonFrame")
+        assert(f.button(:caption, "Click Me").enabled?)   
+        #assert_raises(  UnknownObjectException , "UnknownObjectException was supposed to be thrown ( no frame name supplied) " ) { $ff.button(:caption, "Disabled Button").enabled?}  
     end
     
-    #def test_frame
-       # goto_frames_page()
-        
-        #assert($ff.frame("buttonFrame").button(:caption, "Click Me").enabled?)   
-       # assert_raises(  UnknownObjectException , "UnknownObjectException was supposed to be thrown ( no frame name supplied) " ) { $ff.button(:caption, "Disabled Button").enabled?}  
-    #end
+    def test_buttons
+	    arrButtons = $ff.buttons
+	    assert_equal(7,arrButtons.length)
+        #arrButtons.each do |button|
+            #puts button.to_s
+        #end
+	    assert_equal("b2",arrButtons[1].id)
+        assert_equal("b5",arrButtons[2].id)
+        assert_equal("Submit",arrButtons[3].value)
+        assert_equal("sub3",arrButtons[4].name)
+        assert_equal("b7",arrButtons[5].id)
+        assert_equal("b9",arrButtons[6].id)
+        assert_equal("Sign In",arrButtons[7].value)
+   end
     
 end
 

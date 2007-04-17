@@ -69,17 +69,21 @@ class TC_Fields < Test::Unit::TestCase
             "type:         text",
             "id:           ",
             "value:        Hello World",
-            "disabled:     false" ]
-           #"length:       0",
-           #"max length:   ",
-           #"read only:    false
-        #]
+            "disabled:     false", 
+            #"style:        ",
+            #"class:        ",
+            "read only:    false",
+            "max length:   500",
+            "length:       0"
+        ]
         assert_equal(expected, $ff.text_field(:index, 1).to_s)
         expected[0] = "name:         "
         expected[2] = "id:           text2"
         expected[3] = "value:        goodbye all"
         assert_equal(expected, $ff.text_field(:index, 2).to_s)
         assert_raises(UnknownObjectException) { $ff.text_field(:index, 999).to_s }  
+        #puts $ff.text_field(:name, "text1").to_s
+        #puts $ff.text_field(:name, "readOnly").to_s
     end
     
     def test_text_field_append
@@ -123,23 +127,23 @@ class TC_Fields < Test::Unit::TestCase
         assert_equal("", $ff.text_field(:index, 1).title)
     end
     
-    #def test_text_field_iterators
-    #    assert_equal(12, $ff.text_fields.length)
+    def test_text_field_iterators
+        assert_equal(12, $ff.text_fields.length)
         
         # watir is 1 based, so this is the first text field
-    #    assert_equal("Hello World" , $ff.text_fields[1].value)
-    #    assert_equal("text1" , $ff.text_fields[1].name)
-    #    assert_equal("password" , $ff.text_fields[$ff.text_fields.length].type)
+        assert_equal("Hello World" , $ff.text_fields[1].value)
+        assert_equal("text1" , $ff.text_fields[1].name)
+        assert_equal("password" , $ff.text_fields[$ff.text_fields.length].type)
         
-    #    index = 1
-    #    $ff.text_fields.each do |t|
-    #        assert_equal($ff.text_field(:index, index).value, t.value) 
-    #        assert_equal($ff.text_field(:index, index).id,    t.id)
-    #        assert_equal($ff.text_field(:index, index).name,  t.name)
-    #        index += 1
-    #    end
-    #    assert_equal(index - 1, $ff.text_fields.length)         
-    #end
+        index = 1
+        $ff.text_fields.each do |t|
+            assert_equal($ff.text_field(:index, index).value, t.value) 
+            assert_equal($ff.text_field(:index, index).id,    t.id)
+            assert_equal($ff.text_field(:index, index).name,  t.name)
+            index += 1
+        end
+        assert_equal(index - 1, $ff.text_fields.length)         
+    end
     
     def test_JS_Events
         $ff.text_field(:name, 'events_tester').set('p')
@@ -151,6 +155,10 @@ class TC_Fields < Test::Unit::TestCase
         
         # the following line has an extra keypress at the begining, as we mimic the delete key being pressed
         assert_equal( "keypresskeydownkeypresskeyupkeydownkeypresskeyup" , $ff.text_field(:name , 'events_text').value.gsub("\n" , "") )
+
+        $ff.text_field(:name, "events_text").set("angrez\nsingh")
+        $ff.text_field(:name, "events_text").append("\n") 
+        $ff.text_field(:name, "events_text").append("singh") #\\nsupel")
     end
     
     def test_password
@@ -161,17 +169,17 @@ class TC_Fields < Test::Unit::TestCase
         assert( 'top_secret' , $ff.text_field(:id, "password1").value )
     end
     
-    #def test_labels_iterator
-    #    assert_equal(3, $ff.labels.length)
-    #    assert_equal('Label For this Field' , $ff.labels[1].innerText.strip )
-    #    assert_equal('Password With ID ( the text here is a label for it )' , $ff.labels[3].innerText )
-        
-    #    count=0
-    #    $ff.labels.each do |l|
-    #        count +=1
-    #    end
-    #    assert_equal(count, $ff.labels.length)
-    #end
+    def test_labels_iterator
+        assert_equal(3, $ff.labels.length)
+        assert_equal('Label For this Field' , $ff.labels[1].innerText.strip )
+        assert_equal('Password With ID ( the text here is a label for it )' , $ff.labels[3].innerText )
+       
+        count=0
+        $ff.labels.each do |l|
+            count +=1
+        end
+        assert_equal(count, $ff.labels.length)
+    end
     
     def test_label_properties
         assert_raises(UnknownObjectException) { $ff.label(:index,20).innerText } 

@@ -18,6 +18,9 @@ class TC_Images < Test::Unit::TestCase
     def teardown
         clean_saved_image
     end
+    def test_show_all_objects
+        $ff.show_all_objects
+    end
     
     def test_imageExists
         assert( !  $ff.image(:name , "missing_name").exists?  )
@@ -123,24 +126,24 @@ class TC_Images < Test::Unit::TestCase
         puts  $ff.image(:index , 2).to_s
     end
     
-    #def test_image_iterator
-    #    assert_equal(6 , $ff.images.length)
-    #    assert_equal("" , $ff.images[2].name )
-    #    assert_equal("square", $ff.images[2].id )
-    #    assert_match(/square/, $ff.images[2].src )
+    def test_image_iterator
+        assert_equal(6 , $ff.images.length)
+        assert_equal("" , $ff.images[2].name )
+        assert_equal("square", $ff.images[2].id )
+        assert_match(/square/, $ff.images[2].src )
         
-    #    index = 1
-    #    $ff.images.each do |i|
-    #        assert_equal( $ff.image(:index, index).id , i.id )
-    #        assert_equal( $ff.image(:index, index).name , i.name )
-    #        assert_equal( $ff.image(:index, index).src , i.src )
-    #        assert_equal( $ff.image(:index, index).height , i.height )
-    #        assert_equal( $ff.image(:index, index).width , i.width )
+        index = 1
+        $ff.images.each do |i|
+            assert_equal( $ff.image(:index, index).id , i.id )
+            assert_equal( $ff.image(:index, index).name , i.name )
+            assert_equal( $ff.image(:index, index).src , i.src )
+            assert_equal( $ff.image(:index, index).height , i.height.to_s )
+            assert_equal( $ff.image(:index, index).width , i.width.to_s )
             
-    #        index+=1
-    #    end
-    #    assert_equal( index-1 , $ff.images.length )
-    #end
+            index+=1
+        end
+        assert_equal( index-1 , $ff.images.length )
+    end
     
     #def test_save_local_image
     #   $ff.images[1].save(build_windows_path("sample.img.dat"))

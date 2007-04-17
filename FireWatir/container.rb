@@ -135,6 +135,7 @@ module Container
     #   Table object.
     #
     def table(how, what)
+        locate if defined?(locate)
         Table.new(how, what)
     end
 
@@ -147,11 +148,11 @@ module Container
     #   ff.tables.each { |t| puts t.to_s }            # iterate through all the tables on the page
     #   ff.tables[1].to_s                             # goto the first table on the page                                   
     #   ff.tables.length                              # show how many tables are on the page. Tables that are nested will be included in this
-    #   TODO: implement tables iterator.
     #
-    #def tables
-    #    return Tables.new(self)
-    #end
+    def tables
+        locate if defined?(locate)
+        return Tables.new()
+    end
     
     #
     # Description:
@@ -169,7 +170,8 @@ module Container
     #    TableCell Object
     #
     def cell(how, what=nil)
-      TableCell.new(how, what)
+        locate if defined?(locate)
+        TableCell.new(how, what)
     end
 
     # 
@@ -188,6 +190,7 @@ module Container
     #   TableRow object
     #
     def row(how, what=nil)
+        locate if defined?(locate)
         TableRow.new(how, what)
     end
     
@@ -221,18 +224,20 @@ module Container
 
     # 
     # Description:
-    #   Used for accessing the buttons iterator. It returns a Buttons object
+    #   Used for accessing all the buttons on the page. Returns a Buttons object
     #
     # Typical usage:
     #
     #   ff.buttons.each { |b| puts b.to_s }            # iterate through all the buttons on the page
     #   ff.buttons.length                              # show how many buttons are on the page. 
-    #   
-    # TODO: Implement buttons iterator.
+    # 
+    # Output:
+    #   Buttons object.
     #
-    #def buttons
-    #    return Buttons.new(self)
-    #end
+    def buttons
+        locate if defined?(locate)
+        return Buttons.new()
+    end
 
     # 
     # Description:
@@ -249,23 +254,28 @@ module Container
     # Output:
     #   FileField object
     #
-    #
     def file_field(how, what = nil)
         locate if defined?(locate)
         FileField.new(how, what)
     end    
     
-    # this is the main method for accessing the file_fields iterator. It returns a FileFields object
+    # 
+    # Description:
+    #   Used for accessing all the file field elements on the page. Returns a FileFields object
     #
     # Typical usage:
     #
     #   ff.file_fields.each { |f| puts f.to_s }            # iterate through all the file fields on the page
     #   ff.file_fields[1].to_s                             # goto the first file field on the page                                   
     #   ff.file_fields.length                              # show how many file fields are on the page. 
-    # TODO: Implement the iterator.
-    #def file_fields
-    #    return FileFields.new(self)
-    #end
+    # 
+    # Output:
+    #   FileFields object
+    #
+    def file_fields
+        locate if defined?(locate)
+        return FileFields.new()
+    end
 
     #
     # Description:
@@ -288,18 +298,23 @@ module Container
         TextField.new(how, what)
     end    
 
-    #
-    # this is the method for accessing the text_fields iterator. It returns a Text_Fields object
+    # 
+    # Description:
+    #   Used for accessing all the text fields on the page. Returns a TextFields object
     #
     # Typical usage:
     #
     #   ff.text_fields.each { |t| puts t.to_s }            # iterate through all the text fields on the page
     #   ff.text_fields[1].to_s                             # goto the first text fields on the page                                   
     #   ff.text_fields.length                              # show how many text fields are on the page.
-    # TODO:Implement the iterator.
-    #def text_fields
-    #    return TextFields.new(self)
-    #end
+    #
+    # Output:
+    #   TextFields object.
+    #
+    def text_fields
+        locate if defined?(locate)
+        return TextFields.new()
+    end
 
     # 
     # Description:
@@ -322,18 +337,23 @@ module Container
         return Hidden.new(how, what)
     end
 
-    # this is the method for accessing the hiddens iterator. It returns a Hiddens object
+    # 
+    # Description:
+    #   Used for accessing all the hidden fields on the page. Returns a Hiddens object
     #
     # Typical usage:
     #
     #   ff.hiddens.each { |t|  puts t.to_s }           # iterate through all the hidden fields on the page
     #   ff.hiddens[1].to_s                             # goto the first hidden fields on the page                                   
     #   ff.hiddens.length                              # show how many hidden fields are on the page.
-    # TODO: Implement the iterator.
-    #def hiddens
-    #    locate if defined?(locate)
-    #    return Hiddens.new(self)
-    #end
+    # 
+    # Output:
+    #   Hiddens object.
+    #
+    def hiddens
+        locate if defined?(locate)
+        return Hiddens.new()
+    end
 
     #
     # Description:
@@ -356,18 +376,23 @@ module Container
         return SelectList.new(how, what)
     end
 
-    # this is the method for accessing the select lists iterator. Returns a SelectLists object
+    # 
+    # Description:
+    #   Used for accessing all the Listbox or dropdown elements on the page. Returns a SelectLists object
     #
     # Typical usage:
     #
     #   ff.select_lists.each { |s| puts s.to_s }            # iterate through all the select boxes on the page
     #   ff.select_lists[1].to_s                             # goto the first select boxes on the page                                   
     #   ff.select_lists.length                              # show how many select boxes are on the page.
-    # TODO: Impelement the iterator.
-    #def select_lists
-    #    locate if defined?(locate)
-    #    return SelectLists.new(self)
-    #end
+    # 
+    # Output:
+    #   SelectLists object.
+    #
+    def select_lists
+        locate if defined?(locate)
+        return SelectLists.new()
+    end
     
     #
     # Description:
@@ -400,17 +425,22 @@ module Container
         return CheckBox.new(how, what, ["checkbox"], value) 
     end
 
-    # this is the method for accessing the check boxes iterator. Returns a CheckBoxes object
+    # 
+    # Description:
+    #   Used for accessing all the Checkbox elements on the page. Returns a CheckBoxes object
     #
     # Typical usage:
     #
     #   ff.checkboxes.each { |c| puts c.to_s }           # iterate through all the check boxes on the page
     #   ff.checkboxes[1].to_s                             # goto the first check box on the page                                   
     #   ff.checkboxes.length                              # show how many check boxes are on the page.
-    # TODO: Implement the iterator.
-    #def checkboxes
-    #    return CheckBoxes.new(self)
-    #end
+    # 
+    # Output:
+    #   CheckBoxes object.
+    def checkboxes
+        locate if defined?(locate)
+        return CheckBoxes.new()
+    end
 
     
     #
@@ -444,17 +474,23 @@ module Container
         return Radio.new(how, what, ["radio"], value) 
     end
 
-    # This is the method for accessing the radio buttons iterator. Returns a Radios object
+    # 
+    # Description:
+    #   Used for accessing all the Radiobutton elements on the page. Returns a Radios object
     #
     # Typical usage:
     #
     #   ff.radios.each { |r| puts r.to_s }            # iterate through all the radio buttons on the page
     #   ff.radios[1].to_s                             # goto the first radio button on the page                                   
     #   ff.radios.length                              # show how many radio buttons are on the page.
-    # TODO: Implement the iterator.
-    #def radios
-    #    return Radios.new(self)
-    #end
+    # 
+    # Output:
+    #   Radios object.
+    #
+    def radios
+        locate if defined?(locate)
+        return Radios.new()
+    end
     
     #
     # Description:
@@ -477,17 +513,23 @@ module Container
         return Link.new(how, what)
     end
 
-    # This is the main method for accessing the links collection. Returns a Links object
+    # 
+    # Description:
+    #   Used for accessing all the Link elements on the page. Returns a Links object
     #
     # Typical usage:
     #
     #   ff.links.each { |l| puts l.to_s }            # iterate through all the links on the page
     #   ff.links[1].to_s                             # goto the first link on the page                                   
     #   ff.links.length                              # show how many links are on the page.
-    # TODO: Implement the iterator.
-    #def links
-    #    return Links.new(self)
-    #end
+    #
+    # Output:
+    #   Links Object
+    #
+    def links
+        locate if defined?(locate)
+        return Links.new()
+    end
 
     #
     # Description:
@@ -510,17 +552,23 @@ module Container
         Image.new(how, what)
     end    
     
-    # This is the main method for accessing the images collection. Returns an Images object
+    # 
+    # Description:
+    #   Used for accessing all the Image elements on the page. Returns a Images object
     #
     # Typical usage:
     #
     #   ff.images.each { |i| puts i.to_s }            # iterate through all the images on the page
     #   ff.images[1].to_s                             # goto the first image on the page                                   
     #   ff.images.length                              # show how many images are on the page.
-    # TODO: Implement the iterator.
-    #def images
-    #    return Images.new(self)
-    #end
+    #
+    # Output:
+    #   Images object.
+    #
+    def images
+        locate if defined?(locate)
+        return Images.new()
+    end
 
     # This is the main method for accessing JavaScript popups.
     # returns a PopUp object
@@ -549,17 +597,23 @@ module Container
         return Div.new(how, what)
     end
 
-    # this is the main method for accessing the divs iterator. Returns a Divs collection
+    # 
+    # Description:
+    #   Used for accessing all the Div elements on the page. Returns a Divs object
     #
     # Typical usage:
     #
     #   ff.divs.each { |d| puts d.to_s }            # iterate through all the divs on the page
     #   ff.divs[1].to_s                             # goto the first div on the page                                   
     #   ff.divs.length                              # show how many divs are on the page.
-    # TODO: Implement the iterator.
-    #def divs
-    #    return Divs.new(self)
-    #end
+    #
+    # Output:
+    #   Divs object.
+    #
+    def divs
+        locate if defined?(locate)
+        return Divs.new()
+    end
 
     
     #
@@ -583,19 +637,23 @@ module Container
         return Span.new(how, what)
     end
 
-    # this is the main method for accessing the spans iterator. 
     # 
-    # Returns a Spans object
+    # Description:
+    #   Used for accessing all the Span elements on the page. Returns a Spans object
     #
     # Typical usage:
     #
     #   ff.spans.each { |s| puts s.to_s }            # iterate through all the spans on the page
     #   ff.spans[1].to_s                             # goto the first span on the page                                   
     #   ff.spans.length                              # show how many spans are on the page.
-    # TODO: Implement the span iterator.
-    #def spans
-    #    return Spans.new(self)
-    #end
+    #
+    # Output:
+    #   Spans object.
+    #
+    def spans
+        locate if defined?(locate)
+        return Spans.new()
+    end
 
     
     #
@@ -621,20 +679,23 @@ module Container
         return P.new(how, what)
     end
 
-    # this is the main method for accessing the ps iterator. 
     # 
-    # Returns a Ps object
+    # Description:
+    #   Used for accessing all the Paragraph <p> elements on the page. Returns a Ps object
     #
     # Typical usage:
     #
     #   ff.ps.each { |p| puts p.to_s }            # iterate through all the p tags on the page
     #   ff.ps[1].to_s                             # goto the first p tag on the page                                   
     #   ff.ps.length                              # show how many p tags are on the page.
-    # TODO: implement paragraph iterator
-    # def ps
-    
-    # return Ps.new(self)
-    # end
+    #
+    # Output:
+    #   Ps object
+    #
+    def ps
+        locate if defined?(locate)
+        return Ps.new()
+    end
 
     #
     # Description:
@@ -658,20 +719,23 @@ module Container
         return Pre.new(how, what)
     end
 
-    # this is the main method for accessing the pres iterator. 
     # 
-    # Returns a Pres object
+    # Description:
+    #   Used for accessing all the Pre elements on the page. Returns a Pres object
     #
     # Typical usage:
     #
     #   ff.pres.each { |pre| puts pre.to_s }        # iterate through all the pre tags on the page
     #   ff.pres[1].to_s                             # goto the first pre tag on the page                                   
     #   ff.pres.length                              # show how many pre tags are on the page.
-    #   TODO: implement pres iterator. 
+    #  
+    # Output:
+    #   Pres object
     #
-    # def pres
-    #    return Pres.new(self)
-    # end
+    def pres
+        locate if defined?(locate)
+        return Pres.new()
+    end
 	
     #
     # Description:
@@ -689,76 +753,78 @@ module Container
     #
     # Output:
     #	Label object
+    #
     def label(how, what)
         locate if defined?(locate)
         return Label.new(how, what)
     end
 
-    # this is the main method for accessing the labels iterator. It returns a Labels object
     # 
-    # Returns a Labels object
+    # Description:
+    #   Used for accessing all the Label elements on the page. Returns a Labels object
     #
     # Typical usage:
     #
     #   ff.labels.each { |l| puts l.to_s }            # iterate through all the labels on the page
     #   ff.labels[1].to_s                             # goto the first label on the page                                   
     #   ff.labels.length                              # show how many labels are on the page.
-    #	TODO: implement the labels iterator. 
-    #   def labels
-    #    return Labels.new(self)
-    #   end
+    #
+    # Output:
+    #   Labels object
+    #
+    def labels
+        locate if defined?(locate)
+        return Labels.new()
+    end
 
     # Description:
     #	Searching for Page Elements. Not for external consumption.
     #        
-    def ole_inner_elements
-        return document.body.all 
-    end
-    private :ole_inner_elements
-
-    # 
-    # Description:
-    #	This method shows the available objects on the current page.
-    # 	This is usually only used for debugging or writing new test scripts.
-    # 	This is a nice feature to help find out what HTML objects are on a page
-    # 	when developing a test case using FireWatir.
-    # 	TODO: implemtnt iteration of all the objects on screen.
-    #
-    #def show_all_objects
-    #    puts "-----------Objects in  page -------------" 
-    #    doc = document
-    #    s = ""
-    #    props = ["name" ,"id" , "value" , "alt" , "src"]
-    #    doc.all.each do |n|
-    #        begin
-    #            s += n.invoke("type").to_s.ljust(16)
-    #        rescue
-    #            next
-    #        end
-    #        props.each do |prop|
-    #            begin
-    #                p = n.invoke(prop)
-    #                s += "  " + "#{prop}=#{p}".to_s.ljust(18)
-    #            rescue
-    #                # this object probably doesnt have this property
-    #            end
-    #        end
-    #        s += "\n"
-    #    end
-    #    puts s
-    #end
+    # def ole_inner_elements
+        # return document.body.all 
+    # end
+    # private :ole_inner_elements
     
+	
+	# 
+	# Description:
+	#   This method shows the available objects on the current page.
+	#   This is usually only used for debugging or writing new test scripts.
+	#   This is a nice feature to help find out what HTML objects are on a page
+    #   when developing a test case using FireWatir.
+    #
+    # Typical Usage:
+    #   ff.show_all_objects
+    #
+    # Output:
+    #   Prints all the available elements on the page.
+    #
+	def show_all_objects
+        puts "-----------Objects in the current context-------------" 
+        locate if defined?(locate)
+        elements = Document.new.all
+        puts elements.length
+        elements.each  do |n|
+            puts n.tagName
+            puts n.to_s
+            puts "------------------------------------------" 
+        end
+        puts "Total number of objects in the current context :	#{elements.length}"
+        return elements
+        # Test the index access. 
+        # puts doc[35].to_s
+	end
+       
     #
     # Description:
     #  Reads the javascript execution result from the jssh socket. 
     #
     # Input:
-    # 	- socket - It is the jssh socket, the  only point of comminication between the browser and firewatir scripts.
+    # 	- socket - It is the jssh socket, the  only point of communication between the browser and firewatir scripts.
     # 
     # Output:	
     #	The javascript execution result as string.	
     #
-    
     def read_socket(socket = $jssh_socket)
         return_value = "" 
         data = ""
@@ -768,17 +834,16 @@ module Container
             s = Kernel.select([socket] , nil , nil, 1)
         end
         #if(s != nil)
-            for stream in s[0]
+        for stream in s[0]
+            data = stream.recv(1024)
+            #puts "data is : #{data}"
+            while(data[data.length - 3..data.length - 1] != "\n> ")
+                return_value += data
                 data = stream.recv(1024)
-                #puts "data is : #{data}"
-                while(data[data.length - 3..data.length - 1] != "\n> ")
-                    return_value += data
-                    data = stream.recv(1024)
-                    #puts "data length is : #{data.length}"
-                end
+                #puts "data length is : #{data.length}"
             end
-        #end
-
+        end
+        
         # If received data is less than 1024 characters or for last data 
         # we read in the above loop 
         return_value += data
@@ -795,7 +860,7 @@ module Container
         length = return_value.length 
         #puts "Return value before removing command prompt is : #{return_value}"
         
-	# Remove the command prompt. Every result returned by JSSH has "\n> " at the end.
+        #Remove the command prompt. Every result returned by JSSH has "\n> " at the end.
         if length <= 3 
             return_value = ""
         elsif(return_value[0..2] == "\n> ")    
@@ -805,7 +870,7 @@ module Container
             return_value = return_value[0..length-4]
         end 
         #puts "Return value after removing command prompt is : #{return_value}"
-        socket.flush
+        #socket.flush
         
         # make sure that command prompt doesn't get there.
         if(return_value[return_value.length - 3..return_value.length - 1] == "\n> ")

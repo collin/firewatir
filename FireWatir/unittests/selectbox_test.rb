@@ -102,23 +102,23 @@ class TC_SelectList < Test::Unit::TestCase
         assert( $ff.select_list(:id, 'selectbox_4').disabled )
     end
     
-    #def test_select_list_iterator
-       # assert_equal(4, $ff.select_lists.length)
-      #  assert_equal("o3"   ,    $ff.select_lists[1].value)  
-      #  assert_equal("sel1" ,    $ff.select_lists[1].name )  
-      #  assert_equal("select-one",         $ff.select_lists[1].type )  
-      #  assert_equal("select-multiple" ,   $ff.select_lists[2].type )  
+    def test_select_list_iterator
+        assert_equal(4, $ff.select_lists.length)
+        assert_equal("o3"   ,    $ff.select_lists[1].value)  
+        assert_equal("sel1" ,    $ff.select_lists[1].name )  
+        assert_equal("select-one",         $ff.select_lists[1].type )  
+        assert_equal("select-multiple" ,   $ff.select_lists[2].type )  
         
-      #  index=1
-      #  $ff.select_lists.each do |l|
-      #      assert_equal( $ff.select_list(:index, index).name , l.name )
-      #      assert_equal( $ff.select_list(:index, index).id , l.id )
-      #      assert_equal( $ff.select_list(:index, index).type , l.type )
-      #      assert_equal( $ff.select_list(:index, index).value , l.value )
-     #       index+=1
-     #   end
-     #   assert_equal( index-1, $ff.select_lists.length)
-    #end
+        index=1
+        $ff.select_lists.each do |l|
+            assert_equal( $ff.select_list(:index, index).name , l.name )
+            assert_equal( $ff.select_list(:index, index).id , l.id )
+            assert_equal( $ff.select_list(:index, index).type , l.type )
+            assert_equal( $ff.select_list(:index, index).value , l.value )
+            index+=1
+        end
+        assert_equal( index-1, $ff.select_lists.length)
+    end
 end
 
 class TC_Select_Options < Test::Unit::TestCase

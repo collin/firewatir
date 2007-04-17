@@ -35,13 +35,14 @@ function addRow() {
 CVS Revision: "$Revision: 1.0 $"
 <br>
 <br>
-<table >
+    <table border="1" id='tblTest' cellspacing="3" cellpadding="6" class="TableClass">
     <tr>
-      <td> Row 1 Col1
-      <td> Row 1 Col2
-    <tr>
-      <td> Row 2 Col1
-      <td> Row 2 Col2
+      <td> Row 1 Col1</td>
+      <td> Row 1 Col2</td>
+  </tr>  <tr>
+      <td> Row 2 Col1</td>
+      <td> Row 2 Col2</td>  
+      </tr>
 </table>
 
 
@@ -50,18 +51,21 @@ CVS Revision: "$Revision: 1.0 $"
 <table id= 't1'>
     <Tr><td id=cell_with_colspan colspan=2>Table 2
     <tr>
-      <td id=cell1> Row 1 Col1
-      <td> Row 1 Col2
+      <td id=cell1> Row 1 Col1</td>
+      <td> Row 1 Col2</td>
+      </tr>
     <tr id=row1>
-      <td> Row 2 Col1
-      <td> Row 2 Col2
+      <td> Row 2 Col1</td>
+      <td> Row 2 Col2</td>
+      </tr>
     <tr>
-      <td> Row 3 Col1
-      <td> Row 3 Col2
+      <td> Row 3 Col1</td>
+      <td> Row 3 Col2</td>
+      </tr>
     <tr>
-      <td> Row 4 Col1
-      <td> Row 4 Col2
-
+      <td> Row 4 Col1</td>
+      <td> Row 4 Col2</td>
+</tr>
 </table>
 <br>
 <input type=button value='add row' onClick='javascript:addRow()'>
@@ -73,18 +77,19 @@ The following has a nested table
 <table id='t2' border=1>
 <tr>
 <td>
-cell 1
+cell 1</td>
 <td>
-cell2
+cell2</td>
+</tr>
 <tr>
 <td>
-    <table><tr><td>nest1<td>nest2</table>
+    <table><tr><td>nest1</td><td>nest2</td></tr></table>
+    </td>
 <td>
 Normal
-
+</td>
+</tr>
 </table>
-
-
 <br>
 This table has 3 body tags.
 <br><br>
@@ -127,16 +132,34 @@ This text is in the THIRD TBODY.
 
 </TABLE>
 
-<table id=pic_table>
+<table border="1" id=pic_table>
 <tr>
-  <td> A picture is in the next cell
-  <td><img src=images/circle.jpg>
-
-  <td> A link is in the next cell
-  <td><a href = http://google.com>Google</a>
-
-
-
-
+  <td> A picture is in the next cell</td>
+  <td><img src=images/circle.jpg></td>
+</tr><tr>
+  <td> A link is in the next cell</td>
+  <td><a href = http://google.com>Google</a></td>
+</tr>
+</table>
+Table to string test
+    <table border="1" id='tblTest1' cellspacing="3" cellpadding="6" class="TableClass">
+        <tr><td id=cellwithcolspan colspan=2>Table 3</td></tr>
+    <tr>
+      <td id=cell1> Row 1 Col1</td>
+      <td> Row 1 Col2</td>
+      </tr>
+    <tr id=row1>
+      <td> Row 2 Col1</td>
+      <td> Row 2 Col2</td>
+      </tr>
+    <tr>
+      <td> Row 3 Col1</td>
+      <td> Row 3 Col2</td>
+      </tr>
+    <tr>
+      <td> Row 4 Col1</td>
+      <td> Row 4 Col2</td>
+      </tr>
+</table>
 </body>
 </html>

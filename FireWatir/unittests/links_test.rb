@@ -109,57 +109,67 @@ class TC_Links < Test::Unit::TestCase
         
         assert_equal( "link_title" , $ff.link(:index, 8).title)
     end
+
+    def test_text_attribute
+        arr1 = $ff.link(:text, "nameDelet").to_s
+        arr2 = $ff.link(:text, /Delet/).to_s
+        assert_equal(arr1, arr2)
+        
+    end
     
-    #def test_link_iterator
-    #    assert_equal(9, $ff.links.length )
-    #    assert_equal("Link Using a name" , $ff.links[7].text)
-    #    
-    #    index = 1
-    #    $ff.links.each do |link|
-    #        assert_equal( $ff.link(:index, index).href      , link.href )
-    #        assert_equal( $ff.link(:index, index).id        , link.id )
-    #        assert_equal( $ff.link(:index, index).name      , link.name )
-    #        assert_equal( $ff.link(:index, index).innerText , link.text )
-    #        index+=1
-    #    end
-    #end
+    def test_link_iterator
+        assert_equal(11, $ff.links.length )
+        assert_equal("Link Using a name" , $ff.links[7].text)
+        
+        index = 1
+        $ff.links.each do |link|
+            assert_equal( $ff.link(:index, index).href      , link.href )
+            assert_equal( $ff.link(:index, index).id        , link.id )
+            assert_equal( $ff.link(:index, index).name      , link.name )
+            assert_equal( $ff.link(:index, index).innerText , link.text )
+            index+=1
+        end
+    end
     
-    #def test_div_xml_bug
-    #    $ff.goto($htmlRoot + "div_xml.html")
-    #    assert_nothing_raised {$ff.link(:text, 'Create').exists? }   
-    #end
+    def test_div_xml_bug
+        $ff.goto($htmlRoot + "div_xml.html")
+        assert_nothing_raised {$ff.link(:text, 'Create').exists? }   
+    end
+    def test_link_to_s
+       puts  $ff.link(:id,"linktos").to_s
+    end
 end
 
-#class TC_Frame_Links < Test::Unit::TestCase
+class TC_Frame_Links < Test::Unit::TestCase
     include FireWatir
     
-#    def setup()
-#        $ff.goto($htmlRoot + "frame_links.html")
-#    end
+    def setup()
+        $ff.goto($htmlRoot + "frame_links.html")
+    end
 
-#    def test_new_frame_link_exists
-#        assert(exists?{$ff.frame("buttonFrame").link(:text, "test1")})   
-#    end
-#    def xtest_missing_frame_links_dont_exist        
-#        assert_false(exists?{$ff.frame("buttonFrame").link(:text, "missing")})
-#        assert_false(exists?{ie.frame("missing").link(:text, "test1")})   
-#    end
+    def test_new_frame_link_exists
+        assert($ff.frame("buttonFrame").link(:text, "test1").exists?)   
+    end
+    def test_missing_frame_links_dont_exist        
+        assert_false($ff.frame("buttonFrame").link(:text, "missing").exists?)
+        assert_raise(UnknownFrameException, "UnknownFrameException was supposed to be thrown"){$ff.frame("missing").link(:text, "test1").exists?}
+    end
     
-#    def test_links_in_frames
-#        assert($ff.frame("buttonFrame").link(:text, "test1").exists?)   
-#        assert_false($ff.frame("buttonFrame").link(:text, "missing").exists?)   
+    def test_links_in_frames
+        assert($ff.frame("buttonFrame").link(:text, "test1").exists?)   
+        assert_false($ff.frame("buttonFrame").link(:text, "missing").exists?)   
         
-#       assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { $ff.frame("buttonFrame").link(:index, 199).href }  
-#        assert_match(/links2/, $ff.frame("buttonFrame").link(:index, 1).href)
+        assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { $ff.frame("buttonFrame").link(:index, 199).href }  
+        assert_match(/links2/, $ff.frame("buttonFrame").link(:index, 1).href)
         
-#        count =0
-#        $ff.frame("buttonFrame").links.each do |l|
-#            count+=1
-#        end
-#        
-#        assert_equal( 9 , count)
-#    end    
-#end
+        count =0
+        $ff.frame("buttonFrame").links.each do |l|
+            count+=1
+        end
+        
+        assert_equal(11 , count)
+    end    
+end
 
 #require 'unittests/iostring'
 #class TC_showlinks < Test::Unit::TestCase

@@ -75,7 +75,7 @@ class TC_Tables < Test::Unit::TestCase
     image = table[1][2].image(:index,1)
     assert_equal("106", image.width)
     
-    link = table[1][4].link(:index,1)
+    link = table[2][2].link(:index,1)
     assert_equal("Google", link.innerText)
   end
   

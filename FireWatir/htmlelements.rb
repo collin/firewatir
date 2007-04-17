@@ -107,29 +107,19 @@ class NonControlElement < Element
         @what = what
     end
        
-    #
-    # Description:
-    #   Used to populate the properties in the to_s method.
-    #
-    def span_div_string_creator
-        n = []
-        n <<   "class:".ljust(TO_S_SIZE) + self.class_name
-        n <<   "text:".ljust(TO_S_SIZE) + self.text
-        return n
-    end
-    private :span_div_string_creator
-        
     # 
     # Description:
     #   Creates string of properties of the object.
-    # TODO: Impelement to_s for this class
-    #.
-    #def to_s
-    #    assert_exists
-    #    r = string_creator
-    #    r += span_div_string_creator
-    #    return r.join("\n")
-    #end
+    #
+    def to_s(attributes = nil)
+        assert_exists
+        hash_properties = {"text"=>"innerHTML"}
+        hash_properties.update(attributes) if attributes != nil
+        r = super(hash_properties)
+        #r = string_creator
+        #r += span_div_string_creator
+        return r.join("\n")
+    end
      
 end
 
@@ -180,25 +170,23 @@ class Label < NonControlElement
     # Description:
     #   Used to populate the properties in the to_s method.
     #
-    def label_string_creator
-        n = []
-        n <<   "for:".ljust(TO_S_SIZE) + self.for
-        n <<   "inner text:".ljust(TO_S_SIZE) + self.text
-        return n
-    end
-    private :label_string_creator
+    #def label_string_creator
+    #    n = []
+    #    n <<   "for:".ljust(TO_S_SIZE) + self.for
+    #    n <<   "inner text:".ljust(TO_S_SIZE) + self.text
+    #    return n
+    #end
+    #private :label_string_creator
 
     #
     # Description:
     #   Creates string of properties of the object.
-    # TODO: Impelement to_s for this class
     #
-    #def to_s
-    #    assert_exists
-    #    r = string_creator
-    #    r=r + label_string_creator
-    #    return r.join("\n")
-    #end
+    def to_s
+        assert_exists
+        super({"for" => "htmlFor","text" => "innerHTML"})
+    #   r=r + label_string_creator
+    end
 end
 
 #
@@ -269,23 +257,23 @@ class Table < Element
     # Description:
     #   Used to populate the properties in the to_s method.
     #
-    def table_string_creator
-        n = []
-        n <<   "rows:".ljust(TO_S_SIZE) + self.row_count.to_s
-        n <<   "cols:".ljust(TO_S_SIZE) + self.column_count.to_s
-        return n
-    end
-    private :table_string_creator
+    #def table_string_creator
+    #    n = []
+    #    n <<   "rows:".ljust(TO_S_SIZE) + self.row_count.to_s
+    #    n <<   "cols:".ljust(TO_S_SIZE) + self.column_count.to_s
+    #    return n
+    #end
+    #private :table_string_creator
 
     # returns the properties of the object in a string
     # raises an ObjectNotFound exception if the object cannot be found
     # TODO: Implement to_s method for this class.
-    #def to_s
-    #    assert_exists
-    #    r = string_creator
-    #    r=r + table_string_creator
-    #    return r.join("\n")
-    #end
+    
+    def to_s
+        assert_exists
+        r = super({"rows" => "rows.length","columns" => "columnLength", "cellspacing" => "cellspacing", "cellpadding" => "cellpadding", "border" => "border"})
+       # r += self.column_count.to_s
+    end
 
     #
     # Description:
@@ -554,7 +542,7 @@ class Image < Element
 
     #
     # Description:
-    #   Used to populate the properties in to_s method.
+    #   Used to populate the properties in to_s method. Not used anymore
     #
     def image_string_creator
         n = []
@@ -569,13 +557,10 @@ class Image < Element
     private :image_string_creator
 
     # returns a string representation of the object
-    # TODO: Implement to_s method for this class.
-    #def to_s
-    #    assert_exists
-    #    r = string_creator
-    #    r=r + image_string_creator
-    #    return r.join("\n")
-    #end
+    def to_s
+        assert_exists
+        super({"src" => "src","width" => "width","height" => "height","alt" => "alt"})
+    end
 
     # this method returns the file created date of the image
     #def fileCreatedDate
@@ -710,22 +695,20 @@ class Link < Element
     # Description:
     #   Used to populate the properties in to_s method.
     #
-    def link_string_creator
-        n = []
-        n <<   "href:".ljust(TO_S_SIZE) + self.href
-        n <<   "inner text:".ljust(TO_S_SIZE) + self.text
-        n <<   "img src:".ljust(TO_S_SIZE) + self.src if self.link_has_image
-        return n
-        end
+    #def link_string_creator
+    #    n = []
+    #    n <<   "href:".ljust(TO_S_SIZE) + self.href
+    #    n <<   "inner text:".ljust(TO_S_SIZE) + self.text
+    #    n <<   "img src:".ljust(TO_S_SIZE) + self.src if self.link_has_image
+    #    return n
+    #    end
 
     # returns a textual description of the link
-    # TODO: Implement to_s method for this class.
-    #def to_s
-    #   assert_exists
-    #   r = string_creator
-    #   r = r + link_string_creator
-    #   return r.join("\n")
-    #end
+    
+    def to_s
+       assert_exists
+       super({"href" => "href","inner text" => "text"})
+    end
 end
 
 #
@@ -902,7 +885,7 @@ end
 # Description:
 #   Class for Option element.
 #
-class Option 
+class Option < SelectList
     #
     # Description:
     #   Initializes the instance of option object.
@@ -1031,23 +1014,21 @@ class TextField < InputElement
     # Description:
     #   Used to populate the properties in to_s method
     #
-    def text_string_creator
-        n = []
-        n <<   "length:".ljust(TO_S_SIZE) + self.size.to_s
-        n <<   "max length:".ljust(TO_S_SIZE) + self.maxlength.to_s
-        n <<   "read only:".ljust(TO_S_SIZE) + self.readonly?.to_s
-
-        return n
-    end
-    private :text_string_creator
+    #def text_string_creator
+    #    n = []
+    #    n <<   "length:".ljust(TO_S_SIZE) + self.size.to_s
+    #    n <<   "max length:".ljust(TO_S_SIZE) + self.maxlength.to_s
+    #    n <<   "read only:".ljust(TO_S_SIZE) + self.readonly?.to_s
+    #
+    #    return n
+    #end
+    #private :text_string_creator
 
     # TODO: Impelement the to_s method.
-    #def to_s
-    #   assert_exists
-    #   r = string_creator
-    #   r += text_string_creator
-    #   return r.join("\n")
-    #end
+    def to_s
+       assert_exists
+       super({"length" => "size","max length" => "maxLength","read only" => "readOnly" })
+    end
     
     #
     # Description:
@@ -1213,7 +1194,7 @@ class TextField < InputElement
             #sleep element.typingspeed   # typing speed
             c = value[i,1]
             #element.log  " adding c.chr " + c  #.chr.to_s
-            @o.value = (@o.value.to_s + c)   #c.chr
+            @o.value = "#{(@o.value.to_s + c)}"   #c.chr
             @o.fireEvent("onKeyDown")
             @o.fireEvent("onKeyPress")
             @o.fireEvent("onKeyUp")
@@ -1437,6 +1418,7 @@ end
 
 # this class is the super class for the iterator classes ( buttons, links, spans etc
 # it would normally only be accessed by the iterator methods ( spans , links etc) of IE
+
 #class ElementCollections
 #    include Enumerable
 #    include Container
@@ -1518,17 +1500,16 @@ end
 #--
 #   These classes are not for public consumption, so we switch off rdoc
 
-
 # presumes element_class or element_tag is defined
 # for subclasses of ElementCollections
-#module CommonCollection
+# module CommonCollection
 #    def element_tag
 #        element_class.tag
 #    end
 #    def length
 #        element.document.getElementsByTagName(element_tag).length
 #    end
-#end        
+# end        
 
 # This class is used as part of the .show method of the iterators class
 # it would not normally be used by a user
@@ -1577,31 +1558,49 @@ end
 #end
 
 #    resume rdoc
-#++   
+#   
 
 
-# this class accesses the buttons in the document as a collection
-# it would normally only be accessed by the FireWatir::Container#buttons method
 #
-#class Buttons < ElementCollections
-#    def element_class; Button; end
-#    def length
-#        get_length_of_input_objects(["button", "submit", "image"])
-#    end
-
-#    private
-#    def set_show_items
-#        super
-#        @show_attributes.add( "disabled" , 9)
-#        @show_attributes.add( "value" , 20)
-#    end
-#end
-
-
-# this class accesses the file fields in the document as a collection
-# it would normally only be accessed by the FireWatir::Container#file_fields method
+# Description:
+#   Class for accessing all the button elements in the document.
+#   It would normally only be accessed by the FireWatir::Container#buttons method
 #
-#class FileFields< ElementCollections
+class Buttons < ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of Buttons class.
+    #
+    def initialize
+        super("input", ["button", "image", "submit", "reset"])
+    end
+    #def element_class; Button; end
+    #def length
+       # get_length_of_input_objects(["button", "submit", "image"])
+    #end
+
+    #private
+    #def set_show_items
+    #    super
+    #    @show_attributes.add( "disabled" , 9)
+    #    @show_attributes.add( "value" , 20)
+    #end
+end
+
+
+#
+# Description:
+#   Class for accessing all the File Field elements in the document.
+#   It would normally only be accessed by the FireWatir::Container#file_fields method
+#
+class FileFields< ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of FileFields class.
+    #
+    def initialize()
+        super("input",["file"])
+    end
 #    def element_class; FileField; end
 #    def length
 #        get_length_of_input_objects(["file"])
@@ -1613,13 +1612,22 @@ end
 #        @show_attributes.add( "disabled" , 9)
 #        @show_attributes.add( "value" , 20)
 #    end
-#end
+end
 
 
-# this class accesses the check boxes in the document as a collection
-# Normally a user would not need to create this object as it is returned by the FireWatir::Container#checkboxes method
 #
-#class CheckBoxes < ElementCollections
+# Description:
+#   Class for accessing all the CheckBox elements in the document.
+#   It would normally only be accessed by the FireWatir::Container#checkboxes method
+#
+class CheckBoxes < ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of CheckBoxes class.
+    #
+    def initialize()
+        super("input",["checkbox"])
+    end
 #    def element_class; CheckBox; end  
 #    def length
 #        get_length_of_input_objects("checkbox")
@@ -1629,12 +1637,21 @@ end
 #    def iterator_object(i)
 #        element.checkbox(:index, i+1)
 #    end
-#end
+end
 
-# this class accesses the radio buttons in the document as a collection
-# Normally a user would not need to create this object as it is returned by the FireWatir::Container#radios method
 #
-#class Radios < ElementCollections
+# Description:
+#   Class for accessing all the Radio button elements in the document.
+#   It would normally only be accessed by the FireWatir::Container#radios method
+#
+class Radios < ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of Radios class.
+    #
+    def initialize()
+        super("input",["radio"])
+    end
 #    def element_class; Radio; end
 #    def length
 #        get_length_of_input_objects("radio")
@@ -1644,21 +1661,39 @@ end
 #    def iterator_object(i)
 #        element.radio(:index, i+1)
 #    end
-#end
+end
 
-# this class accesses the select boxes  in the document as a collection
-# Normally a user would not need to create this object as it is returned by the FireWatir::Container#select_lists method
 #
-#class SelectLists < ElementCollections
+# Description:
+#   Class for accessing all the select list elements in the document.
+#   It would normally only be accessed by the FireWatir::Container#select_lists method
+#
+class SelectLists < ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of SelectLists class.
+    #
+    def initialize()
+        super("select",["select-one","select-multiple"])
+    end
 #    include CommonCollection
 #    def element_class; SelectList; end
 #    def element_tag; 'SELECT'; end
-#end
+end
 
-# this class accesses the links in the document as a collection
-# Normally a user would not need to create this object as it is returned by the FireWatir::Container#links method
 #
-#class Links < ElementCollections
+# Description:
+#   Class for accessing all the link elements in the document.
+#   It would normally only be accessed by the FireWatir::Container#links method
+#
+class Links < ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of Links class.
+    #
+    def initialize()
+        super("a")
+    end
 #    include CommonCollection
 #    def element_class; Link; end    
 #    def element_tag; 'A'; end
@@ -1670,12 +1705,21 @@ end
 #        @show_attributes.add("innerText" , 60)
 #    end
 
-#end
+end
 
-# this class accesses the imnages in the document as a collection
-# Normally a user would not need to create this object as it is returned by the FireWatir::Container#images method
 #
-#class Images < ElementCollections
+# Description:
+#   Class for accessing all the image elements in the document.
+#   It would normally only be accessed by the FireWatir::Container#images method
+#
+class Images < ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of Images class.
+    #
+    def initialize()
+        super("img")
+    end
 #    def element_class; Image; end 
 #    def length
 #        element.document.images.length
@@ -1688,33 +1732,61 @@ end
 #        @show_attributes.add("alt", 30)
 #    end 
 
-#end
+end
 
-# this class accesses the text fields in the document as a collection
-# Normally a user would not need to create this object as it is returned by the FireWatir::Container#text_fields method
 #
-#class TextFields < ElementCollections
+# Description:
+#   Class for accessing all the text field elements in the document.
+#   It would normally only be accessed by the FireWatir::Container#text_fields method
+#
+class TextFields < ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of TextFields class.
+    #
+    def initialize()
+        super("input",["text","textarea","password"])
+    end
 #    def element_class; TextField; end
 #    def length
 #        # text areas are also included in the TextFields, but we need to get them seperately
 #        get_length_of_input_objects( ["text" , "password"] ) +
 #            element.document.getElementsByTagName("textarea").length
 #    end
-#end
+end
 
-# this class accesses the hidden fields in the document as a collection
-# Normally a user would not need to create this object as it is returned by the FireWatir::Container#hiddens method
-#class Hiddens < ElementCollections
+#
+# Description:
+#   Class for accessing all the hidden elements in the document.
+#   It would normally only be accessed by the FireWatir::Container#hiddens method
+#
+class Hiddens < ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of Hiddens class.
+    #
+    def initialize
+        super("input",["hidden"])
+    end
 #    def element_class; Hidden; end
 #    def length
 #        get_length_of_input_objects("hidden")
 #    end
-#end
+end
 
-# this class accesses the text fields in the document as a collection
-# Normally a user would not need to create this object as it is returned by the FireWatir::Container#tables method
 #
-#class Tables < ElementCollections
+# Description:
+#   Class for accessing all the table elements in the document.
+#   It would normally only be accessed by the FireWatir::Container#tables method
+#
+class Tables < ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of Tables class.
+    #
+	def initialize
+		super("table")
+	end
 #    include CommonCollection
 #    def element_class; Table; end
 #    def element_tag; 'TABLE'; end
@@ -1724,12 +1796,21 @@ end
 #        super
 #        @show_attributes.delete( "name")
 #    end
-#end
+end
 
-# this class accesses the labels in the document as a collection
-# Normally a user would not need to create this object as it is returned by the FireWatir::Container#labels method
 #
-#class Labels < ElementCollections
+# Description:
+#   Class for accessing all the label elements in the document.
+#   It would normally only be accessed by the FireWatir::Container#labels method
+#
+class Labels < ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of Labels class.
+    #
+    def initialize()
+        super("label")
+    end
 #    include CommonCollection
 #    def element_class; Label; end
 #    def element_tag; 'LABEL'; end
@@ -1739,12 +1820,21 @@ end
 #        super
 #        @show_attributes.add("htmlFor", 20)
 #    end
-#end
+end
 
-# this class accesses the p tags in the document as a collection
-# Normally a user would not need to create this object as it is returned by the FireWatir::Container#ps method
 #
-#class Pres < ElementCollections
+# Description:
+#   Class for accessing all the pre element in the document.
+#   It would normally only be accessed by the FireWatir::Container#pres method
+#
+class Pres < ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of Pres class.
+    #
+    def initialize()
+        super("pre")
+    end
 #	include CommonCollection
 #	def element_class; Pre; end
 	
@@ -1753,12 +1843,21 @@ end
 #		@show_attributes.delete( "name" )
 #		@show_attributes.add( "className", 20 )
 #	end
-#end
+end
 
-# this class accesses the p tags in the document as a collection
-# Normally a user would not need to create this object as it is returned by the FireWatir::Container#ps method
 #
-#class Ps < ElementCollections
+# Description:
+#   Class for accessing all the paragraph elements in the document.
+#   It would normally only be accessed by the FireWatir::Container#ps method
+#
+class Ps < ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of Ps class.
+    #
+    def initialize()
+        super("p")
+    end
 #    include CommonCollection
 #    def element_class; P; end
 
@@ -1769,12 +1868,21 @@ end
 #        @show_attributes.add( "className" , 20)
 #    end
 
-#end
+end
 
-# this class accesses the spans in the document as a collection
-# Normally a user would not need to create this object as it is returned by the FireWatir::Container#spans method
 #
-#class Spans < ElementCollections
+# Description:
+#   Class for accessing all the span elements in the document.
+#   It would normally only be accessed by the FireWatir::Container#spans method
+#
+class Spans < ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of Spans class.
+    #
+    def initialize()
+        super("span")
+    end
 #    include CommonCollection
 #    def element_class; Span; end
 
@@ -1785,12 +1893,21 @@ end
 #        @show_attributes.add( "className" , 20)
 #    end
 
-#end
+end
 
-# this class accesses the divs in the document as a collection
-# Normally a user would not need to create this object as it is returned by the FireWatir::Container#divs method
 #
-#class Divs < ElementCollections
+# Description:
+#   Class for accessing all the div elements in the document.
+#   It would normally only be accessed by the FireWatir::Container#divs method
+#
+class Divs < ElementCollections
+    #
+    # Description:
+    #   Initializes the instance of Divs class.
+    #
+    def initialize()
+        super("div")
+    end
 #    include CommonCollection
 #    def element_class; Div; end
 
@@ -1801,4 +1918,4 @@ end
 #        @show_attributes.add( "className" , 20)
 #    end
 
-#end
+end

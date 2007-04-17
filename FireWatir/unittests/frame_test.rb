@@ -96,6 +96,8 @@ class TC_IFrames < Test::Unit::TestCase
   end
   
   def test_Iframe
+    f = $ff.frame("senderFrame")
+    f.text_field(:name, "textToSend").set("Hello World")
     $ff.frame("senderFrame").text_field(:name , "textToSend").set( "Hello World")
     $ff.frame("senderFrame").button(:index, 1).click
     assert( $ff.frame("receiverFrame").text_field(:name , "receiverText").verify_contains("Hello World") )

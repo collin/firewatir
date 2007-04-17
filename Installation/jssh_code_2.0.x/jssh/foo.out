@@ -1,0 +1,185 @@
+dclpb15:~/Work/MOZILLA_1_8_BRANCH_jssh/mozilla/extensions/jssh davel$ cvs diff -D 20060401     
+cvs diff: Diffing .
+cvs diff: Diffing resources
+cvs diff: Diffing resources/content
+cvs diff: Diffing xemacs
+dclpb15:~/Work/MOZILLA_1_8_BRANCH_jssh/mozilla/extensions/jssh davel$ cvs -n up 
+cvs update: Updating .
+A ChangeLog
+A Makefile.in
+A install.js
+A jar.mn
+A nsIJSSh.idl
+A nsIJSShServer.idl
+A nsJSSh.cpp
+A nsJSSh.h
+A nsJSShModule.cpp
+A nsJSShServer.cpp
+A nsJSShServer.h
+A nsJSShStarter.js
+cvs update: Updating resources
+cvs update: Updating resources/content
+A resources/content/configure.xul
+A resources/content/contents.rdf
+A resources/content/jssh-debug.js
+A resources/content/tasksOverlay.xul
+cvs update: Updating xemacs
+A xemacs/moz-jssh.el
+dclpb15:~/Work/MOZILLA_1_8_BRANCH_jssh/mozilla/extensions/jssh davel$ cvs status .
+cvs status: Examining .
+===================================================================
+File: ChangeLog        	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+===================================================================
+File: Makefile.in      	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+===================================================================
+File: install.js       	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+===================================================================
+File: jar.mn           	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+===================================================================
+File: nsIJSSh.idl      	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+===================================================================
+File: nsIJSShServer.idl	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+===================================================================
+File: nsJSSh.cpp       	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+===================================================================
+File: nsJSSh.h         	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+===================================================================
+File: nsJSShModule.cpp 	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+===================================================================
+File: nsJSShServer.cpp 	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+===================================================================
+File: nsJSShServer.h   	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+===================================================================
+File: nsJSShStarter.js 	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+cvs status: Examining resources
+cvs status: Examining resources/content
+===================================================================
+File: configure.xul    	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+===================================================================
+File: contents.rdf     	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+===================================================================
+File: jssh-debug.js    	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+===================================================================
+File: tasksOverlay.xul 	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+
+cvs status: Examining xemacs
+===================================================================
+File: moz-jssh.el      	Status: Locally Added
+
+   Working revision:	New file!
+   Repository revision:	No revision control file
+   Sticky Tag:		MOZILLA_1_8_BRANCH - MISSING from RCS file!
+   Sticky Date:		(none)
+   Sticky Options:	(none)
+

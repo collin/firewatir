@@ -155,7 +155,14 @@ module FireWatir
         # used only while starting firefox on windows. For other platforms you need to start
         # firefox manually.
         @@firefox_started = false
-        
+
+        # variable to check if connection has been established or not.
+        @@connection_established = false
+
+        # This allows us to identify the window uniquely and close them accordingly.
+        @window_title = nil 
+        @window_url = nil 
+                                                
         #
         # Description: 
         #   Starts the firefox browser. Currently this only works for Windows Platform.
@@ -194,7 +201,13 @@ module FireWatir
                     sleep waitTime
                     @@firefox_started = true
                 end
-            end        
+            end       
+            
+            if(@@connection_established == false)
+                set_defaults()
+            end
+            #get_window_number()
+            #set_browser_document()
         end
 
         #
@@ -222,7 +235,7 @@ module FireWatir
             @@current_window = read_socket().to_i - 1
             # This will store the information about the window.
             @@window_stack = Array.new
-            @@window_stack.push(@@current_window)
+            #@@window_stack.push(@@current_window)
             #puts "here in get_window_number window number is #{@@current_window}"
             return @@current_window
         end
@@ -236,7 +249,7 @@ module FireWatir
         #   url - url to be loaded.
         #
         def goto(url)
-            set_defaults()
+            #set_defaults()
             get_window_number()
             set_browser_document()
             # Load the given url.
@@ -251,12 +264,10 @@ module FireWatir
         #   Loads the previous page (if there is any) in the browser. Waits for the page to get loaded.
         #
         def back()
-            set_browser_document()
-            $jssh_socket.send("if(#{BROWSER_VAR}.canGoBack) #{BROWSER_VAR}.goBack()\n", 0)
+            #set_browser_document()
+            $jssh_socket.send("if(#{BROWSER_VAR}.canGoBack) #{BROWSER_VAR}.goBack();\n", 0)
             read_socket();
             wait()
-            
-            set_browser_document()
         end
 
         #
@@ -264,25 +275,21 @@ module FireWatir
         #   Loads the next page (if there is any) in the browser. Waits for the page to get loaded.
         #
         def forward()
-            set_browser_document()
-            $jssh_socket.send("if(#{BROWSER_VAR}.canGoForward) #{BROWSER_VAR}.goForward()\n", 0)
+            #set_browser_document()
+            $jssh_socket.send("if(#{BROWSER_VAR}.canGoForward) #{BROWSER_VAR}.goForward();\n", 0)
             read_socket();
             wait()
-
-            set_browser_document()
         end
         
         #
         # Description:
         #   Reloads the current page in the browser. Waits for the page to get loaded.
         #
-        def reload()
-            set_browser_document()
-            $jssh_socket.send("#{BROWSER_VAR}.relaod();\n", 0)
+        def refresh()
+            #set_browser_document()
+            $jssh_socket.send("#{BROWSER_VAR}.reload();\n", 0)
             read_socket();
             wait()
-
-            set_browser_document()
         end
         
         #
@@ -296,8 +303,7 @@ module FireWatir
                 $jssh_socket = TCPSocket::new(MACHINE_IP, "9997")
                 $jssh_socket.sync = true
                 read_socket()
-                @@already_closed = false
-                @jspopup_handle = nil
+                @@connection_established = true
             rescue
                 puts "Unable to connect to machine : #{MACHINE_IP} on port 9997. Make sure that JSSh is properly installed and Firefox is running with '-jssh' option"
                 exit
@@ -326,6 +332,12 @@ module FireWatir
 
             $jssh_socket.send("#{jssh_command}\n", 0)
             read_socket()
+
+            # Get window and window's parent title and url
+            $jssh_socket.send("#{DOCUMENT_VAR}.title;\n", 0)
+            @window_title = read_socket()
+            $jssh_socket.send("#{DOCUMENT_VAR}.URL;\n", 0)
+            @window_url = read_socket()
         end
         private :set_browser_document
         
@@ -334,19 +346,27 @@ module FireWatir
         #   Closes the window.
         #
         def close()
-            # This is the case if some click event has closed the window. Click() function sets the variable
-            # alread_closed as true. So in that case just return.
-            if @@already_closed
-                @@already_closed = false
-                return
-            end
-            
+
             if @@current_window == 0
                 $jssh_socket.send(" getWindows()[0].close(); \n", 0)
             else
-                $jssh_socket.send(" getWindows()[#{@@current_window}].close();\n", 0)
-                read_socket();
+                # Check if window exists, because there may be the case that it has been closed by click event on some element.
+                # For e.g: Close Button, Close this Window link etc.
+                window_number = find_window("url", @window_url)
+
+                # If matching window found. Close the window.
+                if(window_number > 0)
+                    $jssh_socket.send(" getWindows()[#{window_number}].close();\n", 0)
+                    read_socket();
+                end    
+                
+                #Get the parent window url from the stack and return that window.
                 @@current_window = @@window_stack.pop()
+                @window_url = @@window_stack.pop()
+                @window_title = @@window_stack.pop()
+                # Find window with this url.
+                window_number = find_window("url", @window_url)
+                @@current_window = window_number
                 set_browser_document()
             end
         end
@@ -361,7 +381,20 @@ module FireWatir
         #   Instance of newly attached window.
         #
         def attach(how, what)
-            find_window(how, what)
+            window_number = find_window(how, what)
+
+            if(window_number == 0)
+               raise NoMatchingWindowFoundException.new("Unable to locate window, using #{how} and #{what}")  
+            elsif(window_number > 0)
+                # Push the window_title and window_url of parent window. So that when we close the child window
+                # appropriate handle of parent window is returned back.
+                @@window_stack.push(@window_title)
+                @@window_stack.push(@window_url)
+
+                @@current_window = window_number.to_i
+                set_browser_document()
+            end    
+            self
         end
 
         #
@@ -423,14 +456,7 @@ module FireWatir
             window_number = read_socket()
             #puts "window number is : " + window_number.to_s
 
-            if(window_number.to_i == 0)
-               raise NoMatchingWindowFoundException.new("Unable to locate window, using #{how} and #{what}")  
-            elsif(window_number.to_i > 0)
-                @@window_stack.push(@@current_window)
-                @@current_window = window_number.to_i
-                set_browser_document()
-            end    
-            self
+            return window_number.to_i
         end
         private :find_window
         
@@ -441,7 +467,7 @@ module FireWatir
         def contains_text(match_text)
             #puts "Text to match is : #{match_text}"
             #puts "Html is : #{self.text}"
-            return (match_text.match(self.text) == nil) ? false : true
+            return (match_text.matches(self.text) == nil) ? false : true
         end
 
         #
@@ -452,8 +478,7 @@ module FireWatir
         #   URL of the page.
         #
         def url()
-            $jssh_socket.send("#{DOCUMENT_VAR}.URL;\n", 0)
-            return read_socket()
+            @window_url
         end 
 
         #
@@ -464,7 +489,19 @@ module FireWatir
         #   Title of the page.
         #
         def title()
-            $jssh_socket.send("#{DOCUMENT_VAR}.title;\n", 0)
+            @window_title
+        end
+
+        #
+        # Description:
+        #   Returns the html of the page currently loaded in the browser.
+        #
+        # Output:
+        #   HTML shown on the page.
+        #
+        def html()
+            $jssh_socket.send("var htmlelem = #{DOCUMENT_VAR}.getElementsByTagName('html')[0]; htmlelem.innerHTML;\n", 0)
+            #$jssh_socket.send("#{BODY_VAR}.innerHTML;\n", 0)
             return read_socket()
         end
 
@@ -476,7 +513,7 @@ module FireWatir
         #   Text shown on the page.
         #
         def text()
-            $jssh_socket.send("#{BODY_VAR}.innerHTML;\n", 0)
+            $jssh_socket.send("#{BODY_VAR}.textContent;\n", 0)
             return read_socket()
         end
         
@@ -509,6 +546,60 @@ module FireWatir
                 $jssh_socket.send("#{BROWSER_VAR}.webProgress.isLoadingDocument;\n" , 0)
                 isLoadingDocument = read_socket()
                 #puts "Is browser still loading page: #{isLoadingDocument}"
+            end
+
+            # Check for Javascript redirect. As we are connected to Firefox via JSSh. JSSh
+            # doesn't detect any javascript redirects so check it here.
+            # If page redirects to itself that this code will enter in infinite loop.
+            # So we currently don't wait for such a page.
+            # wait variable in JSSh tells if we should wait more for the page to get loaded
+            # or continue. -1 means page is not redirected. Anyother positive values means wait.
+            jssh_command = "var wait = -1; var meta = null; meta = #{BROWSER_VAR}.contentDocument.getElementsByTagName('meta')[0];
+                            if(meta != null)
+                            {
+                                var doc_url = #{BROWSER_VAR}.contentDocument.URL;
+                                for(var i=0; i< meta.length;++i)
+                                {
+									var content = meta[i].content;
+									var regex = new RegExp(\"^refresh$\", \"i\");
+									if(regex.test(meta[i].httpEquiv))
+									{
+										var arrContent = content.split(';');
+										var redirect_url = null;
+										if(arrContent.length > 0)
+										{
+											if(arrContent.length > 1)
+												redirect_url = arrContent[1];
+	                                        
+											if(redirect_url != null)
+											{
+												regex = new RegExp(\"^.*\" + redirect_url + \"$\");
+												if(!regex.test(doc_url))
+												{
+													wait = arrContent[0];
+												}
+											}
+											break;
+										}
+									}
+								}
+                            }
+                            wait;"
+            #puts "command in wait is : #{jssh_command}"                
+            jssh_command = jssh_command.gsub(/\n/, "")
+            $jssh_socket.send("#{jssh_command}; \n", 0)
+            wait_time = read_socket();
+            #puts "wait time is : #{wait_time}"
+            begin
+                wait_time = wait_time.to_i
+                if(wait_time != -1)
+                    sleep(wait_time)
+                    # Call wait again. In case there are multiple redirects.
+                    $jssh_socket.send("#{BROWSER_VAR} = #{WINDOW_VAR}.getBrowser(); \n",0)
+                    read_socket()
+                    wait()
+                end    
+            rescue
             end
             set_browser_document()
         end

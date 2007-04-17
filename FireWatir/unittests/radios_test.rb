@@ -143,23 +143,22 @@ class TC_Radios < Test::Unit::TestCase
 
     end
 
-    #def test_radio_iterators
-
-     #   assert_equal(11, $ff.radios.length)
-      #  assert_equal("box5" , $ff.radios[2].id )
-      #  assert_equal(true ,  $ff.radios[3].disabled )
-      #  assert_equal(false ,  $ff.radios[1].disabled )
-
-      #  index = 1
-      #  $ff.radios.each do |r|
-      #      assert_equal( $ff.radio(:index, index).name , r.name )
-      #      assert_equal( $ff.radio(:index, index).id , r.id )
-      #      assert_equal( $ff.radio(:index, index).value, r.value)
-      #      assert_equal( $ff.radio(:index, index).disabled , r.disabled )
-      #      index+=1
-      #  end
-      #  assert_equal(index -1, $ff.radios.length)
-   # end
+    def test_radio_iterators
+        
+        assert_equal(11, $ff.radios.length)
+        assert_equal("box5" , $ff.radios[2].id )
+        assert_equal(true ,  $ff.radios[3].disabled )
+        assert_equal(false ,  $ff.radios[1].disabled )
+        index = 1
+        $ff.radios.each do |r|
+            assert_equal( $ff.radio(:index, index).name , r.name )
+            assert_equal( $ff.radio(:index, index).id , r.id )
+            assert_equal( $ff.radio(:index, index).value, r.value)
+            assert_equal( $ff.radio(:index, index).disabled , r.disabled )
+            index+=1
+        end
+        assert_equal(index -1, $ff.radios.length)
+    end
 
 
 end

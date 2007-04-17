@@ -49,13 +49,13 @@ class TC_CheckBox < Test::Unit::TestCase
        assert_false($ff.button(:value , "foo").enabled?)
     end
 
-    #def test_CheckBox_Exists
-    #  assert($ff.checkbox(:name, "box1").exists?)   
-    # assert_false($ff.checkbox(:name, "missing").exists?)   
-    #
-    #   assert($ff.checkbox(:name, "box4" , 1).exists?)   
-    #  assert_false($ff.checkbox(:name, "box4" , 22).exists?)   
-    #end
+    def test_CheckBox_Exists
+       assert($ff.checkbox(:name, "box1").exists?)   
+       assert_false($ff.checkbox(:name, "missing").exists?)   
+    
+       assert($ff.checkbox(:name, "box4" , 1).exists?)   
+       assert_false($ff.checkbox(:name, "box4" , 22).exists?)   
+    end
 
     #def test_checkbox_Enabled
     #  assert_raises(UnknownObjectException) { $ff.checkbox(:name, "noName").enabled? }  
@@ -132,21 +132,21 @@ class TC_CheckBox < Test::Unit::TestCase
 
     end
 
-    #def test_checkbox_iterator
+    def test_checkbox_iterator
 
-      # assert_equal(11, $ff.checkboxes.length)
-      #  assert_equal("box1" , $ff.checkboxes[1].name )
+        assert_equal(11, $ff.checkboxes.length)
+        assert_equal("box1" , $ff.checkboxes[1].name )
 
-      #  index=1
-      #  $ff.checkboxes.each do |c|
-      #      assert_equal( $ff.checkbox(:index, index).name , c.name )
-      #      assert_equal( $ff.checkbox(:index, index).id, c.id )
-      #      assert_equal( $ff.checkbox(:index, index).value, c.value )
-      #      index+=1
-      #  end
-      #  assert_equal(index-1, $ff.checkboxes.length)
+        index=1
+        $ff.checkboxes.each do |c|
+            assert_equal( $ff.checkbox(:index, index).name , c.name )
+            assert_equal( $ff.checkbox(:index, index).id, c.id )
+            assert_equal( $ff.checkbox(:index, index).value, c.value )
+            index+=1
+        end
+        assert_equal(index-1, $ff.checkboxes.length)
  
-    #end
+    end
 
 
 end

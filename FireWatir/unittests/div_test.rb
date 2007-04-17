@@ -22,14 +22,20 @@ class TC_Divs < Test::Unit::TestCase
     assert($ff.text_field(:name, "text1").verify_contains("0") )  
   end
   
+  def test_show_all_objects
+    assert_equal(36, $ff.show_all_objects.length)
+    assert_equal(3,$ff.div(:id,"text_fields1").show_all_objects.length)
+    
+    assert_equal(8,$ff.text_fields.length)
+    assert_equal(3,$ff.div(:id,"text_fields1").text_fields.length)
+  end
+  
   def test_div_properties
     assert_raises(UnknownObjectException) {$ff.div(:id , "div77").text }
     assert_raises(UnknownObjectException) {$ff.div(:title , "div77").text }
     
-    assert_equal("This div has an onClick that increments text1", 
-    $ff.div(:id , "div3").text.strip )
-    assert_equal("This text is in a div with an id of div1 and title of test1",   
-    $ff.div(:title , "Test1").text.strip )
+    assert_equal("This div has an onClick that increments text1", $ff.div(:id , "div3").text.strip )
+    assert_equal("This text is in a div with an id of div1 and title of test1",$ff.div(:title , "Test1").text.strip )
     
     assert_raises(UnknownObjectException) {$ff.div(:id , "div77").class_name }
     assert_equal("blueText" ,   $ff.div(:id , "div2").class_name )
@@ -43,22 +49,23 @@ class TC_Divs < Test::Unit::TestCase
     #assert_equal(false ,       $ff.div(:index , 2).disabled)
     assert_equal(""    ,       $ff.div(:index , 2).name)
     assert_equal("div2",       $ff.div(:index , 2).id)
+    #puts  $ff.div(:id,"text_fields1").to_s
   end
   
-  #def test_div_iterator
-  #  assert_equal( 7 , $ff.divs.length)
-  #  assert_equal( "div1" , $ff.divs[1].id )
-  #  
-  #  index =1
-  #  $ff.divs.each do |s|
-  #    # puts "each - div= " + s.to_s
-  #    assert_equal($ff.div(:index, index ).name , s.name )
-  #   assert_equal($ff.div(:index, index ).id , s.id )
-  #    assert_equal($ff.div(:index, index ).class_name , s.class_name )
-  #    index +=1
-  #  end
-  #  assert_equal(index-1, $ff.divs.length)   # -1 as we add 1 at the end of the loop
-  #end
+  def test_div_iterator
+    assert_equal( 7 , $ff.divs.length)
+    assert_equal( "div1" , $ff.divs[1].id )
+    
+    index =1
+    $ff.divs.each do |s|
+      # puts "each - div= " + s.to_s
+      assert_equal($ff.div(:index, index ).name , s.name )
+     assert_equal($ff.div(:index, index ).id , s.id )
+      assert_equal($ff.div(:index, index ).class_name , s.class_name )
+      index +=1
+    end
+    assert_equal(index-1, $ff.divs.length)   # -1 as we add 1 at the end of the loop
+  end
   
   def test_objects_in_div
     assert($ff.div(:id, 'buttons1').button(:index,1).exists? )
@@ -91,6 +98,7 @@ class TC_Divs < Test::Unit::TestCase
     $ff.span(:id , "span4").click
     assert($ff.text_field(:name, "text2").verify_contains("0") )  
     
+    #puts $ff.span(:id,"text_fields1").to_s
   end
   
   def test_span_properties
@@ -114,20 +122,20 @@ class TC_Divs < Test::Unit::TestCase
     assert_equal("span2",      $ff.span(:index , 2).id)
   end
   
-  #def test_span_iterator
-  #  assert_equal(7, $ff.spans.length)
-  #  assert_equal("span1", $ff.spans[1].id)
-  #  
-  #  index = 1
-  #  $ff.spans.each do |s|
-  #    # puts "each - span = " + s.to_s
-  #    assert_equal($ff.span(:index, index ).name , s.name )
-  #    assert_equal($ff.span(:index, index ).id , s.id )
-  #    assert_equal($ff.span(:index, index ).class_name , s.class_name )
-  #    index += 1
-  #  end
-  #  assert_equal(index - 1, $ff.spans.length)   # -1 as we add 1 at the end of the loop
-  #end
+  def test_span_iterator
+    assert_equal(7, $ff.spans.length)
+    assert_equal("span1", $ff.spans[1].id)
+    
+    index = 1
+    $ff.spans.each do |s|
+      # puts "each - span = " + s.to_s
+      assert_equal($ff.span(:index, index ).name , s.name )
+      assert_equal($ff.span(:index, index ).id , s.id )
+      assert_equal($ff.span(:index, index ).class_name , s.class_name )
+      index += 1
+    end
+    assert_equal(index - 1, $ff.spans.length)   # -1 as we add 1 at the end of the loop
+  end
   
   def test_objects_in_span
     assert($ff.span(:id, 'buttons1').button(:index,1).exists? )
@@ -165,16 +173,16 @@ class TC_Divs < Test::Unit::TestCase
     assert_equal(  'This text is in a p with an id of number2' , $ff.p(:index,2).text)
   end
   
-  #def test_p_iterator
-  #  assert_equal( 3, $ff.ps.length)
-  #  assert_equal( 'italicText', $ff.ps[2].class_name)
-  #  assert_equal( 'number3', $ff.ps[3].id)
-  #  
-  #  count=1
-  #  $ff.ps.each do |p|
-  #    assert_equal('number'+count.to_s , p.id)
-  #    count+=1
-  #  end
-  #  assert_equal( count-1 ,  $ff.ps.length)
-  #end
+  def test_p_iterator
+    assert_equal( 3, $ff.ps.length)
+    assert_equal( 'italicText', $ff.ps[2].class_name)
+    assert_equal( 'number3', $ff.ps[3].id)
+    
+    count=1
+    $ff.ps.each do |p|
+      assert_equal('number'+count.to_s , p.id)
+      count+=1
+    end
+    assert_equal( count-1 ,  $ff.ps.length)
   end
+end
