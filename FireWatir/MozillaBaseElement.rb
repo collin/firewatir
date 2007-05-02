@@ -833,25 +833,28 @@
         #   wait - Whether to wait for the action to get completed or not. By default its true.
         #
         def fireEvent(event, wait = true)
+            assert_exists()
             #puts "here in fire event function. Event is : #{event}"
             #puts "typeof(#{element_object}.#{event.downcase}); \n"
             $jssh_socket.send("typeof(#{element_object}.#{event.downcase});\n", 0)
             isDefined = read_socket()
             #puts "is method there : #{isDefined}"
-            if(isDefined != "undefined")
+            if(isDefined != "undefined")        
                 if(element_type == "HTMLSelectElement")
+                    event =~ /on(.*)/i
                     jssh_command = "var event = #{DOCUMENT_VAR}.createEvent(\"HTMLEvents\");
-                                    event.initEvent(\"change\", true, true);
+                                    event.initEvent(\"#{$1.downcase}\", true, true);
                                     #{element_object}.dispatchEvent(event);"
                     jssh_command.gsub!(/\n/, "")
                     $jssh_socket.send("#{jssh_command}\n", 0)
                     read_socket() if wait
                     wait() if wait
-                else
+                else    
                     $jssh_socket.send("#{element_object}.#{event.downcase}();\n", 0)
                     value = read_socket() if wait
+                    wait() if wait
                 end    
-            end
+            end    
             @@current_element_object = ''
             @@current_frame_name = ''
             @@current_level = 0
