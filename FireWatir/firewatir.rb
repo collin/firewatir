@@ -346,7 +346,7 @@ module FireWatir
         #   Closes the window.
         #
         def close()
-
+            #puts "current window number is : #{@@current_window}"
             if @@current_window == 0
                 $jssh_socket.send(" getWindows()[0].close(); \n", 0)
             else
@@ -361,7 +361,7 @@ module FireWatir
                 end    
                 
                 #Get the parent window url from the stack and return that window.
-                @@current_window = @@window_stack.pop()
+                #@@current_window = @@window_stack.pop()
                 @window_url = @@window_stack.pop()
                 @window_title = @@window_stack.pop()
                 # Find window with this url.
@@ -543,7 +543,7 @@ module FireWatir
             #puts "In wait function "
             isLoadingDocument = ""
             while isLoadingDocument != "false"
-                $jssh_socket.send("#{BROWSER_VAR}.webProgress.isLoadingDocument;\n" , 0)
+                $jssh_socket.send("#{BROWSER_VAR}=#{WINDOW_VAR}.getBrowser(); #{BROWSER_VAR}.webProgress.isLoadingDocument;\n" , 0)
                 isLoadingDocument = read_socket()
                 #puts "Is browser still loading page: #{isLoadingDocument}"
             end
