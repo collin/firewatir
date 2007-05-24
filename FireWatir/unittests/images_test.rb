@@ -67,7 +67,8 @@ class TC_Images < Test::Unit::TestCase
         
         
         $ff.image(:src, /button/).click
-        assert($ff.text.include?("PASS") )
+        #assert($ff.text.include?("PASS") )
+        assert($ff.contains_text("PASS") )
     end
     
     # TODO: Need to see alternative for this in Mozilla

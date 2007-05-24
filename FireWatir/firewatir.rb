@@ -467,7 +467,14 @@ module FireWatir
         def contains_text(match_text)
             #puts "Text to match is : #{match_text}"
             #puts "Html is : #{self.text}"
-            return (match_text.matches(self.text) == nil) ? false : true
+            #puts match_text.matches(self.text)
+            #puts caller(0)
+            if(match_text.matches(self.text) == nil || match_text.matches(self.text) == false)
+                return false
+            else
+                return true
+            end    
+            #return match_text.matches(self.text) # == nil) ? false : true
         end
 
         #
@@ -514,7 +521,7 @@ module FireWatir
         #
         def text()
             $jssh_socket.send("#{BODY_VAR}.textContent;\n", 0)
-            return read_socket()
+            return read_socket().strip
         end
         
         #
@@ -554,7 +561,7 @@ module FireWatir
             # So we currently don't wait for such a page.
             # wait variable in JSSh tells if we should wait more for the page to get loaded
             # or continue. -1 means page is not redirected. Anyother positive values means wait.
-            jssh_command = "var wait = -1; var meta = null; meta = #{BROWSER_VAR}.contentDocument.getElementsByTagName('meta')[0];
+            jssh_command = "var wait = -1; var meta = null; meta = #{BROWSER_VAR}.contentDocument.getElementsByTagName('meta');
                             if(meta != null)
                             {
                                 var doc_url = #{BROWSER_VAR}.contentDocument.URL;
@@ -649,8 +656,8 @@ module FireWatir
         #   Element matching the xpath query.
         #
         def element_by_xpath(xpath)
-            element = Element.new(nil)
-            return element.element_by_xpath(xpath)
+            element = Element.new(nil, self)
+            return element.element_by_xpath(self, xpath)
         end
 
         #
@@ -664,8 +671,8 @@ module FireWatir
         #   Array of elements matching xpath query.
         #
         def elements_by_xpath(xpath)
-            element = Element.new(nil)
-            return element.elements_by_xpath(xpath)
+            element = Element.new(nil, self)
+            return element.elements_by_xpath(self, xpath)
         end
 
     end # Class Firefox

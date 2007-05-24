@@ -50,4 +50,34 @@ class TC_Bugs< Test::Unit::TestCase
         $ff.span(:id, "span1").fireEvent("onclick")
         assert($ff.text.include?("PASS") )
     end
+
+    def test_file_field_value_bug20
+        actual_file_name = "c:\\Program Files\\TestFile.html"
+        $ff.goto($htmlRoot + "fileupload.html")
+        $ff.file_field(:name, "file3").set(actual_file_name)
+        set_file_name = $ff.file_field(:name, "file3").value
+        # make sure correct value for upload file is posted.
+        assert(actual_file_name, set_file_name)
+    end    
+
+    def test_attribute_value_bug22
+        $ff.goto($htmlRoot + "div.html")
+        assert("Test1", $ff.element_by_xpath("//div[@id='div1']").attribute_value("title"))
+    end
+    
+    def test_url_value_bug23
+        $ff.goto($htmlRoot + "buttons1.html")
+        $ff.button(:id, "b2").click
+        assert($htmlRoot + "pass.html", $ff.url)
+    end
+
+    def test_contains_text_bug28
+        $ff.goto($htmlRoot + "buttons1.html")
+        $ff.button(:id, "b2").click
+        assert_false($ff.contains_text("passed"))
+        assert($ff.contains_text("PASS"))
+        assert($ff.contains_text(/PASS/))
+        assert($ff.contains_text(/pass/i))
+        assert_false($ff.contains_text(/pass/))
+    end
 end 

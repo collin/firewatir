@@ -90,7 +90,9 @@
         # Input:
         #   element - Name of the variable with which the element is referenced in JSSh.
         #
-        def initialize(element)
+        def initialize(element, container=nil)
+            @container = container
+            #puts "in initialize #{@container} #{caller(0)}"     
             if(element != nil && element.class == String)
                 @element_name = element
                 # Get the type of the element.
@@ -148,34 +150,6 @@
                     end"
         end
         
-#        def self.def_wrap_guard(method_name)
-#            class_eval "def #{method_name}
-#                        assert_exists
-#                        # Every element has its name starting from element. If yes then
-#                        # use element_name to send the command to jssh. Else its a number
-#                        # and we are still searching for element, in this case use doc.all
-#                        # array with element_name as index to send command to jssh.
-#                        begin
-#                            $jssh_socket.send('typeof(' + element_object + '.#{method_name});\n', 0)
-#                            return_type = read_socket()
-#                            $jssh_socket.send('' + element_object + '.#{method_name};\n', 0)
-#                            return_value = read_socket()
-#                            if(return_type == \"boolean\")
-#                                return_value = false if return_value == \"false\"
-#                                return_value = true if return_value == \"true\"
-#                            end    
-#                        
-#                            @@current_element_object = ''
-#                            @@current_frame_name = ''
-#                            @@current_level = 0
-#                            return return_value
-#                        rescue
-#                            return ''
-#                        end
-#                        
-#                    end"
-#        end
-        
         def get_attribute_value(attribute_name)
             #if the attribut name is columnLength get number of cells in first row if rows exist.
             if(attribute_name == "columnLength")
@@ -190,7 +164,6 @@
             if(attribute_name == "text")
                 return text()
             end
-
             if(attribute_name == "url" or attribute_name == "href" or attribute_name == "src" or attribute_name == "action" or attribute_name == "name")
                 $jssh_socket.send("#{element_object}.getAttribute(\"#{attribute_name}\");\n" , 0)
                 return_value = read_socket()
@@ -304,7 +277,7 @@
                 #puts "The number of rows in the table are : #{no_of_rows}"
                 return_array = Array.new
                 for i in 0..length - 1 do
-                    return_array << Element.new("#{element_object}.rows[#{i}]")
+                    return_array << Element.new("#{element_object}.rows[#{i}]", @container)
                 end
                 return return_array
             else
@@ -352,68 +325,12 @@
                 jssh_command += "var elements_#{tag} = null; elements_#{tag} = #{DOCUMENT_VAR}.getElementsByTagName(\"#{tag}\");"
                 if(types != nil and (types.include?("textarea") or types.include?("button")) )
                     jssh_command += "elements_#{tag} = #{DOCUMENT_VAR}.body.getElementsByTagName(\"*\");"
-                #    jssh_command += "var elements2 = null; elements2 = #{DOCUMENT_VAR}.getElementsByTagName(\"textarea\");
-                #                     var length = elements_#{tag}.length + elements2.length;
-                #                     var arr = new Array(length);
-                #                     for(var i = 0; i < elements_#{tag}.length; ++i)
-                #                     {
-                #                        arr[i] = elements_#{tag}[i];
-                #                     }
-                #                     for(var i = elements_#{tag}.length, j = 0; j < elements2.length; ++j,++i)
-                #                     {
-                #                        arr[i] = elements2[j];
-                #                     }
-                #                     elements_#{tag} = arr;"
-                        
                 end
-                #if(types != nil and types.include?("button"))
-                #    jssh_command += "isButtonElement = true;
-                #                     var elements2 = null; elements2 = #{DOCUMENT_VAR}.getElementsByTagName(\"button\");
-                #                     var length = elements_#{tag}.length + elements2.length;
-                #                     var arr = new Array(length);
-                #                     for(var i = 0; i < elements_#{tag}.length; ++i)
-                #                     {
-                #                        arr[i] = elements_#{tag}[i];
-                #                     }
-                #                     for(var i = elements_#{tag}.length, j = 0; j < elements2.length; ++j,++i)
-                #                     {
-                #                        arr[i] = elements2[j];
-                #                     }
-                #                     elements_#{tag} = arr;"
-                        
-                #end        
                 @@has_changed = true
             else
                 jssh_command += "var elements_#{@@current_level}_#{tag} = #{@@current_element_object}.getElementsByTagName(\"#{tag}\");" 
                 if(types != nil and (types.include?("textarea") or types.include?("button") ) )
                     jssh_command += "elements_#{@@current_level}_#{tag} = #{@@current_element_object}.getElementsByTagName(\"*\");"
-                #    jssh_command += "var elements2_#{@@current_level} = #{@@current_element_object}.getElementsByTagName(\"textarea\");
-                #                     var length = elements_#{@@current_level}_#{tag}.length + elements2_#{@@current_level}.length;
-                #                     var arr = new Array(length);
-                #                     for(var i = 0; i < elements_#{@@current_level}_#{tag}.length; ++i)
-                #                     {
-                #                        arr[i] = elements_#{@@current_level}_#{tag}[i];
-                #                     }
-                #                     for(var i = elements_#{@@current_level}_#{tag}.length, j = 0; j < elements2_#{@@current_level}.length; ++j,++i)
-                #                     {
-                #                        arr[i] = elements2_#{@@current_level}[j];
-                #                     }
-                #                     elements_#{@@current_level}_#{tag} = arr;"
-                #end
-                #if(types != nil and types.include?("button"))
-                #    jssh_command += "isButtonElement = true;
-                #                     var elements2_#{@@current_level} = #{@@current_element_object}.getElementsByTagName(\"button\");
-                #                     var length = elements_#{@@current_level}_#{tag}.length + elements2_#{@@current_level}.length;
-                #                     var arr = new Array(length);
-                #                     for(var i = 0; i < elements_#{@@current_level}_#{tag}.length; ++i)
-                #                     {
-                #                        arr[i] = elements_#{@@current_level}_#{tag}[i];
-                #                     }
-                #                     for(var i = elements_#{@@current_level}_#{tag}.length, j = 0; j < elements2_#{@@current_level}.length; ++j,++i)
-                #                     {
-                #                        arr[i] = elements2_#{@@current_level}[j];
-                #                     }
-                #                     elements_#{@@current_level}_#{tag} = arr;"
                 end
                 @@has_changed = false
             end
@@ -582,8 +499,10 @@
             @@current_frame_name = ""
             #puts "element name in find control is : #{element_name}"
             @@current_level = @@current_level + 1
+            #puts @container 
+            #puts element_name
             if(element_name != "")
-                return Element.new(element_name)
+                return Element.new(element_name, @container)
             else
                 return nil
             end
@@ -699,7 +618,7 @@
             #puts "element_name for frame is : #{element_name}"
 
             if(element_name != "")
-                return Element.new(element_name)
+                return Element.new(element_name, @container)
             else
                 return nil
             end    
@@ -730,7 +649,7 @@
         # Output:
         #   Array of elements that matched the xpath expression provided as parameter.
         #
-        def elements_by_xpath(xpath)
+        def elements_by_xpath(container, xpath)
             rand_no = rand(1000)
             #jssh_command = "var xpathResult = #{DOCUMENT_VAR}.evaluate(\"count(#{xpath})\", #{DOCUMENT_VAR}, null, #{NUMBER_TYPE}, null); xpathResult.numberValue;"
             #$jssh_socket.send("#{jssh_command}\n", 0);
@@ -758,7 +677,7 @@
             elements = Array.new(node_count.to_i)
 
             for i in 0..elements.length - 1 do
-                elements[i] = Element.new("element_xpath_#{rand_no}[#{i}]")
+                elements[i] = Element.new("element_xpath_#{rand_no}[#{i}]", container)
             end
 
             return elements;
@@ -776,7 +695,7 @@
         # Output:
         #   First element in DOM that matched the XPath expression or query.
         #
-        def element_by_xpath(xpath)
+        def element_by_xpath(container, xpath)
             rand_no = rand(1000)
             jssh_command = "var element_xpath_#{rand_no} = null; element_xpath_#{rand_no} = #{DOCUMENT_VAR}.evaluate(\"#{xpath}\", #{DOCUMENT_VAR}, null, #{FIRST_ORDERED_NODE_TYPE}, null).singleNodeValue; element_xpath_#{rand_no};"
 
@@ -791,7 +710,7 @@
             else
                 @@current_element_object = "element_xpath_#{rand_no}"
                 @@current_level += 1
-                return Element.new("element_xpath_#{rand_no}")
+                return Element.new("element_xpath_#{rand_no}", container)
             end
         end
 
@@ -865,10 +784,9 @@
         #   Returns the value of the specified attribute of an element.
         #
         def attribute_value(attribute_name)
-            
             #puts attribute_name
             assert_exists()
-            get_attribute_value(attribute_name) 
+            return_value = get_attribute_value(attribute_name) 
             @@current_element_object = ''
             @@current_frame_name = ''
             @@current_level = 0
@@ -1048,13 +966,16 @@
                     #puts "jssh_command is: #{jssh_command}"
                     $jssh_socket.send("#{jssh_command}", 0)
                     read_socket()
-                when "HTMLDivElement", "HTMLSpanElement"
-                    fireEvent("onclick")
                 else
-                    $jssh_socket.send("#{element_object}.click();\n" , 0)
-                    read_socket()
+                    $jssh_socket.send("typeof(#{element_object}.click);\n", 0)
+                    isDefined = read_socket()
+                    if(isDefined == "undefined")
+                        fireEvent("onclick")
+                    else
+                        $jssh_socket.send("#{element_object}.click();\n" , 0)
+                        read_socket()
+                    end    
             end
-           
             highlight(:clear)
             # Wait for firefox to reload.
             wait()
@@ -1065,8 +986,10 @@
         #   Wait for the browser to get loaded, after the event is being fired.
         #
         def wait
-            ff = FireWatir::Firefox.new
-            ff.wait()
+            #ff = FireWatir::Firefox.new
+            #ff.wait()
+            #puts @container
+            @container.wait()
             @@current_element_object = ''
             @@current_frame_name = ''
             @@current_level = 0
@@ -1091,7 +1014,7 @@
             assert_enabled
 
             highlight(:set)
-            @@current_js_object = Element.new("#{element_object}")
+            @@current_js_object = Element.new("#{element_object}", @container)
         end
      
         #
@@ -1107,16 +1030,18 @@
         def click_js_popup(button = "OK")
             jssh_command = "var win = #{BROWSER_VAR}.contentWindow;"
             if(button =~ /ok/i)
-                jssh_command += "win.alert = function(param) { return true; };
-                                 win.confirm = function(param) { return true; };"
+                jssh_command += "var popuptext_alert = '';win.alert = function(param) {popuptext_alert = param; return true; };
+                                 var popuptext_confirm = ''; win.confirm = function(param) {popuptext_confirm = param; return true; };"
             elsif(button =~ /cancel/i)
-                jssh_command += "win.alert = function(param) { return false; };
-                                 win.confirm = function(param) { return false; };"
+                jssh_command += "var popuptext_alert = '';win.alert = function(param) {popuptext_alert = param; return false; };
+                                 var popuptext_confirm = '';win.confirm = function(param) {popuptext_confirm = param; return false; };"
             end
             jssh_command.gsub!(/\n/, "")
             $jssh_socket.send("#{jssh_command}\n", 0)
             read_socket()
             click_js_popup_creator_button()
+            #$jssh_socket.send("popuptext_alert;\n", 0)
+            #read_socket()
             $jssh_socket.send("\n", 0)
             read_socket()
         end
@@ -1139,22 +1064,22 @@
                     $jssh_socket.send("#{jssh_command}", 0)
                     read_socket()
                 when "HTMLDivElement", "HTMLSpanElement"
-                    $jssh_socket.send("typeof(#{element_object}.#{event.downcase});\n", 0)
-                    isDefined = read_socket()
-                    #puts "is method there : #{isDefined}"
-                    if(isDefined != "undefined")
-                        if(element_type == "HTMLSelectElement")
-                            jssh_command = "var event = #{DOCUMENT_VAR}.createEvent(\"HTMLEvents\");
-                                            event.initEvent(\"change\", true, true);
-                                            #{element_object}.dispatchEvent(event);"
-                            jssh_command.gsub!(/\n/, "")
-                            $jssh_socket.send("#{jssh_command}\n", 0)
-                            read_socket()
-                        else
-                            $jssh_socket.send("#{element_object}.#{event.downcase}();\n", 0)
-                            read_socket()
-                        end    
-                    end
+                     $jssh_socket.send("typeof(#{element_object}.#{event.downcase});\n", 0)
+                     isDefined = read_socket()
+                     #puts "is method there : #{isDefined}"
+                     if(isDefined != "undefined")
+                         if(element_type == "HTMLSelectElement")
+                             jssh_command = "var event = #{DOCUMENT_VAR}.createEvent(\"HTMLEvents\");
+                                             event.initEvent(\"click\", true, true);
+                                             #{element_object}.dispatchEvent(event);"
+                             jssh_command.gsub!(/\n/, "")
+                             $jssh_socket.send("#{jssh_command}\n", 0)
+                             read_socket()
+                         else
+                             $jssh_socket.send("#{element_object}.#{event.downcase}();\n", 0)
+                             read_socket()
+                         end    
+                     end
                 else
                     jssh_command = "#{@@current_js_object.element_name}.click();\n";
                     $jssh_socket.send("#{jssh_command}", 0)
@@ -1166,7 +1091,7 @@
             @@current_js_object = nil
         end
         private :click_js_popup_creator_button
-        
+    
         #
         # Description:
         #   Iterate over options if element is of Select type.
@@ -1174,26 +1099,27 @@
         #   Iterate over cells if element is of TableRow type.
         #
         def each
+            #puts element_type
             if(element_type == "HTMLSelectElement")
                 $jssh_socket.send("#{element_object}.options.length;\n", 0)
                 length = read_socket().to_i
 
                 for i in 0..length - 1
-                    yield Element.new("#{element_object}.options[#{i}]")
+                    yield Element.new("#{element_object}.options[#{i}]", @container)
                 end
             elsif(element_type == "HTMLTableElement")
                 $jssh_socket.send("#{element_object}.rows.length;\n", 0)
                 length = read_socket().to_i
 
                 for i in 0..length - 1
-                    yield Element.new("#{element_object}.rows[#{i}]")
+                    yield Element.new("#{element_object}.rows[#{i}]", @container)
                 end    
             elsif(element_type == "HTMLTableRowElement")
                 $jssh_socket.send("#{element_object}.cells.length;\n", 0)
                 length = read_socket().to_i
 
                 for i in 0..length - 1
-                    yield Element.new("#{element_object}.cells[#{i}]")
+                    yield Element.new("#{element_object}.cells[#{i}]", @container)
                 end    
             end
         end
@@ -1213,7 +1139,7 @@
                 length = read_socket.to_i
                 return_array = Array.new
                 for i in 0..length - 1
-                    return_array << Element.new("#{element_object}.options[#{i}]")
+                    return_array << Element.new("#{element_object}.options[#{i}]", @container)
                 end
                 return return_array
             else
@@ -1236,7 +1162,7 @@
                 length = read_socket.to_i
                 return_array = Array.new
                 for i in 0..length - 1
-                    return_array << Element.new("#{element_object}.cells[#{i}]")
+                    return_array << Element.new("#{element_object}.cells[#{i}]", @container)
                 end
                 return return_array
             else
@@ -1300,15 +1226,15 @@
             if(element_type == "HTMLSelectElement")
                 @@current_element_object = "#{element_object}.options[#{key}]"
                 @@current_level += 1
-                return Element.new("#{element_object}.options[#{key}]")
+                return Element.new("#{element_object}.options[#{key}]", @container)
             elsif(element_type == "HTMLTableElement")
                 @@current_element_object = "#{element_object}.rows[#{key}]"
                 @@current_level += 1
-                return Element.new("#{element_object}.rows[#{key}]")
+                return Element.new("#{element_object}.rows[#{key}]", @container)
             elsif(element_type == "HTMLTableRowElement")
                 @@current_element_object = "#{element_object}.cells[#{key}]"
                 @@current_level += 1
-                return Element.new("#{element_object}.cells[#{key}]")
+                return Element.new("#{element_object}.cells[#{key}]", @container)
             end
         end
         
@@ -1317,9 +1243,17 @@
         #   Sets the value of file in HTMLInput file field control.
         #
         # Input:
-        #   setPath - location of the file to be uploaded.
+        #   setPath - location of the file to be uploaded. '|' should not be part of filename.
         #
         def setFileFieldValue(setPath)
+            # As ruby converts \\ to \ and while sending name to jssh \ is ignored.
+            # So replace \ with \\. Now this is even trickier you can't replace \ with \\
+            # directly like this string.gsub!("\\", "\\\\") this doesn't work. 
+            # Work around is replace '\' with two special character and then replace 
+            # special character with \.
+            setPath.gsub!("\\", "||")
+            setPath.gsub!("|", "\\")
+            
             jssh_command = "var textBox = #{DOCUMENT_VAR}.getBoxObjectFor(#{element_object}).firstChild;"
             jssh_command += "textBox.value = \"#{setPath}\";\n";
             
@@ -1343,6 +1277,8 @@
         #   *args - arguments sent to the methods.
         #
         def method_missing(methId, *args)
+            assert_exists
+            #assert_enabled
             methodName = methId.id2name
             #puts "method name is : #{methodName}"
             methodName = "colSpan" if methodName == "colspan"   
@@ -1454,11 +1390,12 @@
         # Description:
         #   Creates new instance of Document class.
         #
-        def initialize()
+        def initialize(container)
             @@current_element_object = Element.get_current_element
             @length = 0
             @elements = nil
             @arr_elements = ""
+            @container = container
         end
         
         #
@@ -1508,7 +1445,7 @@
             elements = nil
             elements = Array.new(@length)
             for i in 0..@length - 1 do
-                temp = Element.new("arr_coll_#{@@current_level}[#{i}]")
+                temp = Element.new("arr_coll_#{@@current_level}[#{i}]", @container)
                 elements[i] = temp
             end
             @@current_level += 1
@@ -1533,7 +1470,7 @@
         #
         def each
             for i in 0..@length - 1
-                yield Element.new("#{@arr_elements}[#{i}]")
+                yield Element.new("#{@arr_elements}[#{i}]", @container)
             end
         end
         
@@ -1548,7 +1485,7 @@
         #   Element at the nth index.
         #
         def [](n)
-            return Element.new("#{@arr_elements}[#{n-1}]")
+            return Element.new("#{@arr_elements}[#{n-1}]", @container)
         end
     end
  
@@ -1567,12 +1504,13 @@
         #   tag - tag name of the element for which you want the iterator.
         #   types - element type. used in case where same element tag has different types like input has type image, button etc.
         # 
-        def initialize(tag , types=nil)
+        def initialize(container, tag , types=nil)
             @@current_level += 1        
             @@current_element_object = Element.get_current_element
             #~puts " the current object #{@@current_element_object}"
             @length = 0
             @arr_name = ""
+            @container = container
             @elements = locate_tagged_elements(tag , types)
         end
     
@@ -1595,68 +1533,12 @@
                 jssh_command += "var elements_#{tag} = null; elements_#{tag} = #{DOCUMENT_VAR}.getElementsByTagName(\"#{tag}\");"
                 if(types != nil and (types.include?("textarea") or types.include?("button")) )
                     jssh_command += "elements_#{tag} = #{DOCUMENT_VAR}.body.getElementsByTagName(\"*\");"
-                #    jssh_command += "var elements2 = null; elements2 = #{DOCUMENT_VAR}.getElementsByTagName(\"textarea\");
-                #    var length = elements_#{tag}.length + elements2.length;
-                #    var arr = new Array(length);
-                #     for(var i = 0; i < elements_#{tag}.length; ++i)
-                #     {
-                #        arr[i] = elements_#{tag}[i];
-                #     }
-                #     for(var i = elements_#{tag}.length, j = 0; j < elements2.length; ++j,++i)
-                #     {
-                #        arr[i] = elements2[j];
-                #     }
-                #     elements_#{tag} = arr;"
-                        
                 end
-                #if(types != nil and types.include?("button"))
-                #    jssh_command += "var elements2 = null; elements2 = #{DOCUMENT_VAR}.getElementsByTagName(\"button\");
-                #     var length = elements_#{tag}.length + elements2.length;
-                #     var arr = new Array(length);
-                #     for(var i = 0; i < elements_#{tag}.length; ++i)
-                #     {
-                #        arr[i] = elements_#{tag}[i];
-                #     }
-                #     for(var i = elements_#{tag}.length, j = 0; j < elements2.length; ++j,++i)
-                #     {
-                #        arr[i] = elements2[j];
-                #     }
-                #     elements_#{tag} = arr;"
-                        
-                #end
-                #@@has_changed = true
             else
                 jssh_command += "var elements_#{@@current_level}_#{tag} = #{@@current_element_object}.getElementsByTagName(\"#{tag}\");" 
                 if(types != nil and (types.include?("textarea") or types.include?("button")) )
                     jssh_command += "elements_#{@@current_level}_#{tag} = #{@@current_element_object}.getElementsByTagName(\"*\");"
-                #    jssh_command += "var elements2_#{@@current_level} = #{@@current_element_object}.getElementsByTagName(\"textarea\");
-                #     var length = elements_#{@@current_level}_#{tag}.length + elements2_#{@@current_level}.length;
-                #     var arr = new Array(length);
-                #     for(var i = 0; i < elements_#{@@current_level}_#{tag}.length; ++i)
-                #     {
-                #        arr[i] = elements_#{@@current_level}_#{tag}[i];
-                #     }
-                #     for(var i = elements_#{@@current_level}_#{tag}.length, j = 0; j < elements2_#{@@current_level}.length; ++j,++i)
-                #     {
-                #        arr[i] = elements2_#{@@current_level}[j];
-                #     }
-                #     elements_#{@@current_level}_#{tag} = arr;"
                 end
-                #if(types != nil and types.include?("button"))
-                #    jssh_command += "var elements2_#{@@current_level} = #{@@current_element_object}.getElementsByTagName(\"button\");
-                #     var length = elements_#{@@current_level}_#{tag}.length + elements2_#{@@current_level}.length;
-                #     var arr = new Array(length);
-                #     for(var i = 0; i < elements_#{@@current_level}_#{tag}.length; ++i)
-                #     {
-                #        arr[i] = elements_#{@@current_level}_#{tag}[i];
-                #     }
-                #     for(var i = elements_#{@@current_level}_#{tag}.length, j = 0; j < elements2_#{@@current_level}.length; ++j,++i)
-                #     {
-                #        arr[i] = elements2_#{@@current_level}[j];
-                #     }
-                #     elements_#{@@current_level}_#{tag} = arr;"
-                #end
-                #@@has_changed = false
             end
             
             if(types != nil)
@@ -1674,15 +1556,7 @@
             else
                 jssh_command += "var types = null;"
             end    
-            #jssh_command += "var elements = #{element_object}.getElementsByTagName('*');"
-            #jssh_command += "var object_index = 1; var o = null; var element_name = '';"
             
-            #if(value == nil)
-            #    jssh_command += "var value = null;"
-            #else
-            #    jssh_command += "var value = \"#{value}\";"
-            #end
-            #jssh_command += "elements.length;"
             if(@@current_element_object == "")
             
                 jssh_command += "for(var i=0; i<elements_#{tag}.length; i++)
@@ -1730,7 +1604,7 @@
             
             elements = Array.new(@length)
             for i in 0..@length - 1 do
-                temp = Element.new("arr_coll_#{tag}_#{@@current_level}[#{i}]")
+                temp = Element.new("arr_coll_#{tag}_#{@@current_level}[#{i}]", @container)
                 elements.push(temp)
             end
             @@current_level = @@current_level + 1
@@ -1755,7 +1629,7 @@
         #
         def each
             for i in 0..@length - 1
-                yield Element.new("#{@arr_name}[#{i}]")
+                yield Element.new("#{@arr_name}[#{i}]", @container)
             end
         end
         
@@ -1767,7 +1641,7 @@
         #   n - index of element (1 based)
         #
         def [](n)
-            return Element.new("#{@arr_name}[#{n-1}]")
+            return Element.new("#{@arr_name}[#{n-1}]", @container)
         end
         
     end

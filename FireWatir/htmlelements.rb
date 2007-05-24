@@ -24,10 +24,11 @@ class Frame < Element
     #   - how - Attribute to identify the frame element.
     #   - what - Value of that attribute.
     #
-    def initialize(how, what)
-        @element = Element.new(nil)
+    def initialize(container, how, what)
+        @element = Element.new(nil, container)
         @how = how
         @what = what
+        @container = container
         @o = @element.locate_frame(how, what)
             
         unless @o
@@ -51,14 +52,14 @@ class Form < Element
     #   - how - Attribute to identify the form element.
     #   - what - Value of that attribute.
     #
-    def initialize(how, what)
-        @element = Element.new(nil) #container
+    def initialize(container, how, what)
+        @element = Element.new(nil, container)
         @how = how
         @what = what
-            
+        @container = container    
         # Get form using xpath.
         if @how == :xpath    
-            @o = @element.element_by_xpath(@what)
+            @o = @element.element_by_xpath(container, @what)
         else
             @o = @element.locate_tagged_element("form",@how, @what)
         end
@@ -87,7 +88,7 @@ class NonControlElement < Element
     #
     def locate
         if @how == :xpath
-            @o = @element.element_by_xpath(@what)
+            @o = @element.element_by_xpath(@container, @what)
         else
             @o = @element.locate_tagged_element(self.class::TAG, @how, @what)
         end            
@@ -101,10 +102,11 @@ class NonControlElement < Element
     #   - how - Attribute to identify the element.
     #   - what - Value of that attribute.
     #
-    def initialize( how, what)
+    def initialize(container, how, what)
         @element = Element.new(nil)
         @how = how
         @what = what
+        @container = container
     end
        
     # 
@@ -203,11 +205,12 @@ class Table < Element
     #   - how - Attribute to identify the table element.
     #   - what - Value of that attribute.
     #
-    def initialize( how, what)
+    def initialize(container, how, what)
         @element = Element.new(nil)
         @how = how
         @what = what
-        super nil
+        @container = container
+        #super nil
     end
 
     #
@@ -216,7 +219,7 @@ class Table < Element
     #
     def locate
         if @how == :xpath
-            @o = @element.element_by_xpath(@what)
+            @o = @element.element_by_xpath(@container, @what)
         else
             @o = @element.locate_tagged_element('TABLE', @how, @what)
         end
@@ -428,7 +431,7 @@ class TableRow < Element
     def locate
         @o = nil
         if @how == :xpath
-            @o = @element.element_by_xpath(@what)
+            @o = @element.element_by_xpath(@container, @what)
         else
             @o = @element.locate_tagged_element("TR", @how, @what)   
         end
@@ -442,11 +445,12 @@ class TableRow < Element
     #   - how - Attribute to identify the table row element.
     #   - what - Value of that attribute.
     #
-    def initialize(how, what)
-        @element = Element.new(nil) #container
+    def initialize(container, how, what)
+        @element = Element.new(nil, container)
         @how = how   
         @what = what   
-        super nil
+        @container = container
+        #super nil
     end
 
     #
@@ -473,7 +477,7 @@ class TableCell < Element
     #
     def locate
         if @how == :xpath
-            @o = @element.element_by_xpath(@what)
+            @o = @element.element_by_xpath(@container, @what)
         else
             @o = @element.locate_tagged_element("TD", @how, @what)   
         end
@@ -487,11 +491,12 @@ class TableCell < Element
     #   - how - Attribute to identify the table cell element.
     #   - what - Value of that attribute.
     #
-    def initialize( how, what)   
-        @element = Element.new(nil) #container    
+    def initialize(container, how, what)   
+        @element = Element.new(nil, container)
         @how = how   
         @what = what   
-        super nil   
+        @container = container
+        #super nil   
     end 
 
     alias to_s text
@@ -523,10 +528,11 @@ class Image < Element
     #   - how - Attribute to identify the image element.
     #   - what - Value of that attribute.
     #
-    def initialize( how, what)
-        @element = Element.new(nil)
+    def initialize(container, how, what)
+        @element = Element.new(nil, container)
         @how = how
         @what = what
+        @container = container
     end
     
     # Description:
@@ -534,7 +540,7 @@ class Image < Element
     #
     def locate
         if @how == :xpath
-            @o = @element.element_by_xpath(@what)
+            @o = @element.element_by_xpath(@container, @what)
         else
             @o = @element.locate_tagged_element('IMG', @how, @what)
         end            
@@ -652,10 +658,11 @@ class Link < Element
     #   - how - Attribute to identify the link element.
     #   - what - Value of that attribute.
     #
-    def initialize( how, what)
-        @element = Element.new(nil)
+    def initialize(container, how, what)
+        @element = Element.new(nil, container)
         @how = how
         @what = what
+        @container = container
     end
    
     #
@@ -664,7 +671,7 @@ class Link < Element
     #
     def locate
         if @how == :xpath
-            @o = @element.element_by_xpath(@what)
+            @o = @element.element_by_xpath(@container, @what)
         else
             begin
                 @o = @element.locate_tagged_element('A', @how, @what)
@@ -722,7 +729,7 @@ class InputElement < Element
     #
     def locate
         if @how == :xpath
-            @o = @element.element_by_xpath(@what)
+            @o = @element.element_by_xpath(@container, @what)
         else
             if(self.class::INPUT_TYPES.include?("select-one"))
                 @o = @element.locate_tagged_element("select", @how, @what, self.class::INPUT_TYPES)
@@ -739,11 +746,12 @@ class InputElement < Element
     #   - how - Attribute to identify the element.
     #   - what - Value of that attribute.
     #
-    def initialize( how, what)
-        @element = Element.new(nil)
+    def initialize(container, how, what)
+        @element = Element.new(nil, container)
         @how = how
         @what = what
-        super(nil)
+        @container = container
+        #super(nil)
     end
 end
 
@@ -1287,7 +1295,7 @@ class RadioCheckCommon < Element
     #
     def locate
         if @how == :xpath
-            @o = @element.element_by_xpath(@what)
+            @o = @element.element_by_xpath(@container, @what)
         else
             @o = @element.locate_tagged_element("input", @how, @what, @type, @value)
         end
@@ -1303,12 +1311,13 @@ class RadioCheckCommon < Element
     #   - type - Type of element i.e. radio or checkbox
     #   - value - value of the element.
     #
-    def initialize( how, what, type, value = nil)
-        @element = Element.new(nil)
+    def initialize(container, how, what, type, value = nil)
+        @element = Element.new(nil, container)
         @how = how
         @what = what
         @type = type
         @value = value
+        @container = container
     end
 
     #
@@ -1388,7 +1397,7 @@ class CheckBox < RadioCheckCommon
     def set( set_or_clear=true )
         assert_exists
         assert_enabled
-        highlight( :set)
+        highlight(:set)
 
         if set_or_clear == true
             if @o.checked == false
@@ -1397,7 +1406,7 @@ class CheckBox < RadioCheckCommon
         else
             self.clear
         end
-        highlight( :clear )
+        highlight(:clear )
     end
     
     #
@@ -1571,8 +1580,8 @@ class Buttons < ElementCollections
     # Description:
     #   Initializes the instance of Buttons class.
     #
-    def initialize
-        super("input", ["button", "image", "submit", "reset"])
+    def initialize(container)
+        super(container, "input", ["button", "image", "submit", "reset"])
     end
     #def element_class; Button; end
     #def length
@@ -1598,8 +1607,8 @@ class FileFields< ElementCollections
     # Description:
     #   Initializes the instance of FileFields class.
     #
-    def initialize()
-        super("input",["file"])
+    def initialize(container)
+        super(container, "input",["file"])
     end
 #    def element_class; FileField; end
 #    def length
@@ -1625,8 +1634,8 @@ class CheckBoxes < ElementCollections
     # Description:
     #   Initializes the instance of CheckBoxes class.
     #
-    def initialize()
-        super("input",["checkbox"])
+    def initialize(container)
+        super(container, "input",["checkbox"])
     end
 #    def element_class; CheckBox; end  
 #    def length
@@ -1649,8 +1658,8 @@ class Radios < ElementCollections
     # Description:
     #   Initializes the instance of Radios class.
     #
-    def initialize()
-        super("input",["radio"])
+    def initialize(container)
+        super(container, "input",["radio"])
     end
 #    def element_class; Radio; end
 #    def length
@@ -1673,8 +1682,8 @@ class SelectLists < ElementCollections
     # Description:
     #   Initializes the instance of SelectLists class.
     #
-    def initialize()
-        super("select",["select-one","select-multiple"])
+    def initialize(container)
+        super(container, "select",["select-one","select-multiple"])
     end
 #    include CommonCollection
 #    def element_class; SelectList; end
@@ -1691,8 +1700,8 @@ class Links < ElementCollections
     # Description:
     #   Initializes the instance of Links class.
     #
-    def initialize()
-        super("a")
+    def initialize(container)
+        super(container, "a")
     end
 #    include CommonCollection
 #    def element_class; Link; end    
@@ -1717,8 +1726,8 @@ class Images < ElementCollections
     # Description:
     #   Initializes the instance of Images class.
     #
-    def initialize()
-        super("img")
+    def initialize(container)
+        super(container, "img")
     end
 #    def element_class; Image; end 
 #    def length
@@ -1744,8 +1753,8 @@ class TextFields < ElementCollections
     # Description:
     #   Initializes the instance of TextFields class.
     #
-    def initialize()
-        super("input",["text","textarea","password"])
+    def initialize(container)
+        super(container, "input",["text","textarea","password"])
     end
 #    def element_class; TextField; end
 #    def length
@@ -1765,8 +1774,8 @@ class Hiddens < ElementCollections
     # Description:
     #   Initializes the instance of Hiddens class.
     #
-    def initialize
-        super("input",["hidden"])
+    def initialize(container)
+        super(container, "input",["hidden"])
     end
 #    def element_class; Hidden; end
 #    def length
@@ -1784,8 +1793,8 @@ class Tables < ElementCollections
     # Description:
     #   Initializes the instance of Tables class.
     #
-	def initialize
-		super("table")
+	def initialize(container)
+		super(container, "table")
 	end
 #    include CommonCollection
 #    def element_class; Table; end
@@ -1808,8 +1817,8 @@ class Labels < ElementCollections
     # Description:
     #   Initializes the instance of Labels class.
     #
-    def initialize()
-        super("label")
+    def initialize(container)
+        super(container, "label")
     end
 #    include CommonCollection
 #    def element_class; Label; end
@@ -1832,8 +1841,8 @@ class Pres < ElementCollections
     # Description:
     #   Initializes the instance of Pres class.
     #
-    def initialize()
-        super("pre")
+    def initialize(container)
+        super(container, "pre")
     end
 #	include CommonCollection
 #	def element_class; Pre; end
@@ -1855,8 +1864,8 @@ class Ps < ElementCollections
     # Description:
     #   Initializes the instance of Ps class.
     #
-    def initialize()
-        super("p")
+    def initialize(container)
+        super(container, "p")
     end
 #    include CommonCollection
 #    def element_class; P; end
@@ -1880,8 +1889,8 @@ class Spans < ElementCollections
     # Description:
     #   Initializes the instance of Spans class.
     #
-    def initialize()
-        super("span")
+    def initialize(container)
+        super(container, "span")
     end
 #    include CommonCollection
 #    def element_class; Span; end
@@ -1905,8 +1914,8 @@ class Divs < ElementCollections
     # Description:
     #   Initializes the instance of Divs class.
     #
-    def initialize()
-        super("div")
+    def initialize(container)
+        super(container, "div")
     end
 #    include CommonCollection
 #    def element_class; Div; end

@@ -88,7 +88,7 @@ module Container
             what = how
             how = :name
         end
-        Frame.new(how, what)
+        Frame.new(self, how, what)
     end
 
     #
@@ -115,7 +115,7 @@ module Container
             what = how
             how = :name
         end    
-        Form.new(how, what)
+        Form.new(self, how, what)
     end
     
     #
@@ -136,7 +136,7 @@ module Container
     #
     def table(how, what)
         locate if defined?(locate)
-        Table.new(how, what)
+        Table.new(self, how, what)
     end
 
     #
@@ -151,7 +151,7 @@ module Container
     #
     def tables
         locate if defined?(locate)
-        return Tables.new()
+        return Tables.new(self)
     end
     
     #
@@ -171,7 +171,7 @@ module Container
     #
     def cell(how, what=nil)
         locate if defined?(locate)
-        TableCell.new(how, what)
+        TableCell.new(self, how, what)
     end
 
     # 
@@ -191,7 +191,7 @@ module Container
     #
     def row(how, what=nil)
         locate if defined?(locate)
-        TableRow.new(how, what)
+        TableRow.new(self, how, what)
     end
     
     # 
@@ -219,7 +219,7 @@ module Container
             what = how
             how = :value
         end    
-        Button.new(how, what)
+        Button.new(self, how, what)
     end    
 
     # 
@@ -236,7 +236,7 @@ module Container
     #
     def buttons
         locate if defined?(locate)
-        return Buttons.new()
+        return Buttons.new(self)
     end
 
     # 
@@ -256,7 +256,7 @@ module Container
     #
     def file_field(how, what = nil)
         locate if defined?(locate)
-        FileField.new(how, what)
+        FileField.new(self, how, what)
     end    
     
     # 
@@ -274,7 +274,7 @@ module Container
     #
     def file_fields
         locate if defined?(locate)
-        return FileFields.new()
+        return FileFields.new(self)
     end
 
     #
@@ -295,7 +295,7 @@ module Container
     #
     def text_field(how, what = nil)
         locate if defined?(locate)
-        TextField.new(how, what)
+        TextField.new(self, how, what)
     end    
 
     # 
@@ -313,7 +313,7 @@ module Container
     #
     def text_fields
         locate if defined?(locate)
-        return TextFields.new()
+        return TextFields.new(self)
     end
 
     # 
@@ -334,7 +334,7 @@ module Container
     #
     def hidden(how, what)
         locate if defined?(locate)
-        return Hidden.new(how, what)
+        return Hidden.new(self, how, what)
     end
 
     # 
@@ -352,7 +352,7 @@ module Container
     #
     def hiddens
         locate if defined?(locate)
-        return Hiddens.new()
+        return Hiddens.new(self)
     end
 
     #
@@ -373,7 +373,7 @@ module Container
     #
     def select_list(how, what) 
         locate if defined?(locate)
-        return SelectList.new(how, what)
+        return SelectList.new(self, how, what)
     end
 
     # 
@@ -391,7 +391,7 @@ module Container
     #
     def select_lists
         locate if defined?(locate)
-        return SelectLists.new()
+        return SelectLists.new(self)
     end
     
     #
@@ -422,7 +422,7 @@ module Container
     #
     def checkbox(how, what, value = nil) 
         locate if defined?(locate)
-        return CheckBox.new(how, what, ["checkbox"], value) 
+        return CheckBox.new(self, how, what, ["checkbox"], value) 
     end
 
     # 
@@ -439,7 +439,7 @@ module Container
     #   CheckBoxes object.
     def checkboxes
         locate if defined?(locate)
-        return CheckBoxes.new()
+        return CheckBoxes.new(self)
     end
 
     
@@ -471,7 +471,7 @@ module Container
     #
     def radio(how, what, value = nil) 
         locate if defined?(locate)
-        return Radio.new(how, what, ["radio"], value) 
+        return Radio.new(self, how, what, ["radio"], value) 
     end
 
     # 
@@ -489,7 +489,7 @@ module Container
     #
     def radios
         locate if defined?(locate)
-        return Radios.new()
+        return Radios.new(self)
     end
     
     #
@@ -510,7 +510,7 @@ module Container
     #
     def link(how, what) 
         locate if defined?(locate)
-        return Link.new(how, what)
+        return Link.new(self, how, what)
     end
 
     # 
@@ -528,7 +528,7 @@ module Container
     #
     def links
         locate if defined?(locate)
-        return Links.new()
+        return Links.new(self)
     end
 
     #
@@ -549,7 +549,7 @@ module Container
     #
     def image(how, what = nil)
         locate if defined?(locate)
-        Image.new(how, what)
+        Image.new(self, how, what)
     end    
     
     # 
@@ -567,7 +567,7 @@ module Container
     #
     def images
         locate if defined?(locate)
-        return Images.new()
+        return Images.new(self)
     end
 
     # This is the main method for accessing JavaScript popups.
@@ -594,7 +594,7 @@ module Container
     #
     def div(how, what)
         locate if defined?(locate)
-        return Div.new(how, what)
+        return Div.new(self, how, what)
     end
 
     # 
@@ -612,7 +612,7 @@ module Container
     #
     def divs
         locate if defined?(locate)
-        return Divs.new()
+        return Divs.new(self)
     end
 
     
@@ -634,7 +634,7 @@ module Container
     #   
     def span(how, what)
         locate if defined?(locate)
-        return Span.new(how, what)
+        return Span.new(self, how, what)
     end
 
     # 
@@ -652,7 +652,7 @@ module Container
     #
     def spans
         locate if defined?(locate)
-        return Spans.new()
+        return Spans.new(self)
     end
 
     
@@ -676,7 +676,7 @@ module Container
     #
     def p(how, what)
         locate if defined?(locate)
-        return P.new(how, what)
+        return P.new(self, how, what)
     end
 
     # 
@@ -694,7 +694,7 @@ module Container
     #
     def ps
         locate if defined?(locate)
-        return Ps.new()
+        return Ps.new(self)
     end
 
     #
@@ -716,7 +716,7 @@ module Container
     #
     def pre(how, what)
         locate if defined?(locate)
-        return Pre.new(how, what)
+        return Pre.new(self, how, what)
     end
 
     # 
@@ -734,7 +734,7 @@ module Container
     #
     def pres
         locate if defined?(locate)
-        return Pres.new()
+        return Pres.new(self)
     end
 	
     #
@@ -756,7 +756,7 @@ module Container
     #
     def label(how, what)
         locate if defined?(locate)
-        return Label.new(how, what)
+        return Label.new(self, how, what)
     end
 
     # 
@@ -774,7 +774,7 @@ module Container
     #
     def labels
         locate if defined?(locate)
-        return Labels.new()
+        return Labels.new(self)
     end
 
     # Description:
@@ -802,7 +802,7 @@ module Container
 	def show_all_objects
         puts "-----------Objects in the current context-------------" 
         locate if defined?(locate)
-        elements = Document.new.all
+        elements = Document.new(self).all
         puts elements.length
         elements.each  do |n|
             puts n.tagName
