@@ -16,7 +16,7 @@ class TC_Frames < Test::Unit::TestCase
     assert_raises(UnknownObjectException) { $ff.frame("buttonFrame2").button(:id, "b2").enabled?  }  
     assert($ff.frame("buttonFrame").button(:id, "b2").enabled?)   
     assert(!$ff.frame("buttonFrame").button(:caption, "Disabled Button").enabled?)
- end
+  end
   
   def test_frame_using_name
     assert_raises(UnknownFrameException) { $ff.frame(:name , "missingFrame").button(:id, "b2").enabled?  }  
@@ -44,10 +44,10 @@ class TC_Frames < Test::Unit::TestCase
   def test_preset_frame
     # with ruby's instance_eval, we are able to use the same frame for several actions
     results = $ff.frame("buttonFrame").instance_eval do [
-      button(:id, "b2").enabled?, 
-      button(:caption, "Disabled Button").enabled?
-      ]
-    end
+     button(:id, "b2").enabled?, 
+     button(:caption, "Disabled Button").enabled?
+     ]
+  end
     assert_equal([true, false], results)
   end
   

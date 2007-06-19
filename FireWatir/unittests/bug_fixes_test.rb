@@ -80,4 +80,25 @@ class TC_Bugs< Test::Unit::TestCase
         assert($ff.contains_text(/pass/i))
         assert_false($ff.contains_text(/pass/))
     end
+
+    def test_frame_bug_21
+        $ff.goto($htmlRoot + "frame_buttons.html")
+        frame1 = $ff.frame(:name, "buttonFrame")
+        frame2 = $ff.frame(:name, "buttonFrame2")
+        assert_equal("buttons1.html", frame1.src)
+        assert_equal("blankpage.html", frame2.src)
+    end
+    
+    def test_quotes_bug_11
+        $ff.goto($htmlRoot + "textfields1.html")
+        $ff.text_field(:name, "text1").set("value with quote (\")")
+        assert_equal("value with quote (\")", $ff.text_field(:name, "text1").value)
+        $ff.text_field(:name, "text1").set("value with backslash (\\)")
+        assert_equal("value with backslash (\\)", $ff.text_field(:name, "text1").value)
+    end
+
+    def test_close_bug_26
+        $ff.close()
+        $ff = Firefox.new
+    end
 end 

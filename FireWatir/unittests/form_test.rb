@@ -10,7 +10,7 @@ class TC_Forms2 < Test::Unit::TestCase # Note: there is no TC_Forms
   def setup
     $ff.goto($htmlRoot + "forms2.html")
   end
-  
+ 
   def test_Form_Exists
     assert($ff.form(:name, "test2").exists?)   
     assert(!$ff.form(:name, "missing").exists?)   
@@ -40,9 +40,9 @@ class TC_Forms2 < Test::Unit::TestCase # Note: there is no TC_Forms
     assert_equal("\n<BR><INPUT value=\"Submit\" type=\"submit\">\n".downcase(), 
     $ff.form(:name, 'test2').html.downcase())
   end
-#  def test_form_flash
-#    assert_nothing_raised{ $ff.form(:name, 'test2').flash }
-#  end
+  def test_form_flash
+    assert_nothing_raised{ $ff.form(:name, 'test2').flash }
+  end
   def test_form_sub_element
     assert_equal('Click Me', $ff.form(:index, 1).button(:name, 'b1').value)
   end
@@ -132,16 +132,16 @@ class TC_Forms3 < Test::Unit::TestCase
     assert_equal("" , $ff.text_field(:id, 't1').getContents )
   end
   
-#  def test_flash1
-#    $ff.form(:name ,"test2").button(:caption , "Submit").flash
-#  end 
-  
+##  def test_flash1
+##    $ff.form(:name ,"test2").button(:caption , "Submit").flash
+##  end 
+#  
   def test_objects_with_same_name
     assert_equal('textfield' ,$ff.text_field( :name , 'g1').value )
     assert_equal('button'    ,$ff.button(     :name , 'g1').value )
     assert_equal('1'         ,$ff.checkbox(   :name , 'g1').value )
     assert_equal('2'         ,$ff.radio(      :name , 'g1').value )
-    
+   
     assert_equal('textfield' ,$ff.text_field( :name , /g1/).value )
     assert_equal('button'    ,$ff.button(     :name , /g1/).value )
     assert_equal('1'         ,$ff.checkbox(   :name , /g1/).value )
@@ -286,21 +286,21 @@ class TC_Hidden_Fields2 < Test::Unit::TestCase
     assert_equal("333"  , $ff.text_field(:name ,"vis2").value )
    
     # iterators
-#    assert_equal(2, $ff.hiddens.length)
-#    count =1
-#    $ff.hiddens.each do |h|
-#      case count
-#      when 1
-#        assert_equal( "", h.id)
-#        assert_equal( "hid1", h.name)
-#      when 2
-#        assert_equal( "", h.name)
-#        assert_equal( "hidden_1", h.id)
-#      end
-#      count+=1
-#    end
-    
-#    assert_equal("hid1" , $ff.hiddens[1].name )
-#    assert_equal("hidden_1" , $ff.hiddens[2].id )
+##    assert_equal(2, $ff.hiddens.length)
+##    count =1
+##    $ff.hiddens.each do |h|
+##      case count
+##      when 1
+##        assert_equal( "", h.id)
+##        assert_equal( "hid1", h.name)
+##      when 2
+##        assert_equal( "", h.name)
+##        assert_equal( "hidden_1", h.id)
+##      end
+##      count+=1
+##    end
+#    
+##    assert_equal("hid1" , $ff.hiddens[1].name )
+##    assert_equal("hidden_1" , $ff.hiddens[2].id )
   end
 end

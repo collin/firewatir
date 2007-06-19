@@ -155,6 +155,7 @@ class TC_Radios < Test::Unit::TestCase
             assert_equal( $ff.radio(:index, index).id , r.id )
             assert_equal( $ff.radio(:index, index).value, r.value)
             assert_equal( $ff.radio(:index, index).disabled , r.disabled )
+            assert_equal( $ff.radio(:index, index).isSet? , r.isSet? )
             index+=1
         end
         assert_equal(index -1, $ff.radios.length)

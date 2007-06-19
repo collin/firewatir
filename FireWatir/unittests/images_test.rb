@@ -18,9 +18,9 @@ class TC_Images < Test::Unit::TestCase
     def teardown
         clean_saved_image
     end
-    def test_show_all_objects
-        $ff.show_all_objects
-    end
+#    def test_show_all_objects
+#        $ff.show_all_objects
+#    end
     
     def test_imageExists
         assert( !  $ff.image(:name , "missing_name").exists?  )

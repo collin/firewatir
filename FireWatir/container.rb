@@ -84,6 +84,7 @@ module Container
     #   Frame object.
     #
     def frame(how, what = nil)
+        locate if defined?(locate)
         if(what == nil)
             what = how
             how = :name
@@ -111,6 +112,7 @@ module Container
     #   Form object.
     #
     def form(how, what=nil)   
+        locate if defined?(locate)
        if(what == nil)
             what = how
             how = :name

@@ -3,7 +3,7 @@ require 'unittests/setup'
 
 class TC_JavaScript_Test < Test::Unit::TestCase
     include FireWatir
-    include FireWatir::Dialog
+#    include FireWatir::Dialog
     
     def setup
         $ff.goto($htmlRoot  + 'JavascriptClick.html')
@@ -14,6 +14,7 @@ class TC_JavaScript_Test < Test::Unit::TestCase
 
         $ff.click_jspopup_button("OK")
         assert_equal($ff.text_field(:id, "testResult").value , "You pressed the Alert button!")
+        assert_equal("Press OK", $ff.get_popup_text)
     end
     
     def test_confirm_ok
@@ -21,6 +22,7 @@ class TC_JavaScript_Test < Test::Unit::TestCase
         
         $ff.click_jspopup_button("OK")
         assert_equal($ff.text_field(:id, "testResult").value , "You pressed the Confirm and OK button!")
+        assert_equal("Press a button", $ff.get_popup_text)
     end
     
     def test_confirm_cancel
@@ -28,5 +30,6 @@ class TC_JavaScript_Test < Test::Unit::TestCase
         
         $ff.click_jspopup_button("Cancel")
         assert_equal($ff.text_field(:id, "testResult").value, "You pressed the Confirm and Cancel button!")
+        assert_equal("Press a button", $ff.get_popup_text)
     end
 end

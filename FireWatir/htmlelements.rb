@@ -16,6 +16,7 @@
 #
 class Frame < Element 
 
+    attr_accessor :element_name
     #
     # Description:
     #   Initializes the instance of frame or iframe object.
@@ -25,14 +26,18 @@ class Frame < Element
     #   - what - Value of that attribute.
     #
     def initialize(container, how, what)
-        @element = Element.new(nil, container)
         @how = how
         @what = what
         @container = container
-        @o = @element.locate_frame(how, what)
+    end
+
+    def locate
+        @element_name = locate_frame(@how, @what)
+        #puts @element_name
+        @o = self
             
-        unless @o
-            raise UnknownFrameException, "Unable to locate a frame using #{how} and #{what}. "
+        unless @element_name
+            raise UnknownFrameException, "Unable to locate a frame using #{@how} and #{@what}. "
         end    
     end
 
@@ -44,6 +49,7 @@ end
 #
 class Form < Element
 
+    attr_accessor :element_name
     #
     # Description:
     #   Initializes the instance of form object.
@@ -53,24 +59,30 @@ class Form < Element
     #   - what - Value of that attribute.
     #
     def initialize(container, how, what)
-        @element = Element.new(nil, container)
         @how = how
         @what = what
-        @container = container    
+        @container = container
+    end
+
+    def locate
         # Get form using xpath.
-        if @how == :xpath    
-            @o = @element.element_by_xpath(container, @what)
+        if @how == :jssh_name
+            @element_name = @what
+        elsif @how == :xpath    
+            @element_name = element_by_xpath(container, @what)
         else
-            @o = @element.locate_tagged_element("form",@how, @what)
+            @element_name = locate_tagged_element("form",@how, @what)
         end
+        @o = self
     end
 
     #
     # Description:
     #   Submit the form. Equivalent to pressing Enter or Return to submit a form. 
     #
-    def submit # XXX use assert_exists
-        @o.submit 
+    def submit
+        assert_exists
+        submit_form 
         @o.wait
     end   
 
@@ -81,17 +93,24 @@ end # class Form
 #   Base class containing items that are common between the span, div, label, p and pre classes.
 #
 class NonControlElement < Element
-  
+
+    attr_accessor :element_name
+    #def get_element_name
+    #    return @element_name
+    #end
     #
     # Description:
     #   Locate the element on the page. Element can be a span, div, label, p or pre HTML tag.
     #
     def locate
-        if @how == :xpath
-            @o = @element.element_by_xpath(@container, @what)
+        if(@how == :jssh_name)
+            @element_name = @what
+        elsif @how == :xpath
+            @element_name = element_by_xpath(@container, @what)
         else
-            @o = @element.locate_tagged_element(self.class::TAG, @how, @what)
-        end            
+            @element_name = locate_tagged_element(self.class::TAG, @how, @what)
+        end
+            @o = self
     end            
     
     #
@@ -103,10 +122,11 @@ class NonControlElement < Element
     #   - what - Value of that attribute.
     #
     def initialize(container, how, what)
-        @element = Element.new(nil)
+        #@element = Element.new(nil)
         @how = how
         @what = what
         @container = container
+        @o = nil
     end
        
     # 
@@ -196,6 +216,7 @@ end
 #   Class for table element.
 #
 class Table < Element
+    attr_accessor :element_name
       
     #
     # Description:
@@ -206,10 +227,10 @@ class Table < Element
     #   - what - Value of that attribute.
     #
     def initialize(container, how, what)
-        @element = Element.new(nil)
         @how = how
         @what = what
         @container = container
+        @o = nil
         #super nil
     end
 
@@ -218,11 +239,14 @@ class Table < Element
     #   Locate the table element.
     #
     def locate
-        if @how == :xpath
-            @o = @element.element_by_xpath(@container, @what)
+        if @how == :jssh_name
+            @element_name = @what
+        elsif @how == :xpath
+            @element_name = element_by_xpath(@container, @what)
         else
-            @o = @element.locate_tagged_element('TABLE', @how, @what)
+            @element_name = locate_tagged_element('TABLE', @how, @what)
         end
+        @o = self
     end
      
     #
@@ -287,7 +311,7 @@ class Table < Element
     #
     def row_count 
         assert_exists
-        return @o.get_rows.length
+        return rows.length
     end
 
     #
@@ -300,7 +324,7 @@ class Table < Element
     def to_a
         assert_exists
         y = []
-        table_rows = @o.get_rows()
+        table_rows = rows
         for row in table_rows
             x = []
             row.each do |td|
@@ -320,7 +344,52 @@ class Table < Element
     #
     def rows
         assert_exists
-        @o.get_rows()
+        arr_rows = get_rows
+        table_rows = Array.new(arr_rows.length)
+        for i in 0..arr_rows.length - 1 do
+            table_rows[i] = TableRow.new(@container, :jssh_name, arr_rows[i])
+        end
+        return table_rows
+    end
+
+    def [](key)
+        assert_exists
+        arr_rows = rows
+        return arr_rows[key - 1]
+    end
+
+    def each
+        assert_exists
+        arr_rows = rows
+        for i in 0..arr_rows.length - 1 do
+            yield arr_rows[i]
+        end
+    end
+
+    def column_count
+        assert_exists
+        arr_rows = rows
+        return arr_rows[0].column_count
+    end
+
+    def column_values(column)
+        assert_exists
+        arr_rows = rows
+        values = Array.new(arr_rows.length)
+        for i in 0..arr_rows.length - 1 do
+            values[i] = arr_rows[i][column].to_s 
+        end
+        return values
+    end
+    def row_values(row)
+        assert_exists
+        arr_rows = rows
+        cells = arr_rows[row - 1].cells
+        values = Array.new(cells.length)
+        for i in 0..cells.length - 1 do
+            values[i] = cells[i].to_s
+        end
+        return values
     end
 end
 
@@ -424,17 +493,21 @@ end
 # Class for Table row element.
 #
 class TableRow < Element
+    attr_accessor :element_name
 
     # Description:
     #   Locate the table row element on the page.
     #
     def locate
         @o = nil
-        if @how == :xpath
-            @o = @element.element_by_xpath(@container, @what)
+        if @how == :jssh_name
+            @element_name = @what
+        elsif @how == :xpath
+            @element_name = element_by_xpath(@container, @what)
         else
-            @o = @element.locate_tagged_element("TR", @how, @what)   
+            @element_name = locate_tagged_element("TR", @how, @what)   
         end
+        @o = self
     end
 
     #
@@ -446,7 +519,6 @@ class TableRow < Element
     #   - what - Value of that attribute.
     #
     def initialize(container, how, what)
-        @element = Element.new(nil, container)
         @how = how   
         @what = what   
         @container = container
@@ -462,7 +534,32 @@ class TableRow < Element
     #
     def column_count
         assert_exists
-        @o.cells.length
+        arr_cells = cells
+        return arr_cells.length
+    end
+
+    def [] (key)
+        assert_exists
+        arr_cells = cells
+        return arr_cells[key - 1]
+    end
+
+    def each
+        assert_exists
+        arr_cells = cells
+        for i in 0..arr_cells.length - 1 do
+            yield arr_cells[i]
+        end
+    end    
+
+    def cells
+        assert_exists        
+        arr_cells = get_cells
+        row_cells = Array.new(arr_cells.length)
+        for i in 0..arr_cells.length - 1 do
+            row_cells[i] = TableCell.new(@container, :jssh_name, arr_cells[i])
+        end
+        return row_cells
     end
 end
 
@@ -471,16 +568,20 @@ end
 # Class for Table Cell.
 #
 class TableCell < Element
+    attr_accessor :element_name
 
     # Description:
     #   Locate the table cell element on the page.
     #
     def locate
-        if @how == :xpath
-            @o = @element.element_by_xpath(@container, @what)
+        if @how == :jssh_name
+            @element_name = @what
+        elsif @how == :xpath
+            @element_name = element_by_xpath(@container, @what)
         else
-            @o = @element.locate_tagged_element("TD", @how, @what)   
+            @element_name = locate_tagged_element("TD", @how, @what)   
         end
+        @o = self
     end
 
     #
@@ -492,7 +593,6 @@ class TableCell < Element
     #   - what - Value of that attribute.
     #
     def initialize(container, how, what)   
-        @element = Element.new(nil, container)
         @how = how   
         @what = what   
         @container = container
@@ -520,6 +620,7 @@ end
 #   Class for Image element.
 #
 class Image < Element
+    attr_accessor :element_name
     #
     # Description:
     #   Initializes the instance of image object.
@@ -529,7 +630,6 @@ class Image < Element
     #   - what - Value of that attribute.
     #
     def initialize(container, how, what)
-        @element = Element.new(nil, container)
         @how = how
         @what = what
         @container = container
@@ -539,11 +639,14 @@ class Image < Element
     #   Locate the image element on the page.
     #
     def locate
-        if @how == :xpath
-            @o = @element.element_by_xpath(@container, @what)
+        if @how == :jssh_name
+            @element_name = @what
+        elsif @how == :xpath
+            @element_name = element_by_xpath(@container, @what)
         else
-            @o = @element.locate_tagged_element('IMG', @how, @what)
-        end            
+            @element_name = locate_tagged_element('IMG', @how, @what)
+        end
+        @o = self
     end            
 
     #
@@ -650,6 +753,7 @@ end
 #   Class for Link element.
 #
 class Link < Element
+    attr_accessor :element_name
     #
     # Description:
     #   Initializes the instance of link element.
@@ -659,7 +763,6 @@ class Link < Element
     #   - what - Value of that attribute.
     #
     def initialize(container, how, what)
-        @element = Element.new(nil, container)
         @how = how
         @what = what
         @container = container
@@ -670,15 +773,14 @@ class Link < Element
     #   Locate the link element on the page.
     #
     def locate
-        if @how == :xpath
-            @o = @element.element_by_xpath(@container, @what)
+        if @how == :jssh_name
+            @element_name = @what
+        elsif @how == :xpath
+            @element_name = element_by_xpath(@container, @what)
         else
-            begin
-                @o = @element.locate_tagged_element('A', @how, @what)
-            rescue UnknownObjectException
-                @o = nil
-            end
+            @element_name = locate_tagged_element('A', @how, @what)
         end
+        @o = self
     end
 
     #TODO: if an image is used as part of the link, this will return true      
@@ -723,20 +825,24 @@ end
 #   Base class containing items that are common between select list, text field, button, hidden, file field classes.
 #
 class InputElement < Element
+    attr_accessor :element_name
     #
     # Description:
     #   Locate the element on the page. Element can be a select list, text field, button, hidden, file field.
     #
     def locate
-        if @how == :xpath
-            @o = @element.element_by_xpath(@container, @what)
+        if @how == :jssh_name
+            @element_name = @what
+        elsif @how == :xpath
+            @element_name = element_by_xpath(@container, @what)
         else
             if(self.class::INPUT_TYPES.include?("select-one"))
-                @o = @element.locate_tagged_element("select", @how, @what, self.class::INPUT_TYPES)
+                @element_name = locate_tagged_element("select", @how, @what, self.class::INPUT_TYPES)
             else    
-                @o = @element.locate_tagged_element("input", @how, @what, self.class::INPUT_TYPES)
+                @element_name = locate_tagged_element("input", @how, @what, self.class::INPUT_TYPES)
             end    
-        end              
+        end
+        @o = self
     end
     #
     # Description:
@@ -747,10 +853,10 @@ class InputElement < Element
     #   - what - Value of that attribute.
     #
     def initialize(container, how, what)
-        @element = Element.new(nil, container)
         @how = how
         @what = what
         @container = container
+        @element_name = ""
         #super(nil)
     end
 end
@@ -778,8 +884,23 @@ class SelectList < InputElement
                 wait = true
             end
         end
-        @element.wait if wait
+        @o.wait if wait
         #highlight( :clear)
+    end
+   
+    def each
+        assert_exists
+        arr_options = options 
+        #puts arr_options[0]#.length
+        for i in 0..arr_options.length - 1 do
+            yield Option.new(self, :jssh_name, arr_options[i])
+        end
+    end
+
+    def [] (key)
+        assert_exists
+        arr_options = options
+        return Option.new(self, :jssh_name, arr_options[key - 1])
     end
     
     #
@@ -824,7 +945,7 @@ class SelectList < InputElement
                 else
                     option.selected = true
                     @o.fireEvent("onChange")
-                    @element.wait
+                    @o.wait
                     doBreak = true
                     break
                 end
@@ -867,6 +988,7 @@ class SelectList < InputElement
         returnArray = []
         #element.log "There are #{@o.length} items"
         @o.each do |thisItem|
+            #puts "#{thisItem.selected}"
             if thisItem.selected
                 #element.log "Item ( #{thisItem.text} ) is selected"
                 returnArray << thisItem.text 
@@ -908,18 +1030,33 @@ class Option < SelectList
         @how = attribute
         @what = value
         @option = nil
+        @element_name = ""
         
-        unless [:text, :value].include? attribute 
+        unless [:text, :value, :jssh_name].include? attribute 
             raise MissingWayOfFindingObjectException,
                 "Option does not support attribute #{@how}"
         end
         #puts @select_list.o.length
-        @select_list.o.each do |option| # items in the list
-            if value.matches( option.invoke(attribute.to_s))
-                @option = option
-                break
+        #puts "what is : #{@what}, how is #{@how}, list name is : #{@select_list.element_name}"
+        if(attribute == :jssh_name)
+            @element_name = @what
+            @option = self
+        else    
+            @select_list.o.each do |option| # items in the list
+                #puts "option is : #{option}"
+                if(attribute == :value)
+                    match_value = option.value
+                else    
+                    match_value = option.text
+                end    
+                #puts "value is #{match_value}"
+                if value.matches( match_value) #option.invoke(attribute))
+                    @option = option
+                    @element_name = option.element_name
+                    break
+                end
             end
-        end
+        end    
     end
 
     #
@@ -956,7 +1093,7 @@ class Option < SelectList
     #
     def class_name
         assert_exists
-        @option.class_name
+        option_class_name
     end
     
     #
@@ -968,7 +1105,7 @@ class Option < SelectList
     #
     def text
         assert_exists
-        @option.text
+        option_text
     end
     
     #
@@ -980,7 +1117,7 @@ class Option < SelectList
     #
     def value
         assert_exists
-        @option.value
+        option_value
     end
     
     #
@@ -992,7 +1129,8 @@ class Option < SelectList
     #
     def selected
         assert_exists
-        @option.selected
+        #@option.selected
+        option_selected
     end
 end    
 
@@ -1112,7 +1250,7 @@ class TextField < InputElement
         @o.value = ""
         @o.fireEvent("onKeyPress")
         @o.fireEvent("onChange")
-        @element.wait()
+        @container.wait()
         highlight(:clear)
     end
     
@@ -1173,10 +1311,10 @@ class TextField < InputElement
     # Input:
     #   - v - Text to be set.
     #
-    def value=(v)
-        assert_exists
-        @o.value = v.to_s
-    end
+    #def value=(v)
+    #    assert_exists
+    #    @o.value = v.to_s
+    #end
 
     # 
     # Description:
@@ -1289,16 +1427,20 @@ end
 #   Base class for checkbox and radio button elements.
 #
 class RadioCheckCommon < Element
+    attr_accessor :element_name
     #
     # Description:
     #   Locate the element on the page. Element can be a checkbox or radio button.
     #
     def locate
-        if @how == :xpath
-            @o = @element.element_by_xpath(@container, @what)
+        if @how == :jssh_name
+            @element_name = @what
+        elsif @how == :xpath
+            @element_name = element_by_xpath(@container, @what)
         else
-            @o = @element.locate_tagged_element("input", @how, @what, @type, @value)
+            @element_name = locate_tagged_element("input", @how, @what, @type, @value)
         end
+        @o = self
     end
     
     #
@@ -1312,7 +1454,6 @@ class RadioCheckCommon < Element
     #   - value - value of the element.
     #
     def initialize(container, how, what, type, value = nil)
-        @element = Element.new(nil, container)
         @how = how
         @what = what
         @type = type
@@ -1366,7 +1507,7 @@ class RadioCheckCommon < Element
     def set_clear_item(set)
         @o.checked = set
         @o.fireEvent("onClick")
-        @element.wait
+        @container.wait
     end
     private :set_clear_item
 
@@ -1581,7 +1722,14 @@ class Buttons < ElementCollections
     #   Initializes the instance of Buttons class.
     #
     def initialize(container)
-        super(container, "input", ["button", "image", "submit", "reset"])
+        @container = container
+        elements = locate_tagged_elements("input", ["button", "image", "submit", "reset"])
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = Button.new(container, :jssh_name, elements[i])
+        end
     end
     #def element_class; Button; end
     #def length
@@ -1608,7 +1756,14 @@ class FileFields< ElementCollections
     #   Initializes the instance of FileFields class.
     #
     def initialize(container)
-        super(container, "input",["file"])
+        @container = container
+        elements = locate_tagged_elements("input", ["file"])
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = FileField.new(container, :jssh_name, elements[i])
+        end
     end
 #    def element_class; FileField; end
 #    def length
@@ -1635,7 +1790,14 @@ class CheckBoxes < ElementCollections
     #   Initializes the instance of CheckBoxes class.
     #
     def initialize(container)
-        super(container, "input",["checkbox"])
+        @container = container
+        elements = locate_tagged_elements("input", ["checkbox"])
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = CheckBox.new(container, :jssh_name, elements[i], ["checkbox"])
+        end
     end
 #    def element_class; CheckBox; end  
 #    def length
@@ -1659,7 +1821,14 @@ class Radios < ElementCollections
     #   Initializes the instance of Radios class.
     #
     def initialize(container)
-        super(container, "input",["radio"])
+        @container = container
+        elements = locate_tagged_elements("input", ["radio"])
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = Radio.new(container, :jssh_name, elements[i], ["radio"])
+        end
     end
 #    def element_class; Radio; end
 #    def length
@@ -1683,7 +1852,15 @@ class SelectLists < ElementCollections
     #   Initializes the instance of SelectLists class.
     #
     def initialize(container)
-        super(container, "select",["select-one","select-multiple"])
+        #super(container, "select",["select-one","select-multiple"])
+        @container = container
+        elements = locate_tagged_elements("select", ["select-one", "select-multiple"])
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = SelectList.new(container, :jssh_name, elements[i])
+        end
     end
 #    include CommonCollection
 #    def element_class; SelectList; end
@@ -1701,7 +1878,15 @@ class Links < ElementCollections
     #   Initializes the instance of Links class.
     #
     def initialize(container)
-        super(container, "a")
+        #super(container, "a")
+        @container = container
+        elements = locate_tagged_elements("a")
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = Link.new(container, :jssh_name, elements[i])
+        end
     end
 #    include CommonCollection
 #    def element_class; Link; end    
@@ -1727,7 +1912,15 @@ class Images < ElementCollections
     #   Initializes the instance of Images class.
     #
     def initialize(container)
-        super(container, "img")
+        #super(container, "img")
+        @container = container
+        elements = locate_tagged_elements("img")
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = Image.new(container, :jssh_name, elements[i])
+        end
     end
 #    def element_class; Image; end 
 #    def length
@@ -1754,7 +1947,15 @@ class TextFields < ElementCollections
     #   Initializes the instance of TextFields class.
     #
     def initialize(container)
-        super(container, "input",["text","textarea","password"])
+        #super(container, "input",["text","textarea","password"])
+        @container = container
+        elements = locate_tagged_elements("input", ["text", "textarea", "password"])
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = TextField.new(container, :jssh_name, elements[i])
+        end
     end
 #    def element_class; TextField; end
 #    def length
@@ -1775,7 +1976,15 @@ class Hiddens < ElementCollections
     #   Initializes the instance of Hiddens class.
     #
     def initialize(container)
-        super(container, "input",["hidden"])
+        #super(container, "input",["hidden"])
+        @container = container
+        elements = locate_tagged_elements("input", ["hidden"])
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = Hidden.new(container, :jssh_name, elements[i])
+        end
     end
 #    def element_class; Hidden; end
 #    def length
@@ -1794,7 +2003,15 @@ class Tables < ElementCollections
     #   Initializes the instance of Tables class.
     #
 	def initialize(container)
-		super(container, "table")
+		#super(container, "table")
+        @container = container
+        elements = locate_tagged_elements("table")
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = Table.new(container, :jssh_name, elements[i])
+        end
 	end
 #    include CommonCollection
 #    def element_class; Table; end
@@ -1818,7 +2035,15 @@ class Labels < ElementCollections
     #   Initializes the instance of Labels class.
     #
     def initialize(container)
-        super(container, "label")
+        #super(container, "label")
+        @container = container
+        elements = locate_tagged_elements("label")
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = Label.new(container, :jssh_name, elements[i])
+        end
     end
 #    include CommonCollection
 #    def element_class; Label; end
@@ -1842,7 +2067,15 @@ class Pres < ElementCollections
     #   Initializes the instance of Pres class.
     #
     def initialize(container)
-        super(container, "pre")
+        #super(container, "pre")
+        @container = container
+        elements = locate_tagged_elements("pre")
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = Pre.new(container, :jssh_name, elements[i])
+        end
     end
 #	include CommonCollection
 #	def element_class; Pre; end
@@ -1865,7 +2098,15 @@ class Ps < ElementCollections
     #   Initializes the instance of Ps class.
     #
     def initialize(container)
-        super(container, "p")
+        #super(container, "p")
+        @container = container
+        elements = locate_tagged_elements("p")
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = P.new(container, :jssh_name, elements[i])
+        end
     end
 #    include CommonCollection
 #    def element_class; P; end
@@ -1890,7 +2131,15 @@ class Spans < ElementCollections
     #   Initializes the instance of Spans class.
     #
     def initialize(container)
-        super(container, "span")
+        #super(container, "span")
+        @container = container
+        elements = locate_tagged_elements("span")
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = Span.new(container, :jssh_name, elements[i])
+        end
     end
 #    include CommonCollection
 #    def element_class; Span; end
@@ -1915,7 +2164,15 @@ class Divs < ElementCollections
     #   Initializes the instance of Divs class.
     #
     def initialize(container)
-        super(container, "div")
+        #super(container, "div")
+        @container = container
+        elements = locate_tagged_elements("div")
+        length = elements.length
+        #puts "length is : #{length}"
+        @element_objects = Array.new(length)
+        for i in 0..length - 1 do
+            @element_objects[i] = Div.new(container, :jssh_name, elements[i])
+        end
     end
 #    include CommonCollection
 #    def element_class; Div; end

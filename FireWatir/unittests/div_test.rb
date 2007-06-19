@@ -22,14 +22,14 @@ class TC_Divs < Test::Unit::TestCase
     assert($ff.text_field(:name, "text1").verify_contains("0") )  
   end
   
-  def test_show_all_objects
-    assert_equal(36, $ff.show_all_objects.length)
-    assert_equal(3,$ff.div(:id,"text_fields1").show_all_objects.length)
-    
-    assert_equal(8,$ff.text_fields.length)
-    assert_equal(3,$ff.div(:id,"text_fields1").text_fields.length)
-  end
-  
+#  def test_show_all_objects
+#    assert_equal(36, $ff.show_all_objects.length)
+#    assert_equal(3,$ff.div(:id,"text_fields1").show_all_objects.length)
+#   
+#    assert_equal(8,$ff.text_fields.length)
+#    assert_equal(3,$ff.div(:id,"text_fields1").text_fields.length)
+#  end
+#  
   def test_div_properties
     assert_raises(UnknownObjectException) {$ff.div(:id , "div77").text }
     assert_raises(UnknownObjectException) {$ff.div(:title , "div77").text }
@@ -60,7 +60,7 @@ class TC_Divs < Test::Unit::TestCase
     $ff.divs.each do |s|
       # puts "each - div= " + s.to_s
       assert_equal($ff.div(:index, index ).name , s.name )
-     assert_equal($ff.div(:index, index ).id , s.id )
+      assert_equal($ff.div(:index, index ).id , s.id )
       assert_equal($ff.div(:index, index ).class_name , s.class_name )
       index +=1
     end
@@ -82,9 +82,9 @@ class TC_Divs < Test::Unit::TestCase
     assert_equal( 'button1' ,   $ff.div(:id , 'text_fields1').text_field(:index,1).value)
     
     #assert_equal( 3 , $ff.div(:id , 'text_fields1').text_fields.length )
-    $ff.div(:id, 'text_fields1').text_field(:name, 'div_text1').set("drink me")
-    assert_equal("drink me", $ff.div(:id, 'text_fields1').text_field(:name, 'div_text1').getContents)
-  end
+   $ff.div(:id, 'text_fields1').text_field(:name, 'div_text1').set("drink me")
+   assert_equal("drink me", $ff.div(:id, 'text_fields1').text_field(:name, 'div_text1').getContents)
+ end
   
   #---- Span Tests ---
   def test_spans
@@ -149,6 +149,8 @@ class TC_Divs < Test::Unit::TestCase
     $ff.span(:id, 'buttons1').button(:index,1).click
     
     assert_equal( 'button1' ,   $ff.span(:id , 'text_fields1').text_field(:index,1).value)
+    $ff.span(:id , 'text_fields1').text_field(:index,1).set('text box inside span')
+    assert_equal( 'text box inside span' ,   $ff.span(:id , 'text_fields1').text_field(:index,1).value)
    
     #assert_equal( 3 , $ff.span(:id , 'text_fields1').text_fields.length )
   end

@@ -19,10 +19,10 @@ class TC_Hidden_Fields < Test::Unit::TestCase
         $ff.hidden(:index,1).value = 44
         $ff.hidden(:index,2).value = 55
         
-        #$ff.button(:value , "Show Hidden").click
-        
-        #assert_equal("44"  , $ff.text_field(:name , "vis1").value ) 
-        #assert_equal("55"  , $ff.text_field(:name , "vis2").value )
+        $ff.button(:value , "Show Hidden").click
+       
+        assert_equal("44"  , $ff.text_field(:name , "vis1").value ) 
+        assert_equal("55"  , $ff.text_field(:name , "vis2").value )
                         
         # test using name and ID
         assert( $ff.hidden(:name ,"hid1").exists? )
@@ -51,18 +51,18 @@ class TC_Hidden_Fields < Test::Unit::TestCase
         assert_equal("555"  , $ff.text_field(:name ,"vis2").value )
         
         # test using a form
-        #assert( $ff.form(:name , "has_a_hidden").hidden(:name ,"hid1").exists? )
-        #assert( $ff.form(:name , "has_a_hidden").hidden(:id,"hidden_1").exists? )
-        #assert_false( $ff.form(:name , "has_a_hidden").hidden(:name,"hidden_44").exists? )
-        #assert_false( $ff.form(:name , "has_a_hidden").hidden(:id,"hidden_55").exists? )
+        assert( $ff.form(:name , "has_a_hidden").hidden(:name ,"hid1").exists? )
+        assert( $ff.form(:name , "has_a_hidden").hidden(:id,"hidden_1").exists? )
+        assert_false( $ff.form(:name , "has_a_hidden").hidden(:name,"hidden_44").exists? )
+        assert_false( $ff.form(:name , "has_a_hidden").hidden(:id,"hidden_55").exists? )
         
-        #$ff.form(:name , "has_a_hidden").hidden(:name ,"hid1").value = 222
-        #$ff.form(:name , "has_a_hidden").hidden(:id,"hidden_1").value = 333
+        $ff.form(:name , "has_a_hidden").hidden(:name ,"hid1").value = 222
+        $ff.form(:name , "has_a_hidden").hidden(:id,"hidden_1").value = 333
         
-        #$ff.button(:value , "Show Hidden").click
+        $ff.button(:value , "Show Hidden").click
         
-        #assert_equal("222"  , $ff.text_field(:name , "vis1").value ) 
-        #assert_equal("333"  , $ff.text_field(:name ,"vis2").value )
+        assert_equal("222"  , $ff.text_field(:name , "vis1").value ) 
+        assert_equal("333"  , $ff.text_field(:name ,"vis2").value )
         
         # iterators
         assert_equal(2, $ff.hiddens.length)

@@ -142,6 +142,7 @@ class TC_CheckBox < Test::Unit::TestCase
             assert_equal( $ff.checkbox(:index, index).name , c.name )
             assert_equal( $ff.checkbox(:index, index).id, c.id )
             assert_equal( $ff.checkbox(:index, index).value, c.value )
+            assert_equal( $ff.checkbox(:index, index).isSet?, c.isSet? )
             index+=1
         end
         assert_equal(index-1, $ff.checkboxes.length)

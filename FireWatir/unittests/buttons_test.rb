@@ -46,7 +46,7 @@ class TC_Buttons < Test::Unit::TestCase
         assert_equal(b1, $ff.button(:index, 1).to_s)
         assert_raises(UnknownObjectException , "UnknownObjectException was supposed to be thrown" ) {   $ff.button(:name, "noName").to_s   }  
     end
-    
+   
     def test_properties
         assert_raises(UnknownObjectException , "UnknownObjectException was supposed to be thrown" ) {   $ff.button(:name, "noName").id   }  
         assert_raises(UnknownObjectException , "UnknownObjectException was supposed to be thrown" ) {   $ff.button(:name, "noName").name   }  
@@ -166,7 +166,7 @@ class TC_Buttons < Test::Unit::TestCase
 	    assert_equal(7,arrButtons.length)
         #arrButtons.each do |button|
             #puts button.to_s
-        #end
+       #end
 	    assert_equal("b2",arrButtons[1].id)
         assert_equal("b5",arrButtons[2].id)
         assert_equal("Submit",arrButtons[3].value)

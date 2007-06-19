@@ -7,7 +7,9 @@ module FireWatir
             super(message)
         end
     end
-    
+
+    # This exception is thrown if we are unable to connect to JSSh.
+    class UnableToStartJSShException < FireWatirException; end
     # This exception is thrown if an attempt is made to access an object that doesn't exist
     class UnknownObjectException < FireWatirException; end
     # This exception is thrown if an attempt is made to access an object that is in a disabled state

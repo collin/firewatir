@@ -158,11 +158,15 @@ module FireWatir
 
         # variable to check if connection has been established or not.
         @@connection_established = false
-
+        
+        @@window_stack = Array.new
         # This allows us to identify the window uniquely and close them accordingly.
         @window_title = nil 
         @window_url = nil 
-                                                
+
+        # Number of times we tried to connect to JSSH before raising exception.
+        #@no_of_tries = 0 
+
         #
         # Description: 
         #   Starts the firefox browser. Currently this only works for Windows Platform.
@@ -179,7 +183,7 @@ module FireWatir
         #
         def initialize(waitTime = 2)
             if(RUBY_PLATFORM =~ /.*mswin.*/)
-                if( ! @@firefox_started )
+                #if( ! @@firefox_started )
 
                     #puts "plaftorm is windows"
                     # Get the path to Firefox.exe using Registry.
@@ -199,15 +203,15 @@ module FireWatir
                     puts "Waiting for #{waitTime} seconds for Firefox to get started."
                     Thread.new { system("\"#{path_to_exe}\" -jssh") }
                     sleep waitTime
-                    @@firefox_started = true
-                end
+                #    @@firefox_started = true
+                #end
             end       
             
             if(@@connection_established == false)
                 set_defaults()
             end
-            #get_window_number()
-            #set_browser_document()
+            get_window_number()
+            set_browser_document()
         end
 
         #
@@ -234,7 +238,6 @@ module FireWatir
             $jssh_socket.send("getWindows().length;\n", 0)
             @@current_window = read_socket().to_i - 1
             # This will store the information about the window.
-            @@window_stack = Array.new
             #@@window_stack.push(@@current_window)
             #puts "here in get_window_number window number is #{@@current_window}"
             return @@current_window
@@ -297,7 +300,7 @@ module FireWatir
         #   This function creates a new socket at port 9997 and sets the default values for instance and class variables.
         #   Generates error message if cannot connect to jssh and exits the current process.
         #
-        def set_defaults
+        def set_defaults(no_of_tries = 0)
             # JSSH listens on port 9997. Create a new socket to connect to port 9997.
             begin
                 $jssh_socket = TCPSocket::new(MACHINE_IP, "9997")
@@ -305,8 +308,9 @@ module FireWatir
                 read_socket()
                 @@connection_established = true
             rescue
-                puts "Unable to connect to machine : #{MACHINE_IP} on port 9997. Make sure that JSSh is properly installed and Firefox is running with '-jssh' option"
-                exit
+                    no_of_tries += 1
+                    retry if no_of_tries < 3
+                    raise UnableToStartJSShException, "Unable to connect to machine : #{MACHINE_IP} on port 9997. Make sure that JSSh is properly installed and Firefox is running with '-jssh' option"
             end
         end
         private :set_defaults
@@ -634,6 +638,10 @@ module FireWatir
             element.click_js_popup(button)
         end
 
+        def get_popup_text
+            element = Element.new(nil)
+            element.get_popup_text
+        end
         #
         # Description:
         #   Returns the document element of the page currently loaded in the browser.
@@ -656,8 +664,9 @@ module FireWatir
         #   Element matching the xpath query.
         #
         def element_by_xpath(xpath)
-            element = Element.new(nil, self)
-            return element.element_by_xpath(self, xpath)
+            temp = Element.new(nil, self)
+            element_name = temp.element_by_xpath(self, xpath)
+            return Element.new(element_name, self)
         end
 
         #

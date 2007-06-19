@@ -290,28 +290,27 @@ class TC_Table_Columns < Test::Unit::TestCase
     assert_equal(3, $ff.table(:index, 3)[4][1].colspan)
   end
 
-#  def test_get_columnvalues_multiple_column
-#    assert_equal(["R1C1", "R2C1", "R3C1"], $ff.table(:index, 2).column_values(1))
-#    assert_equal(["R1C3", "R2C3", "R3C3"], $ff.table(:index, 2).column_values(3))
-#  end
+  def test_get_columnvalues_multiple_column
+    assert_equal(["R1C1", "R2C1", "R3C1"], $ff.table(:index, 2).column_values(1))
+    assert_equal(["R1C3", "R2C3", "R3C3"], $ff.table(:index, 2).column_values(3))
+  end
 
-#  def test_get_columnvalues_with_colspan
-#    assert_equal(["R1C1", "R2C1", "R3C1", "R4C1", "R5C1", "R6C2"], $ff.table(:index, 3).column_values(1))
-#   (2..4).each{|x|assert_raises(UnknownCellException){$ff.table(:index, 3).column_values(x)}}
-#  end
+  def test_get_columnvalues_with_colspan
+    assert_equal(["R1C1", "R2C1", "R3C1", "R4C1", "R5C1", "R6C2"], $ff.table(:index, 3).column_values(1))
+  end
 
-#  def test_get_rowvalues_full_row
-#    assert_equal(["R1C1", "R1C2", "R1C3"], $ff.table(:index, 3).row_values(1))
-#  end
+  def test_get_rowvalues_full_row
+    assert_equal(["R1C1", "R1C2", "R1C3"], $ff.table(:index, 3).row_values(1))
+  end
 
-#  def test_get_rowvalues_with_colspan
-#    assert_equal(["R2C1", "R2C2"], $ff.table(:index, 3).row_values(2))
-#  end
+  def test_get_rowvalues_with_colspan
+    assert_equal(["R2C1", "R2C2"], $ff.table(:index, 3).row_values(2))
+  end
 
-#  def test_getrowvalues_with_rowspan
-#    assert_equal(["R5C1", "R5C2", "R5C3"], $ff.table(:index, 3).row_values(5))
-#    assert_equal(["R6C2", "R6C3"], $ff.table(:index, 3).row_values(6))
-#  end
+  def test_getrowvalues_with_rowspan
+    assert_equal(["R5C1", "R5C2", "R5C3"], $ff.table(:index, 3).row_values(5))
+    assert_equal(["R6C2", "R6C3"], $ff.table(:index, 3).row_values(6))
+  end
 end
 
 class TC_Tables_Complex < Test::Unit::TestCase
