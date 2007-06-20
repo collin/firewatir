@@ -22,14 +22,14 @@ class TC_Divs < Test::Unit::TestCase
     assert($ff.text_field(:name, "text1").verify_contains("0") )  
   end
   
-#  def test_show_all_objects
-#    assert_equal(36, $ff.show_all_objects.length)
-#    assert_equal(3,$ff.div(:id,"text_fields1").show_all_objects.length)
-#   
-#    assert_equal(8,$ff.text_fields.length)
-#    assert_equal(3,$ff.div(:id,"text_fields1").text_fields.length)
-#  end
-#  
+  def test_show_all_objects
+    assert_equal(36, $ff.show_all_objects.length)
+    assert_equal(3,$ff.div(:id,"text_fields1").show_all_objects.length)
+   
+    assert_equal(8,$ff.text_fields.length)
+    assert_equal(3,$ff.div(:id,"text_fields1").text_fields.length)
+  end
+  
   def test_div_properties
     assert_raises(UnknownObjectException) {$ff.div(:id , "div77").text }
     assert_raises(UnknownObjectException) {$ff.div(:title , "div77").text }

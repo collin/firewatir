@@ -156,16 +156,11 @@ module FireWatir
         # firefox manually.
         @@firefox_started = false
 
-        # variable to check if connection has been established or not.
-        @@connection_established = false
-        
         @@window_stack = Array.new
+        
         # This allows us to identify the window uniquely and close them accordingly.
         @window_title = nil 
         @window_url = nil 
-
-        # Number of times we tried to connect to JSSH before raising exception.
-        #@no_of_tries = 0 
 
         #
         # Description: 
@@ -201,15 +196,14 @@ module FireWatir
 
                     puts "Starting Firefox using the executable : #{path_to_exe}"
                     puts "Waiting for #{waitTime} seconds for Firefox to get started."
-                    Thread.new { system("\"#{path_to_exe}\" -jssh") }
+                    @t = Thread.new { system("\"#{path_to_exe}\" -jssh") }
+                    
                     sleep waitTime
                 #    @@firefox_started = true
                 #end
             end       
             
-            if(@@connection_established == false)
-                set_defaults()
-            end
+            set_defaults()
             get_window_number()
             set_browser_document()
         end
@@ -306,7 +300,6 @@ module FireWatir
                 $jssh_socket = TCPSocket::new(MACHINE_IP, "9997")
                 $jssh_socket.sync = true
                 read_socket()
-                @@connection_established = true
             rescue
                     no_of_tries += 1
                     retry if no_of_tries < 3
@@ -353,6 +346,8 @@ module FireWatir
             #puts "current window number is : #{@@current_window}"
             if @@current_window == 0
                 $jssh_socket.send(" getWindows()[0].close(); \n", 0)
+                @t.join
+                #sleep 5
             else
                 # Check if window exists, because there may be the case that it has been closed by click event on some element.
                 # For e.g: Close Button, Close this Window link etc.

@@ -45,37 +45,12 @@
         NUMBER_TYPE = 1
         # To get single node value
         FIRST_ORDERED_NODE_TYPE = 9
-        # This stores the name of the variable which stores the current element in JSSH  
-        @@current_element_object = ""
         # This stores the level to which we have gone finding element inside another element.
         # This is just to make sure that every element has unique name in JSSH.
         @@current_level = 0
         # This stores the name of the element that is about to trigger an Javascript pop up.
         @@current_js_object = nil
-        # This stores the name of the variable which stores the current frame.
-        @@current_frame_name = ""
-        # Has the elements array changed.
-        @@has_changed = false 
 
-        #
-        # Description:
-        #   Returns the current element. Used internally by Firewatir.
-        #
-        # Output:
-        #   Name of current element.
-        #
-        def self.get_current_element
-            return @@current_element_object
-        end
-
-        #
-        # Description:
-        #   Resets the current element. Used internally by Firewatir.
-        #
-        def self.reset_current_element
-            @@current_element_object = ""
-        end
-       
         attr_accessor :element_name
         #
         # Description:
@@ -131,8 +106,6 @@
                             return_value = true if return_value == \"true\"
                         end
                         #puts return_value
-                        @@current_element_object = ''
-                        @@current_frame_name = ''
                         @@current_level = 0
                         return return_value
                     end"
@@ -490,9 +463,7 @@
             jssh_command.gsub!(/\n/, "")                
             #puts jssh_command 
             $jssh_socket.send("#{jssh_command};\n", 0)
-            #@@current_element_object = 
             element_name = read_socket();          
-            @@current_frame_name = ""
             #puts "element name in find control is : #{element_name}"
             @@current_level = @@current_level + 1
             #puts @container 
@@ -706,11 +677,9 @@
             #puts "command send to jssh is : #{jssh_command}"
             #puts "result is : #{result}"
             if(result == "null" || result == "" || result.include?("exception"))
-                @@current_element_object = ""
                 @@current_level = 0
                 return nil
             else
-                @@current_element_object = "element_xpath_#{rand_no}"
                 @@current_level += 1
                 return "element_xpath_#{rand_no}"
             end
@@ -793,8 +762,6 @@
                     wait() if wait
                 end    
             end    
-            @@current_element_object = ''
-            @@current_frame_name = ''
             @@current_level = 0
         end
         alias fireEvent fire_event
@@ -806,8 +773,6 @@
             #puts attribute_name
             assert_exists()
             return_value = get_attribute_value(attribute_name) 
-            @@current_element_object = ''
-            @@current_frame_name = ''
             @@current_level = 0
             return return_value
         end
@@ -844,8 +809,6 @@
             assert_exists
             $jssh_socket.send("#{element_object}.disabled;\n", 0)
             value = read_socket()
-            @@current_element_object = ''
-            @@current_frame_name = ''
             @@current_level = 0
             return true if(value == "false") 
             return false if(value == "true") 
@@ -876,8 +839,6 @@
                 #puts "not locating the element again"
                 return true
             end    
-            @@current_element_object = ''
-            @@current_frame_name = ''
             @@current_level = 0
             if(element_object == nil || element_object == "")
                 return false
@@ -904,8 +865,6 @@
             #    return_value = false if returnValue == "false"
             #    return_value = true if returnValue == "true"
             #end
-            @@current_element_object = ''
-            @@current_frame_name = ''
             @@current_level = 0
             return return_value
         end
@@ -960,8 +919,6 @@
                 return text()
             else
                 result = string_creator(attributes) #.join("\n")
-                @@current_element_object = ''
-                @@current_frame_name = ''
                 @@current_level = 0
                 return result
             end    
@@ -1017,8 +974,6 @@
             #ff.wait()
             #puts @container
             @container.wait()
-            @@current_element_object = ''
-            @@current_frame_name = ''
             @@current_level = 0
         end
 
@@ -1128,8 +1083,6 @@
                     $jssh_socket.send("#{jssh_command}", 0)
                     read_socket()
             end
-            @@current_element_object = ''
-            @@current_frame_name = ''
             @@current_level = 0
             @@current_js_object = nil
         end
@@ -1227,8 +1180,6 @@
             #puts jssh_command
             $jssh_socket.send("#{jssh_command}", 0)
             read_socket()
-            @@current_element_object = ''
-            @@current_frame_name = ''
             @@current_level = 0
         end
         protected :setFileFieldValue
@@ -1331,8 +1282,6 @@
                 returnValue = read_socket()
                 #puts "return value is : #{returnValue}"
                 
-                @@current_element_object = ''
-                @@current_frame_name = ''
                 @@current_level = 0
 
                 if(method_type == "boolean")
@@ -1360,7 +1309,6 @@
         #   Creates new instance of Document class.
         #
         def initialize(container)
-            @@current_element_object = Element.get_current_element
             @length = 0
             @elements = nil
             @arr_elements = ""
@@ -1379,36 +1327,35 @@
             @arr_elements = "arr_coll_#{@@current_level}"
             jssh_command = "var arr_coll_#{@@current_level}=new Array(); "
           
-            if(@@current_element_object == "")
+            if(@container.class == FireWatir::Firefox || @container.class == Frame)
                 jssh_command +="var element_collection = null; element_collection = #{DOCUMENT_VAR}.getElementsByTagName(\"*\");
-                                if(element_collection != null && typeof(element_collection) != 'undefined')
+                            if(element_collection != null && typeof(element_collection) != 'undefined')
+                            {
+                                for (var i = 0; i < element_collection.length; i++) 
                                 {
-                                    for (var i = 0; i < element_collection.length; i++) 
-                                    {
-                                        if((element_collection[i].tagName != 'BR') && (element_collection[i].tagName != 'HR') && (element_collection[i].tagName != 'DOCTYPE') && (element_collection[i].tagName != 'META') && (typeof(element_collection[i].tagName) != 'undefined')) 
-                                            arr_coll_#{@@current_level}.push(element_collection[i]);
-                                    }
-                                }    
-                                arr_coll_#{@@current_level}.length;"
+                                    if((element_collection[i].tagName != 'BR') && (element_collection[i].tagName != 'HR') && (element_collection[i].tagName != 'DOCTYPE') && (element_collection[i].tagName != 'META') && (typeof(element_collection[i].tagName) != 'undefined')) 
+                                        arr_coll_#{@@current_level}.push(element_collection[i]);
+                                }
+                            }    
+                            arr_coll_#{@@current_level}.length;"
             else
-                jssh_command +="var element_collection = null; element_collection = #{@@current_element_object}.getElementsByTagName(\"*\");
+                jssh_command +="var element_collection = null; element_collection = #{@container.element_name}.getElementsByTagName(\"*\");
                                 if(element_collection!= null && typeof(element_collection) != 'undefined')
                                 {
                                     for (var i = 0; i < element_collection.length; i++) 
                                     {
                                         if((element_collection[i].tagName != 'BR') && (element_collection[i].tagName != 'HR') && (element_collection[i].tagName != 'DOCTYPE') && (element_collection[i].tagName != 'META') && (typeof(element_collection[i].tagName) != 'undefined')) 
-                                            arr_coll_#{@@current_level}.push(element_collection[i]);
+                                        arr_coll_#{@@current_level}.push(element_collection[i]);
                                     }
                                 }    
                                 arr_coll_#{@@current_level}.length;"
             end
-               
+
             # Remove \n that are there in the string as a result of pressing enter while formatting.                
             jssh_command.gsub!(/\n/, "")
             #puts  jssh_command
             $jssh_socket.send("#{jssh_command};\n", 0)
             @length = read_socket().to_i;   
-            Element.reset_current_element()            
             #puts "elements length is in locate_tagged_elements is : #{@length}"
           
             elements = nil
