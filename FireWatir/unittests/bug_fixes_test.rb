@@ -101,4 +101,30 @@ class TC_Bugs< Test::Unit::TestCase
         $ff.close()
         $ff = Firefox.new
     end
+
+    def test_class_bug_29
+        $ff.goto($htmlRoot + "div.html")
+        div = $ff.div(:class, "blueText")
+        assert_equal("div2", div.id)
+    end
+
+    def test_element_using_any_attribute
+        $ff.goto($htmlRoot + "div.html")
+        div = $ff.div(:title, "Test1")
+        assert_equal("div1", div.id)
+    end
+    
+    def test_element_using_any_attribute2
+        $ff.goto($htmlRoot + "div.html")
+        div = $ff.div(:attribute, "attribute")
+        assert_equal("div1", div.id)
+    end
+
+    def test_file_field_bug_20
+        $ff.goto($htmlRoot + "fileupload.html")
+        $ff.file_field(:name, "file3").set("c:\\results.txt")
+        $ff.button(:name, "upload").click()
+        url = $ff.url
+        assert(url =~ /.*results.txt&upload=upload$/)
+    end
 end 

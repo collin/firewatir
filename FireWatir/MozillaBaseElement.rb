@@ -381,7 +381,10 @@
                                             }    
                                             else
                                             {
-                                                attribute = element.#{how};
+                                                if(element.#{how} != undefined)
+                                                    attribute = element.#{how};
+                                                else
+                                                    attribute = element.getAttribute(\"#{how}\");
                                             }
                                         }
                                         if(\"value\" == \"#{how}\" && isButtonElement && (attribute == null || attribute == ''))
@@ -1174,11 +1177,11 @@
             setPath.gsub!("\\", "||")
             setPath.gsub!("|", "\\")
             
-            jssh_command = "var textBox = #{DOCUMENT_VAR}.getBoxObjectFor(#{element_object}).firstChild;"
-            jssh_command += "textBox.value = \"#{setPath}\";\n";
+            #jssh_command = "var textBox = #{DOCUMENT_VAR}.getBoxObjectFor(#{element_object}).firstChild;"
+            #jssh_command += "textBox.value = \"#{setPath}\";\n";
             
             #puts jssh_command
-            $jssh_socket.send("#{jssh_command}", 0)
+            $jssh_socket.send("#{element_object}.value = \"#{setPath}\";\n", 0)
             read_socket()
             @@current_level = 0
         end
