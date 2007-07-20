@@ -49,7 +49,7 @@
         # This is just to make sure that every element has unique name in JSSH.
         @@current_level = 0
         # This stores the name of the element that is about to trigger an Javascript pop up.
-        @@current_js_object = nil
+        #@@current_js_object = nil
 
         attr_accessor :element_name
         #
@@ -129,7 +129,15 @@
                 $jssh_socket.send("#{element_object}.getAttribute(\"#{attribute_name}\");\n" , 0)
                 return_value = read_socket()
             else    
-                $jssh_socket.send("#{element_object}.#{attribute_name};\n", 0)
+                jssh_command = "var attribute = '';
+                                if(#{element_object}.#{attribute_name} != undefined)
+                                    attribute = #{element_object}.#{attribute_name};
+                                else
+                                    attribute = #{element_object}.getAttribute(\"#{attribute_name}\");
+                                attribute;"
+                jssh_command.gsub!("\n", "")                    
+                $jssh_socket.send("#{jssh_command};\n", 0)
+                #puts jssh_command
                 return_value = read_socket()
             end
             if(attribute_name == "value")
@@ -594,6 +602,13 @@
             end    
         end
         
+        def get_frame_html
+           $jssh_socket.send("var htmlelem = #{DOCUMENT_VAR}.getElementsByTagName('html')[0]; htmlelem.innerHTML;\n", 0)
+           #$jssh_socket.send("#{BODY_VAR}.innerHTML;\n", 0)
+           result = read_socket()
+           return "<html>" + result + "</html>"
+        end
+
         def submit_form
             #puts "form name is : #{element_object}"
             $jssh_socket.send("#{element_object}.submit();\n" , 0)
@@ -617,6 +632,7 @@
         #   Returns array of elements that matches a given XPath query.
         #   Mozilla browser directly supports XPath query on its DOM. So no need to create the DOM tree as WATiR does for IE.
         #   Refer: http://developer.mozilla.org/en/docs/DOM:document.evaluate
+        #   Used internally by Firewatir use ff.elements_by_xpath instead.
         #
         # Input:
         #   xpath - The xpath expression or query.
@@ -652,7 +668,7 @@
             elements = Array.new(node_count.to_i)
 
             for i in 0..elements.length - 1 do
-                elements[i] = Element.new("element_xpath_#{rand_no}[#{i}]", container)
+                elements[i] = "element_xpath_#{rand_no}[#{i}]"
             end
 
             return elements;
@@ -663,6 +679,7 @@
         #   Returns first element found while traversing the DOM; that matches an given XPath query.
         #   Mozilla browser directly supports XPath query on its DOM. So no need to create the DOM tree as WATiR does for IE.
         #   Refer: http://developer.mozilla.org/en/docs/DOM:document.evaluate
+        #   Used internally by Firewatir use ff.element_by_xpath instead.
         #
         # Input:
         #   xpath - The xpath expression or query.
@@ -698,7 +715,7 @@
         #
         def element_object
             #puts caller.join("\n")
-            #puts "In element_object element name is : #{element_name}"
+            #puts "In element_object element name is : #{@element_name}"
             #puts "in element_object : #{@container.class}" 
             #if(@container.class == FireWatir::Firefox)
                 return @element_name #if @element_name != nil
@@ -721,6 +738,11 @@
             # Get the type of the element.
             $jssh_socket.send("#{element_object};\n", 0)
             temp = read_socket()
+
+            if temp == ""
+                return nil
+            end
+
             #puts "#{element_object} and type is #{temp}"
             temp =~ /\[object\s(.*)\]/
             if $1
@@ -732,7 +754,7 @@
                 return "HTMLAnchorElement"
             end
         end
-        private :element_type
+        #private :element_type
         
         #
         # Description:
@@ -768,6 +790,7 @@
             @@current_level = 0
         end
         alias fireEvent fire_event
+        
         # 
         # Description:
         #   Returns the value of the specified attribute of an element.
@@ -900,7 +923,9 @@
         def_wrap :class_name, :className
         # Return the html of the object
         def_wrap :html, :innerHTML
-        
+        # Return the action of form
+        def_wrap :action
+
         #
         # Description:
         #   Display basic details about the object. Sample output for a button is shown.
@@ -994,13 +1019,13 @@
         #       ff.button(:id, "button").click_no_wait()
         #       ff.click_js_popup_button("OK")
         #
-        def click_no_wait
-            assert_exists
-            assert_enabled
-
-            highlight(:set)
-            @@current_js_object = Element.new("#{element_object}", @container)
-        end
+        #def click_no_wait
+        #    assert_exists
+        #    assert_enabled
+        #
+        #    highlight(:set)
+        #    @@current_js_object = Element.new("#{element_object}", @container)
+        #end
      
         #
         # Description:
@@ -1012,84 +1037,79 @@
         # Input:
         #   button to be clicked
         #
-        def click_js_popup(button = "OK")
-            jssh_command = "var win = #{BROWSER_VAR}.contentWindow;"
-            if(button =~ /ok/i)
-                jssh_command += "var popuptext = '';win.alert = function(param) {popuptext = param; return true; };
-                                 win.confirm = function(param) {popuptext = param; return true; };"
-            elsif(button =~ /cancel/i)
-                jssh_command += "var popuptext = '';win.alert = function(param) {popuptext = param; return false; };
-                                 win.confirm = function(param) {popuptext = param; return false; };"
-            end
-            jssh_command.gsub!(/\n/, "")
-            $jssh_socket.send("#{jssh_command}\n", 0)
-            read_socket()
-            click_js_popup_creator_button()
-            #$jssh_socket.send("popuptext_alert;\n", 0)
-            #read_socket()
-            $jssh_socket.send("\n", 0)
-            read_socket()
-        end
-
-        def get_popup_text()
-            $jssh_socket.send("popuptext\n;", 0)
-            read_socket()
-        end
+        #def click_js_popup(button = "OK")
+        #    jssh_command = "var win = #{BROWSER_VAR}.contentWindow;"
+        #    if(button =~ /ok/i)
+        #        jssh_command += "var popuptext = '';win.alert = function(param) {popuptext = param; return true; };
+        #                         win.confirm = function(param) {popuptext = param; return true; };"
+        #    elsif(button =~ /cancel/i)
+        #        jssh_command += "var popuptext = '';win.alert = function(param) {popuptext = param; return false; };
+        #                         win.confirm = function(param) {popuptext = param; return false; };"
+        #    end
+        #    jssh_command.gsub!(/\n/, "")
+        #    $jssh_socket.send("#{jssh_command}\n", 0)
+        #    read_socket()
+        #    click_js_popup_creator_button()
+        #    #$jssh_socket.send("popuptext_alert;\n", 0)
+        #    #read_socket()
+        #    $jssh_socket.send("\n", 0)
+        #    read_socket()
+        #end
 
         #
         # Description:
         #   Clicks on button or link or any element that triggers a javascript pop up.
         #   Used internally by function click_js_popup.
         #
-        def click_js_popup_creator_button
-            #puts @@current_js_object.element_name
-            $jssh_socket.send("#{@@current_js_object.element_name}\n;", 0)
-            temp = read_socket()
-            temp =~ /\[object\s(.*)\]/
-            if $1
-                type = $1
-            else
-                # This is done because in JSSh if you write element name of anchor type
-                # then it displays the link to which it navigates instead of displaying 
-                # object type. So above regex match will return nil
-                type = "HTMLAnchorElement"
-            end
-            #puts type
-            case type
-                when "HTMLAnchorElement", "HTMLImageElement"
-                    jssh_command = "var event = #{DOCUMENT_VAR}.createEvent(\"MouseEvents\");"
-                    # Info about initMouseEvent at: http://www.xulplanet.com/references/objref/MouseEvent.html        
-                    jssh_command += "event.initMouseEvent('click',true,true,null,1,0,0,0,0,false,false,false,false,0,null);"
-                    jssh_command += "#{@@current_js_object.element_name}.dispatchEvent(event);\n"
-
-                    $jssh_socket.send("#{jssh_command}", 0)
-                    read_socket()
-                when "HTMLDivElement", "HTMLSpanElement"
-                     $jssh_socket.send("typeof(#{element_object}.#{event.downcase});\n", 0)
-                     isDefined = read_socket()
-                     #puts "is method there : #{isDefined}"
-                     if(isDefined != "undefined")
-                         if(element_type == "HTMLSelectElement")
-                             jssh_command = "var event = #{DOCUMENT_VAR}.createEvent(\"HTMLEvents\");
-                                             event.initEvent(\"click\", true, true);
-                                             #{element_object}.dispatchEvent(event);"
-                             jssh_command.gsub!(/\n/, "")
-                             $jssh_socket.send("#{jssh_command}\n", 0)
-                             read_socket()
-                         else
-                             $jssh_socket.send("#{element_object}.#{event.downcase}();\n", 0)
-                             read_socket()
-                         end    
-                     end
-                else
-                    jssh_command = "#{@@current_js_object.element_name}.click();\n";
-                    $jssh_socket.send("#{jssh_command}", 0)
-                    read_socket()
-            end
-            @@current_level = 0
-            @@current_js_object = nil
-        end
-        private :click_js_popup_creator_button
+        #def click_js_popup_creator_button
+        #    #puts @@current_js_object.element_name
+        #    $jssh_socket.send("#{@@current_js_object.element_name}\n;", 0)
+        #    temp = read_socket()
+        #    temp =~ /\[object\s(.*)\]/
+        #    if $1
+        #        type = $1
+        #    else
+        #        # This is done because in JSSh if you write element name of anchor type
+        #        # then it displays the link to which it navigates instead of displaying 
+        #        # object type. So above regex match will return nil
+        #        type = "HTMLAnchorElement"
+        #    end
+        #    #puts type
+        #    case type
+        #        when "HTMLAnchorElement", "HTMLImageElement"
+        #            jssh_command = "var event = #{DOCUMENT_VAR}.createEvent(\"MouseEvents\");"
+        #            # Info about initMouseEvent at: http://www.xulplanet.com/references/objref/MouseEvent.html        
+        #            jssh_command += "event.initMouseEvent('click',true,true,null,1,0,0,0,0,false,false,false,false,0,null);"
+        #            jssh_command += "#{@@current_js_object.element_name}.dispatchEvent(event);\n"
+        #
+        #            $jssh_socket.send("#{jssh_command}", 0)
+        #            read_socket()
+        #        when "HTMLDivElement", "HTMLSpanElement"
+        #             $jssh_socket.send("typeof(#{element_object}.#{event.downcase});\n", 0)
+        #             isDefined = read_socket()
+        #             #puts "is method there : #{isDefined}"
+        #             if(isDefined != "undefined")
+        #                 if(element_type == "HTMLSelectElement")
+        #                     jssh_command = "var event = #{DOCUMENT_VAR}.createEvent(\"HTMLEvents\");
+        #                                     event.initEvent(\"click\", true, true);
+        #                                     #{element_object}.dispatchEvent(event);"
+        #                     jssh_command.gsub!(/\n/, "")
+        #                     $jssh_socket.send("#{jssh_command}\n", 0)
+        #                     read_socket()
+        #                 else
+        #                     $jssh_socket.send("#{element_object}.#{event.downcase}();\n", 0)
+        #                     read_socket()
+        #                 end    
+        #             end
+        #        else
+        #            jssh_command = "#{@@current_js_object.element_name}.click();\n";
+        #            $jssh_socket.send("#{jssh_command}", 0)
+        #            read_socket()
+        #    end
+        #    @@current_level = 0
+        #    @@current_js_object = nil
+        #end
+        #private :click_js_popup_creator_button
     
         # 
         # Description:
@@ -1110,24 +1130,52 @@
         end
         private :options
        
+        #
+        # Description:
+        #   Used to get class name for option element. Used internally by Firewatir use ff.select_list(...).option(..).class
+        #
+        # Output:
+        #   Class name of option element.
+        #
         def option_class_name
             $jssh_socket.send("#{element_object}.className;\n", 0)
             return read_socket()
         end
         private :option_class_name
         
+        #
+        # Description:
+        #   Used to get text for option element. Used internally by Firewatir use ff.select_list(...).option(..).text
+        #
+        # Output:
+        #   Text of option element.
+        #
         def option_text
             $jssh_socket.send("#{element_object}.text;\n", 0)
             return read_socket()
         end
         private :option_text
         
+        #
+        # Description:
+        #   Used to get value for option element. Used internally by Firewatir use ff.select_list(...).option(..).value
+        #
+        # Output:
+        #   Value of option element.
+        #
         def option_value
             $jssh_socket.send("#{element_object}.value;\n", 0)
             return read_socket()
         end
         private :option_value
         
+        #
+        # Description:
+        #   Used to check if option is selected or not. Used internally by Firewatir use ff.select_list(...).option(..).selected
+        #
+        # Output:
+        #   True if option is selected, false otherwise.
+        #
         def option_selected
             $jssh_socket.send("#{element_object}.selected;\n", 0)
             value = read_socket()
@@ -1185,7 +1233,7 @@
             read_socket()
             @@current_level = 0
         end
-        protected :setFileFieldValue
+        private :setFileFieldValue
 
         #
         # Description:
@@ -1405,6 +1453,109 @@
         #
         def [](n)
             return Element.new("#{@arr_elements}[#{n-1}]", @container)
+        end
+
+        #
+        # Description:
+        #   Get all forms available on the page.
+        #   Used internally by Firewatir use ff.show_forms instead.
+        #
+        # Output:
+        #   Array containing Form elements
+        #
+        def get_forms()
+            $jssh_socket.send("var element_forms = #{DOCUMENT_VAR}.forms; element_forms.length;\n", 0)
+            length = read_socket().to_i
+            forms = Array.new(length)
+
+            for i in 0..length - 1 do
+                forms[i] = Form.new(@container, :jssh_name, "element_forms[#{i}]")
+            end
+            return forms
+        end
+
+        #
+        # Description:
+        #   Get all images available on the page.
+        #   Used internally by Firewatir use ff.show_images instead.
+        #
+        # Output:
+        #   Array containing Image elements
+        #
+        def get_images
+            return Images.new(@container) 
+        end
+        
+        #
+        # Description:
+        #   Get all links available on the page.
+        #   Used internally by Firewatir use ff.show_links instead.
+        #
+        # Output:
+        #   Array containing Link elements
+        #
+        def get_links
+            return Links.new(@container) 
+        end
+        
+        #
+        # Description:
+        #   Get all divs available on the page.
+        #   Used internally by Firewatir use ff.show_divs instead.
+        #
+        # Output:
+        #   Array containing Div elements
+        #
+        def get_divs
+            return Divs.new(@container) 
+        end
+        
+        #
+        # Description:
+        #   Get all tables available on the page.
+        #   Used internally by Firewatir use ff.show_tables instead.
+        #
+        # Output:
+        #   Array containing Table elements
+        #
+        def get_tables
+            return Tables.new(@container) 
+        end
+        
+        #
+        # Description:
+        #   Get all pres available on the page.
+        #   Used internally by Firewatir use ff.show_pres instead.
+        #
+        # Output:
+        #   Array containing Pre elements
+        #
+        def get_pres
+            return Pres.new(@container) 
+        end
+
+        #
+        # Description:
+        #   Get all spans available on the page.
+        #   Used internally by Firewatir use ff.show_spans instead.
+        #
+        # Output:
+        #   Array containing Span elements
+        #
+        def get_spans
+            return Spans.new(@container) 
+        end
+        
+        #
+        # Description:
+        #   Get all labels available on the page.
+        #   Used internally by Firewatir use ff.show_labels instead.
+        #
+        # Output:
+        #   Array containing Label elements
+        #
+        def get_labels
+            return Labels.new(@container) 
         end
     end
  

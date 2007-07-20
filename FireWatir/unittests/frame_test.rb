@@ -67,6 +67,7 @@ class TC_Frames2 < Test::Unit::TestCase
   def test_frame_by_id
     assert_raises(UnknownFrameException) { $ff.frame(:id , "missingFrame").button(:id, "b2").enabled?  }  
     assert($ff.frame(:id, 'first_frame').button(:id, "b2").enabled?)
+    assert(/.*Test page for buttons.*/ =~ $ff.frame(:id, 'first_frame').html)
   end
 end
 
@@ -105,40 +106,46 @@ class TC_IFrames < Test::Unit::TestCase
   
 end   
 
-#require 'unittests/iostring'
-#class TC_show_frames < Test::Unit::TestCase
-#  include MockStdoutTestCase                
+require 'unittests/iostring'
+class TC_show_frames < Test::Unit::TestCase
+  include MockStdoutTestCase                
+ 
+  def capture_and_compare(page, expected)
+    $ff.goto($htmlRoot + page)
+    $stdout = @mockout
+    $ff.showFrames
+    assert_equal(expected, @mockout)
+  end
+ 
+  def test_show_nested_frames
+    capture_and_compare("nestedFrames.html", <<END_OF_MESSAGE)
+There are 2 frames
+frame: name: nestedFrame
+      index: 1
+frame: name: nestedFrame2
+      index: 2
+END_OF_MESSAGE
+  end
   
-#  def capture_and_compare(page, expected)
-#    $ff.goto($htmlRoot + page)
-#    $stdout = @mockout
-#    $ff.showFrames
-#    assert_equal(expected, @mockout)
-#  end
+  def test_button_frames
+    capture_and_compare("frame_buttons.html", <<END_OF_MESSAGE)
+There are 2 frames
+frame: name: buttonFrame
+      index: 1
+frame: name: buttonFrame2
+      index: 2
+END_OF_MESSAGE
+  end
+ 
+  def test_iframes
+    capture_and_compare("iframeTest.html", <<END_OF_MESSAGE)
+There are 2 frames
+frame: name: senderFrame
+      index: 1
+frame: name: receiverFrame
+      index: 2
+END_OF_MESSAGE
+  end
   
-#  def test_show_nested_frames
-#    capture_and_compare("nestedFrames.html", <<END_OF_MESSAGE)
-#there are 2 frames
-#frame  index: 1 name: nestedFrame
-#frame  index: 2 name: nestedFrame2
-#END_OF_MESSAGE
-#  end
-  
-#  def test_button_frames
-#    capture_and_compare("frame_buttons.html", <<END_OF_MESSAGE)
-#there are 2 frames
-#frame  index: 1 name: buttonFrame
-#frame  index: 2 name: buttonFrame2
-#END_OF_MESSAGE
-#  end
-  
-#  def test_iframes
-#    capture_and_compare("iframeTest.html", <<END_OF_MESSAGE)
-#there are 2 frames
-#frame  index: 1 name: senderFrame
-#frame  index: 2 name: receiverFrame
-#END_OF_MESSAGE
-#  end
-  
-#end
+end
 

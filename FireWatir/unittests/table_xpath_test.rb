@@ -13,8 +13,17 @@ class TC_Tables_XPath < Test::Unit::TestCase
   
   def test_Table_Exists
     assert(!$ff.table(:xpath , "//table[@id = 'missingTable']").exists?)
-    
     assert($ff.table(:xpath, "//table[@id = 't1']").exists?)
+  end
+
+  def test_element_by_xpath_class
+    element = $ff.element_by_xpath("//table[@id = 't1']")
+    assert(element.instance_of?(Table),"element class should be #{Table}; got #{element.class}")
+    # FIXME really bizarre: this one should be a Table, but 
+    # Firefox.element_factory gets HTMLAnchorElement as input
+    # TODO: If element is not present, this should return null or raises exception
+    #element = $ff.element_by_xpath("//table[@id = 'missingTable']")
+    #assert(element.instance_of?(Table),"element class should be #{Table}; got #{element.class}")
   end
   
   def test_rows

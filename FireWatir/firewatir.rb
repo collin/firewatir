@@ -100,7 +100,7 @@
                  button with a given caption
    :index        Used to find the nth object of the specified type on a page.
                  For example, button(:index, 2) finds the second button.
-                 Current versions of WATIR use 1-based indexing, but future
+                 Current versions of FireWatir use 1-based indexing, but future
                  versions will use 0-based indexing.
    :xpath	     The xpath expression for identifying the element.
    
@@ -154,8 +154,9 @@ module FireWatir
         # variable to check if firefox browser has been started or not. Currently this is
         # used only while starting firefox on windows. For other platforms you need to start
         # firefox manually.
-        @@firefox_started = false
-
+        #@@firefox_started = false
+        
+        # Stack to hold windows.
         @@window_stack = Array.new
         
         # This allows us to identify the window uniquely and close them accordingly.
@@ -178,30 +179,31 @@ module FireWatir
         #
         def initialize(waitTime = 2)
             if(RUBY_PLATFORM =~ /.*mswin.*/)
-                #if( ! @@firefox_started )
-
-                    #puts "plaftorm is windows"
-                    # Get the path to Firefox.exe using Registry.
-                    require 'win32/registry.rb'
-                    path_to_exe = ""
-                    Win32::Registry::HKEY_LOCAL_MACHINE.open('SOFTWARE\Mozilla\Mozilla Firefox') do |reg|
-                        keys = reg.keys
-                        reg1 = Win32::Registry::HKEY_LOCAL_MACHINE.open("SOFTWARE\\Mozilla\\Mozilla Firefox\\#{keys[0]}\\Main")
-                        reg1.each do |subkey, type, data|
-                            if(subkey =~ /pathtoexe/i)
-                                path_to_exe = data
-                            end
+                #puts "plaftorm is windows"
+                # Get the path to Firefox.exe using Registry.
+                require 'win32/registry.rb'
+                path_to_exe = ""
+                Win32::Registry::HKEY_LOCAL_MACHINE.open('SOFTWARE\Mozilla\Mozilla Firefox') do |reg|
+                    keys = reg.keys
+                    reg1 = Win32::Registry::HKEY_LOCAL_MACHINE.open("SOFTWARE\\Mozilla\\Mozilla Firefox\\#{keys[0]}\\Main")
+                    reg1.each do |subkey, type, data|
+                        if(subkey =~ /pathtoexe/i)
+                            path_to_exe = data
                         end
                     end
+                end
 
-                    puts "Starting Firefox using the executable : #{path_to_exe}"
-                    puts "Waiting for #{waitTime} seconds for Firefox to get started."
-                    @t = Thread.new { system("\"#{path_to_exe}\" -jssh") }
-                    
-                    sleep waitTime
-                #    @@firefox_started = true
-                #end
-            end       
+                puts "Starting Firefox using the executable : #{path_to_exe}"
+                puts "Waiting for #{waitTime} seconds for Firefox to get started."
+                @t = Thread.new { system("\"#{path_to_exe}\" -jssh") }
+            elsif(RUBY_PLATFORM =~ /linux/i)
+                puts RUBY_PLATFORM
+                path_to_bin = `which firefox`.strip
+                puts "#{path_to_bin} -jssh"
+                @t = Thread.new { `#{path_to_bin} -jssh` }
+            end      
+            
+            sleep waitTime
             
             set_defaults()
             get_window_number()
@@ -292,7 +294,7 @@ module FireWatir
         #
         # Description:
         #   This function creates a new socket at port 9997 and sets the default values for instance and class variables.
-        #   Generates error message if cannot connect to jssh and exits the current process.
+        #   Generatesi UnableToStartJSShException if cannot connect to jssh even after 3 tries.
         #
         def set_defaults(no_of_tries = 0)
             # JSSH listens on port 9997. Create a new socket to connect to port 9997.
@@ -508,7 +510,8 @@ module FireWatir
         def html()
             $jssh_socket.send("var htmlelem = #{DOCUMENT_VAR}.getElementsByTagName('html')[0]; htmlelem.innerHTML;\n", 0)
             #$jssh_socket.send("#{BODY_VAR}.innerHTML;\n", 0)
-            return read_socket()
+            result = read_socket()
+            return "<html>" + result + "</html>"
         end
 
         #
@@ -627,16 +630,99 @@ module FireWatir
         # Input:
         #   button - JavaScript button to be clicked. Values can be OK or Cancel
         #
-        def click_jspopup_button(button)
-            button = button.downcase
-            element = Element.new(nil)
-            element.click_js_popup(button)
-        end
+        #def click_jspopup_button(button)
+        #    button = button.downcase
+        #    element = Element.new(nil)
+        #    element.click_js_popup(button)
+        #end
 
-        def get_popup_text
-            element = Element.new(nil)
-            element.get_popup_text
+        #
+        # Description:
+        #   Tells FireWatir to click javascript button in case one comes after performing some action on an element. Matches
+        #   text of pop up with one if supplied as parameter. If text matches clicks the button else stop script execution until
+        #   pop up is dismissed by manual intervention.
+        # 
+        # Input:
+        #   button      - JavaScript button to be clicked. Values can be OK or Cancel
+        #   waitTime    - Time to wait for pop up to come. Not used just for compatibility with Watir.
+        #   userInput   - Not used just for compatibility with Watir
+        #   text        - Text that should appear on pop up.
+        #
+        def startClicker(button, waitTime = 1, userInput = nil, text = nil)
+            jssh_command = "var win = #{BROWSER_VAR}.contentWindow;"
+            if(button =~ /ok/i)
+                jssh_command += "var popuptext = '';
+                                 var old_alert = win.alert;
+                                 var old_confirm = win.confirm;
+                                 win.alert = function(param) {"
+                if(text != nil)                 
+                    jssh_command +=          "if(param == \"#{text}\") {
+                                                popuptext = param; 
+                                                return true;
+                                              }
+                                              else {
+                                                popuptext = param;
+                                                win.alert = old_alert;
+                                                win.alert(param);
+                                              }"
+                else
+                    jssh_command +=          "popuptext = param; return true;"
+                end
+                jssh_command += "};
+                                 win.confirm = function(param) {"
+                if(text != nil)                 
+                    jssh_command +=          "if(param == \"#{text}\") {
+                                                popuptext = param; 
+                                                return true;
+                                              }
+                                              else {
+                                                win.confirm = old_confirm;
+                                                win.confirm(param);
+                                              }"
+                else
+                    jssh_command +=          "popuptext = param; return true;"
+                end
+                jssh_command += "};"
+
+            elsif(button =~ /cancel/i)
+                jssh_command = "var old_confirm = win.confirm; 
+                                              win.confirm = function(param) {"
+                if(text != nil)                 
+                    jssh_command +=          "if(param == \"#{text}\") {
+                                                popuptext = param; 
+                                                return false;
+                                              }
+                                              else {
+                                                win.confirm = old_confirm;
+                                                win.confirm(param);
+                                              }"
+                else
+                    jssh_command +=          "popuptext = param; return false;"
+                end
+                jssh_command += "};"
+            end
+            jssh_command.gsub!(/\n/, "")
+            #puts "jssh command sent for js pop up is : #{jssh_command}"
+            $jssh_socket.send("#{jssh_command}\n", 0)
+            read_socket()
         end
+        
+        #
+        # Description:
+        #   Returns text of javascript pop up in case it comes.
+        #
+        # Output:
+        #   Text shown in javascript pop up.
+        #
+        def get_popup_text()
+            $jssh_socket.send("popuptext;\n", 0)
+            return_value = read_socket()
+            # reset the variable
+            $jssh_socket.send("popuptexti = '';\n", 0)
+            read_socket()
+            return return_value
+        end
+        
         #
         # Description:
         #   Returns the document element of the page currently loaded in the browser.
@@ -661,8 +747,94 @@ module FireWatir
         def element_by_xpath(xpath)
             temp = Element.new(nil, self)
             element_name = temp.element_by_xpath(self, xpath)
-            return Element.new(element_name, self)
+            return element_factory(element_name)
         end
+
+        # 
+        # Description:
+        #   Factory method to create object of correct Element class while using XPath to get the element.
+        #
+        def element_factory(element_name)
+            jssh_type = Element.new(element_name,self).element_type
+            #puts "jssh type is : #{jssh_type}" # DEBUG
+            candidate_class = jssh_type =~ /HTML(.*)Element/ ? $1 : ''
+            #puts candidate_class # DEBUG
+            if candidate_class == 'Input'
+                $jssh_socket.send("#{element_name}.type;\n", 0)
+                input_type = read_socket().downcase.strip
+                puts input_type # DEBUG
+                firewatir_class = input_class(input_type)
+            else
+                firewatir_class = jssh2firewatir(candidate_class)
+            end
+            
+            #puts firewatir_class # DEBUG
+            klass = Kernel.const_get(firewatir_class)
+
+            if klass == Element
+                klass.new(element_name,self)
+            elsif klass == CheckBox
+                klass.new(self,:jssh_name,element_name,["checkbox"])
+            elsif klass == Radio
+                klass.new(self,:jssh_name,element_name,["radio"])
+            else
+                klass.new(self,:jssh_name,element_name)
+            end 
+        end
+        private :element_factory
+
+        #
+        # Description:
+        #   Get the class name for element of input type depending upon its type like checkbox, radio etc.
+        #
+        def input_class(input_type)
+            hash = {
+                'select-one' => 'SelectList',
+                'select-multiple' => 'SelectList',
+                'text' => 'TextField',
+                'password' => 'TextField',
+                'textarea' => 'TextField',
+                # TODO when there's no type, it's a TextField
+                'file' => 'FileField',
+                'checkbox' => 'CheckBox',
+                'radio' => 'Radio',
+                'reset' => 'Button',
+                'button' => 'Button',
+                'submit' => 'Button',
+                'image' => 'Button'
+            }
+            hash.default = 'Element'
+ 
+            hash[input_type]
+        end
+        private :input_class
+
+        #
+        # Description:
+        #   Converts element type returned by JSSh like HTMLDivElement to its corresponding class in Firewatir.
+        #
+        def jssh2firewatir(candidate_class)
+            hash = {
+                'Div' => 'Div',
+                'Button' => 'Button',
+                'Frame' => 'Frame',
+                'Span' => 'Span',
+                'Paragraph' => 'P',
+                'Label' => 'Label',
+                'Form' => 'Form',
+                'Image' => 'Image',
+                'Table' => 'Table',
+                'TableCell' => 'TableCell',
+                'TableRow' => 'TableRow',
+                'Select' => 'SelectList',
+                'Link' => 'Link',
+                'Anchor' => 'Link' # FIXME is this right?
+                #'Option' => 'Option' #Option uses a different constructor
+            }
+            hash.default = 'Element'
+            hash[candidate_class]
+        end
+        private :jssh2firewatir
 
         #
         # Description:
@@ -676,48 +848,255 @@ module FireWatir
         #
         def elements_by_xpath(xpath)
             element = Element.new(nil, self)
-            return element.elements_by_xpath(self, xpath)
-        end
-
-    end # Class Firefox
-
-    # 
-    # Module for handling the Javascript pop-ups. Not in use currently. Will be available in future.    
-    # Use ff.click_jspopup_button(button) for clicking javascript pop ups
-    # POPUP object
-    module Dialog
-        class JSPopUp
-            include Container
-            
-            def has_appeared(text)
-                require 'socket' 
-                sleep 4 
-                shell = TCPSocket.new("localhost", 9997)
-                read_socket(shell)
-                #jssh_command =  "var url = #{DOCUMENT_VAR}.URL;"
-                jssh_command = "var length = getWindows().length; var win;length;\n"
-                #jssh_command += "for(var i = 0; i < length; i++)"
-                #jssh_command += "{"
-                #jssh_command += "   win = getWindows()[i];"
-                #jssh_command += "   if(win.opener != null && "
-                #jssh_command += "      win.title == \"[JavaScript Application]\" &&"
-                #jssh_command += "      win.opener.document.URL == url)"
-                #jssh_command += "   {"
-                #jssh_command += "       break;"
-                #jssh_command += "   }"
-                #jssh_command += "}"
-                
-                #jssh_command += " win.title;\n";
-                #jssh_command += "var dialog = win.document.childNodes[0];"
-                #jssh_command += "vbox = dialog.childNodes[1].childNodes[1];"
-                #jssh_command += "vbox.childNodes[1].childNodes[0].childNodes[0].textContent;\n"
-                puts jssh_command 
-                shell.send("#{jssh_command}", 0)
-                jstext = read_socket(shell)
-                puts jstext
-                return jstext == text
+            elem_names = element.elements_by_xpath(self, xpath)
+            a = elem_names.inject([]) {|elements,name| elements << element_factory(name)}
+        end    
+	
+        #
+        # Description:
+        #   Show all the forms available on the page.
+        #
+        # Output:
+        #   Name, id, method and action of all the forms available on the page.
+        #
+        def show_forms
+            forms = Document.new(self).get_forms()
+            count = forms.length
+            puts "There are #{count} forms"
+            for i in 0..count - 1 do
+                puts "Form name: " + forms[i].name
+                puts "       id: " + forms[i].id
+                puts "   method: " + forms[i].attribute_value("method")
+                puts "   action: " + forms[i].action
             end
         end
-    end       
+        alias showForms show_forms
+        
+        #
+        # Description:
+        #   Show all the images available on the page.
+        #
+        # Output:
+        #   Name, id, src and index of all the images available on the page.
+        #
+        def show_images
+            images = Document.new(self).get_images
+            puts "There are #{images.length} images"
+            index = 1
+            images.each do |l|
+                puts "image: name: #{l.name}"
+                puts "         id: #{l.id}"
+                puts "        src: #{l.src}"
+                puts "      index: #{index}"
+                index += 1
+            end
+        end
+        alias showImages show_images
+
+        #
+        # Description:
+        #   Show all the links available on the page.
+        #
+        # Output:
+        #   Name, id, href and index of all the links available on the page.
+        #
+        def show_links
+            links = Document.new(self).get_links
+            puts "There are #{links.length} links"
+            index = 1
+            links.each do |l|
+                puts "link:  name: #{l.name}"
+                puts "         id: #{l.id}"
+                puts "       href: #{l.href}"
+                puts "      index: #{index}"
+                index += 1
+            end
+        end
+        alias showLinks show_links
+        
+        #
+        # Description:
+        #   Show all the divs available on the page.
+        #
+        # Output:
+        #   Name, id, class and index of all the divs available on the page.
+        #
+        def show_divs
+            divs = Document.new(self).get_divs
+            puts "There are #{divs.length} divs"
+            index = 1
+            divs.each do |l|
+                puts "div:   name: #{l.name}"
+                puts "         id: #{l.id}"
+                puts "      class: #{l.className}"
+                puts "      index: #{index}"
+                index += 1
+            end
+        end
+        alias showDivs show_divs
+        
+        #
+        # Description:
+        #   Show all the tables available on the page.
+        #
+        # Output:
+        #   Id, row count, column count (only first row) and index of all the tables available on the page.
+        #
+        def show_tables
+            tables = Document.new(self).get_tables
+            puts "There are #{tables.length} tables"
+            index = 1
+            tables.each do |l|
+                puts "table:   id: #{l.id}"
+                puts "       rows: #{l.row_count}"
+                puts "    columns: #{l.column_count}"
+                puts "      index: #{index}"
+                index += 1
+            end
+        end
+        alias showTables show_tables
+        
+        #
+        # Description:
+        #   Show all the pre elements available on the page.
+        #
+        # Output:
+        #   Id, name and index of all the pre elements available on the page.
+        #
+        def show_pres
+            pres = Document.new(self).get_pres
+            puts "There are #{pres.length} pres"
+            index = 1
+            pres.each do |l|
+                puts "pre:     id: #{l.id}"
+                puts "       name: #{l.name}"
+                puts "      index: #{index}"
+                index += 1
+            end
+        end
+        alias showPres show_pres
+        
+        #
+        # Description:
+        #   Show all the spans available on the page.
+        #
+        # Output:
+        #   Name, id, class and index of all the spans available on the page.
+        #
+        def show_spans
+            spans = Document.new(self).get_spans
+            puts "There are #{spans.length} spans"
+            index = 1
+            spans.each do |l|
+                puts "span:  name: #{l.name}"
+                puts "         id: #{l.id}"
+                puts "      class: #{l.className}"
+                puts "      index: #{index}"
+                index += 1
+            end
+        end
+        alias showSpans show_spans
+        
+        #
+        # Description:
+        #   Show all the labels available on the page.
+        #
+        # Output:
+        #   Name, id, for and index of all the labels available on the page.
+        #
+        def show_labels
+            labels = Document.new(self).get_labels
+            puts "There are #{labels.length} labels"
+            index = 1
+            labels.each do |l|
+                puts "label: name: #{l.name}"
+                puts "         id: #{l.id}"
+                puts "        for: #{l.for}"
+                puts "      index: #{index}"
+                index += 1
+            end
+        end
+        alias showLabels show_labels
+        
+        #
+        # Description:
+        #   Show all the frames available on the page. Doesn't show nested frames.
+        #
+        # Output:
+        #   Name, and index of all the frames available on the page.
+        #
+        def show_frames
+            jssh_command = "var frameset = #{WINDOW_VAR}.frames;
+                            var elements_frames = new Array();
+                            for(var i = 0; i < frameset.length; i++)
+                            {
+                                var frames = frameset[i].frames;
+                                for(var j = 0; j < frames.length; j++)
+                                {
+                                    elements_frames.push(frames[j].frameElement);    
+                                }
+                            }
+                            elements_frames.length;"
+            
+            jssh_command.gsub!("\n", "")
+            $jssh_socket.send("#{jssh_command};\n", 0)
+            length = read_socket().to_i 
+            
+            puts "There are #{length} frames"
+            
+            frames = Array.new(length)
+            for i in 0..length - 1 do
+                frames[i] = Frame.new(self, :jssh_name, "elements_frames[#{i}]")
+            end
+            
+            for i in 0..length - 1 do
+                puts "frame: name: #{frames[i].name}"
+                puts "      index: #{i+1}"
+            end
+        end
+        alias showFrames show_frames
+
+    end # Class Firefox
+ 
+    # 
+    # Module for handling the Javascript pop-ups. Not in use currently, will be available in future.    
+    # Use ff.startClicker() method for clicking javascript pop ups. Refer to unit tests on how to handle
+    # javascript pop up (unittests/javascript_test.rb)
+    #module Dialog
+    #    # Class for handling javascript popup. Not in use currently, will be available in future. See unit tests on how to handle
+    #    # javascript pop up (unittests/javascript_test.rb).
+    #    class JSPopUp
+    #        include Container
+    #        
+    #        def has_appeared(text)
+    #            require 'socket' 
+    #            sleep 4 
+    #            shell = TCPSocket.new("localhost", 9997)
+    #            read_socket(shell)
+    #            #jssh_command =  "var url = #{DOCUMENT_VAR}.URL;"
+    #            jssh_command = "var length = getWindows().length; var win;length;\n"
+    #            #jssh_command += "for(var i = 0; i < length; i++)"
+    #            #jssh_command += "{"
+    #            #jssh_command += "   win = getWindows()[i];"
+    #            #jssh_command += "   if(win.opener != null && "
+    #            #jssh_command += "      win.title == \"[JavaScript Application]\" &&"
+    #            #jssh_command += "      win.opener.document.URL == url)"
+    #            #jssh_command += "   {"
+    #            #jssh_command += "       break;"
+    #            #jssh_command += "   }"
+    #            #jssh_command += "}"
+    #            
+    #            #jssh_command += " win.title;\n";
+    #            #jssh_command += "var dialog = win.document.childNodes[0];"
+    #            #jssh_command += "vbox = dialog.childNodes[1].childNodes[1];"
+    #            #jssh_command += "vbox.childNodes[1].childNodes[0].childNodes[0].textContent;\n"
+    #            puts jssh_command 
+    #            shell.send("#{jssh_command}", 0)
+    #            jstext = read_socket(shell)
+    #            puts jstext
+    #            return jstext == text
+    #        end
+    #    end
+    #end       
 
 end

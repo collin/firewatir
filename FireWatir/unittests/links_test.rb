@@ -171,29 +171,60 @@ class TC_Frame_Links < Test::Unit::TestCase
     end    
 end
 
-#require 'unittests/iostring'
-#class TC_showlinks < Test::Unit::TestCase
-#    include MockStdoutTestCase
-    
-#    def test_showLinks
-#        $ff.goto($htmlRoot + "links1.html")
-#        $stdout = @mockout
-#       $ff.showLinks
-#        expected = [/^index name +id +href + text\/src$/,
-#            get_path_regex(1, "links2.html","test1"),
-#            get_path_regex(2, "link_pass.html","test1"),
-#           get_path_regex(3, "pass3.html", " / file:///#{$myDir.downcase}/html/images/button.jpg"),
-#            get_path_regex(4, "textarea.html", "new window"),
-#            get_path_regex(5, "textarea.html", "new window"),
-#            get_path_regex(6, "links1.html", "link using an id", "link_id"),
-#            get_path_regex(7, "links1.html", "link using a name", "link_name"),
-#           get_path_regex(8, "links1.html", "link using a title"),
-#            get_path_regex(9, "pass.html", "image and a text link / file:///#{$myDir.downcase}/html/images/triangle.jpg")]
-#        items = @mockout.split(/\n/).collect {|s|s.downcase.strip}
-#        expected.each_with_index{|regex, x| assert_match(regex, items[x])}
-#    end
-#    
-#    def get_path_regex(idx, name, inner, nameid="")
-#        Regexp.new("^#{idx} +#{nameid} +file:///#{$myDir.downcase}/html/#{name} *#{inner}$")
-#    end
-#end
+class TC_Links_Display < Test::Unit::TestCase
+  include FireWatir
+  include MockStdoutTestCase
+
+  def test_showLinks
+    $ff.goto($htmlRoot + "links1.html")
+    $stdout = @mockout
+    $ff.showLinks
+    assert_equal(<<END_OF_MESSAGE, @mockout)
+There are 11 links
+link:  name: 
+         id: 
+       href: links2.html
+      index: 1
+link:  name: 
+         id: 
+       href: link_pass.html
+      index: 2
+link:  name: 
+         id: 
+       href: pass3.html
+      index: 3
+link:  name: 
+         id: 
+       href: textarea.html
+      index: 4
+link:  name: 
+         id: 
+       href: textarea.html
+      index: 5
+link:  name: 
+         id: link_id
+       href: links1.HTML
+      index: 6
+link:  name: link_name
+         id: 
+       href: links1.HTML
+      index: 7
+link:  name: 
+         id: 
+       href: links1.HTML
+      index: 8
+link:  name: 
+         id: 
+       href: pass.html
+      index: 9
+link:  name: 
+         id: linktos
+       href: link_pass.html
+      index: 10
+link:  name: test_link
+         id: 
+       href: link1.html
+      index: 11
+END_OF_MESSAGE
+  end
+end

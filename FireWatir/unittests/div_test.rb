@@ -188,3 +188,87 @@ class TC_Divs < Test::Unit::TestCase
     assert_equal( count-1 ,  $ff.ps.length)
   end
 end
+
+class TC_Divs_Display < Test::Unit::TestCase
+  include FireWatir
+  include MockStdoutTestCase
+
+  def test_showDivs
+    $ff.goto($htmlRoot + "div.html")
+    $stdout = @mockout
+    $ff.showDivs
+    assert_equal(<<END_OF_MESSAGE, @mockout)
+There are 7 divs
+div:   name: 
+         id: div1
+      class: 
+      index: 1
+div:   name: 
+         id: div2
+      class: blueText
+      index: 2
+div:   name: 
+         id: div3
+      class: 
+      index: 3
+div:   name: 
+         id: div4
+      class: 
+      index: 4
+div:   name: 
+         id: buttons1
+      class: 
+      index: 5
+div:   name: 
+         id: buttons2
+      class: 
+      index: 6
+div:   name: divName
+         id: text_fields1
+      class: divClass
+      index: 7
+END_OF_MESSAGE
+  end
+end
+
+class TC_Spans_Display < Test::Unit::TestCase
+  include FireWatir
+  include MockStdoutTestCase
+
+  def test_showSpans
+    $ff.goto($htmlRoot + "div.html")
+    $stdout = @mockout
+    $ff.showSpans
+    assert_equal(<<END_OF_MESSAGE, @mockout)
+There are 7 spans
+span:  name: 
+         id: span1
+      class: 
+      index: 1
+span:  name: 
+         id: span2
+      class: blueText
+      index: 2
+span:  name: 
+         id: span3
+      class: 
+      index: 3
+span:  name: 
+         id: span4
+      class: 
+      index: 4
+span:  name: 
+         id: buttons1
+      class: 
+      index: 5
+span:  name: 
+         id: buttons2
+      class: 
+      index: 6
+span:  name: spanName
+         id: text_fields1
+      class: spanClass
+      index: 7
+END_OF_MESSAGE
+  end
+end

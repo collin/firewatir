@@ -164,3 +164,41 @@ class TC_Images < Test::Unit::TestCase
     end
 end
 
+class TC_Images_Display < Test::Unit::TestCase
+  include FireWatir
+  include MockStdoutTestCase
+
+  def test_showImages
+    $ff.goto($htmlRoot + "images1.html")
+    $stdout = @mockout
+    $ff.showImages
+    assert_equal(<<END_OF_MESSAGE, @mockout)
+There are 6 images
+image: name: 
+         id: 
+        src: images/triangle.jpg
+      index: 1
+image: name: 
+         id: square
+        src: images/square.jpg
+      index: 2
+image: name: circle
+         id: 
+        src: images/circle.jpg
+      index: 3
+image: name: themissingimage
+         id: 
+        src: images/missing.jpg
+      index: 4
+image: name: disabler_test
+         id: 
+        src: images/button.jpg
+      index: 5
+image: name: 
+         id: 
+        src: images/circle.jpg
+      index: 6
+END_OF_MESSAGE
+  end
+end
+

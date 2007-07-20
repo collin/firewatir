@@ -32,7 +32,11 @@ class Frame < Element
     end
 
     def locate
-        @element_name = locate_frame(@how, @what)
+        if(@how == :jssh_name)
+            @element_name = @what
+        else    
+            @element_name = locate_frame(@how, @what)
+        end    
         #puts @element_name
         @o = self
             
@@ -41,6 +45,10 @@ class Frame < Element
         end    
     end
 
+    def html
+        assert_exists
+        get_frame_html
+    end
 end
 
 #
@@ -352,12 +360,26 @@ class Table < Element
         return table_rows
     end
 
+    #
+    # Description:
+    #   Get row at particular index in table.
+    #
+    # Input:
+    #   key - row index
+    #
+    # Output:
+    #   Table Row element
+    #
     def [](key)
         assert_exists
         arr_rows = rows
         return arr_rows[key - 1]
     end
 
+    #
+    # Desription:
+    #   Iterate over each table row element.
+    #
     def each
         assert_exists
         arr_rows = rows
@@ -366,12 +388,29 @@ class Table < Element
         end
     end
 
+    #
+    # Description:
+    #   Get column count of first row in the table.
+    #
+    # Output:
+    #   Number of columns in first row.
+    #
     def column_count
         assert_exists
         arr_rows = rows
         return arr_rows[0].column_count
     end
 
+    #
+    # Description:
+    #   Get values of specified column in each row.
+    #
+    # Input:
+    #   Column number
+    #
+    # Output:
+    #   Values of column (specified as input) in each row
+    #
     def column_values(column)
         assert_exists
         arr_rows = rows
@@ -381,6 +420,17 @@ class Table < Element
         end
         return values
     end
+
+    #
+    # Description:
+    #   Get values of all the column in specified row.
+    #
+    # Input:
+    #   Row number.
+    #
+    # Output:
+    #   Value of all columns present in the row.
+    #
     def row_values(row)
         assert_exists
         arr_rows = rows
@@ -495,6 +545,7 @@ end
 class TableRow < Element
     attr_accessor :element_name
 
+    #
     # Description:
     #   Locate the table row element on the page.
     #
@@ -538,12 +589,26 @@ class TableRow < Element
         return arr_cells.length
     end
 
+    #
+    # Description:
+    #   Get cell at specified index in a row.
+    #
+    # Input:
+    #   key - column index.
+    #
+    # Output:
+    #   Table cell element at specified index.
+    #
     def [] (key)
         assert_exists
         arr_cells = cells
         return arr_cells[key - 1]
     end
 
+    #
+    # Description:
+    #   Iterate over each cell in a row.
+    #
     def each
         assert_exists
         arr_cells = cells
@@ -552,6 +617,13 @@ class TableRow < Element
         end
     end    
 
+    #
+    # Description:
+    #   Get array of all cells in Table Row
+    #
+    # Output:
+    #   Array containing Table Cell elements.
+    #
     def cells
         assert_exists        
         arr_cells = get_cells
@@ -897,6 +969,16 @@ class SelectList < InputElement
         end
     end
 
+    #
+    # Description:
+    #   Get option element at specified index in select list.
+    #
+    # Input:
+    #   key - option index
+    #
+    # Output:
+    #   Option element at specified index
+    #
     def [] (key)
         assert_exists
         arr_options = options

@@ -17,6 +17,19 @@ class TC_Selectbox_XPath < Test::Unit::TestCase
        assert_false($ff.select_list(:xpath, "//select[@id='missing']").exists?)   
     end
 
+    def test_element_by_xpath_class
+      element = $ff.element_by_xpath("//select[@name='sel1']")
+      assert(element.instance_of?(SelectList),"element class should be #{SelectList}; got #{element.class}")
+      # FIXME got HTMLAnchorElement, should've gotten HTMLSelectElement
+      # TODO: If element is not present, this should return null
+      #element = $ff.element_by_xpath("//select[@name='missing']")
+      #assert(element.instance_of?(SelectList),"element class should be #{SelectList}; got #{element.class}")
+      # FIXME got HTMLAnchorElement, should've gotten HTMLSelectElement
+      # TODO: If element is not present, this should return null
+      #element = $ff.element_by_xpath("//select[@id='missing']")
+      #assert(element.instance_of?(SelectList),"element class should be #{SelectList}; got #{element.class}")
+    end
+
     def test_select_list_enabled
        assert($ff.select_list(:xpath, "//select[@name='sel1']").enabled?)   
        assert_raises(UnknownObjectException) { $ff.select_list(:xpath, "//select[@name='NoName']").enabled? }  

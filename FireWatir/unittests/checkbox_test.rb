@@ -19,6 +19,7 @@ class TC_CheckBox < Test::Unit::TestCase
        assert_raises(UnknownObjectException , "UnknownObjectException was supposed to be thrown" ) {   $ff.checkbox(:name, "noName").value   }  
 
        assert_equal("box1"  , $ff.checkbox(:index, 1).name  ) 
+       assert_instance_of(CheckBox,$ff.checkbox(:index,1))
        assert_equal(""  , $ff.checkbox(:index, 1).id  ) 
        assert_equal("checkbox"  , $ff.checkbox(:index, 1).type  ) 
        assert_equal("on"  , $ff.checkbox(:index, 1).value  ) 

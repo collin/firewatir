@@ -124,10 +124,10 @@ class TC_Buttons < Test::Unit::TestCase
      end
 
      def test_button2
-        assert($ff.button(:caption, "Click Me2").exists?)   
+        assert($ff.button(:caption, "Click Me2").exists?, 'Can\'t find Button with caption "Click Me2"')   
        
-        assert($ff.button(:caption, "Disabled Button2").exists?) 
-        assert($ff.button(:caption, "Sign In").exists?)
+        assert($ff.button(:caption, "Disabled Button2").exists?, 'Can\'t find Button with caption "Disabled Button2"') 
+        assert($ff.button(:caption, "Sign In").exists?, 'Can\'t find Button with caption "Sign In"')
         
         assert_equal("b6"  , $ff.button(:id, "b7").name ) 
         assert_equal("b7"  , $ff.button(:name, "b6").id ) 
@@ -142,15 +142,15 @@ class TC_Buttons < Test::Unit::TestCase
         assert_equal(""  , $ff.button(:name, "b8").class_name  ) 
         assert_equal("Sign In", $ff.button(:caption, "Sign In").value)
         
-        assert($ff.button(:caption, "Click Me").enabled?)   
+        assert($ff.button(:caption, "Click Me").enabled?, 'Button wih caption "Click Me" should be enabled')   
       
-        assert_false($ff.button(:caption, "Disabled Button2").enabled?)   
+        assert_false($ff.button(:caption, "Disabled Button2").enabled?, 'Button wih caption "Disabled Button2" should be disabled')   
         
         
         assert_raises(ObjectDisabledException , "ObjectDisabledException was supposed to be thrown" ) {   $ff.button(:caption, "Disabled Button2").click   }  
         
         $ff.button(:caption, "Click Me2").click
-        assert($ff.text.include?("PASS")) 
+        assert($ff.text.include?("PASS"), 'Clicking on "Click Me2" button should\'ve taken to the "PASS" page') 
 
      end
     
@@ -163,18 +163,53 @@ class TC_Buttons < Test::Unit::TestCase
     
     def test_buttons
 	    arrButtons = $ff.buttons
-	    assert_equal(7,arrButtons.length)
+	    assert_equal(7, arrButtons.length)
         #arrButtons.each do |button|
             #puts button.to_s
        #end
-	    assert_equal("b2",arrButtons[1].id)
-        assert_equal("b5",arrButtons[2].id)
-        assert_equal("Submit",arrButtons[3].value)
-        assert_equal("sub3",arrButtons[4].name)
-        assert_equal("b7",arrButtons[5].id)
-        assert_equal("b9",arrButtons[6].id)
-        assert_equal("Sign In",arrButtons[7].value)
-   end
-    
+      assert_equal("b2", arrButtons[1].id)
+      assert_equal("b5", arrButtons[2].id)
+      assert_equal("Submit", arrButtons[3].value)
+      assert_equal("sub3", arrButtons[4].name)
+      assert_equal("b7", arrButtons[5].id)
+      assert_equal("b9", arrButtons[6].id)
+      assert_equal("Sign In", arrButtons[7].value)
+    end
+
+    # Tests collection class
+    def test_class_buttons
+      arr_buttons = $ff.buttons
+      arr_buttons.each do |b|
+        assert(b.instance_of?(Button),"element class should be #{Button}; got #{b.class}")
+      end
+      # test properties
+      assert_equal("b2", arr_buttons[1].id)
+      assert_equal("b1", arr_buttons[1].name) 
+      assert_equal("button", arr_buttons[1].type) 
+      assert_equal("Click Me", arr_buttons[1].value) 
+      assert_equal(false, arr_buttons[1].disabled) 
+      assert_equal("italic_button", arr_buttons[1].class_name) 
+      assert_equal( "this is button1", arr_buttons[1].title)
+ 
+      assert_equal("b5", arr_buttons[2].id)
+      assert_equal("b4", arr_buttons[2].name) 
+      assert_equal("button", arr_buttons[2].type) 
+      assert_equal("Disabled Button", arr_buttons[2].value) 
+      assert_equal(true, arr_buttons[2].disabled) 
+      assert_equal( "", arr_buttons[2].title)
+      assert_equal("", arr_buttons[2].class_name) 
+
+      assert_equal("Submit", arr_buttons[3].value)
+      assert_equal("sub3", arr_buttons[4].name)
+      assert_equal("b7", arr_buttons[5].id)
+      assert_equal("b9", arr_buttons[6].id)
+      assert_equal("Sign In", arr_buttons[7].value)
+
+
+
+
+    end
+
+
 end
 

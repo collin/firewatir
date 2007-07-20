@@ -16,7 +16,24 @@ class TC_Links_XPath < Test::Unit::TestCase
         assert(exists?{$ff.link(:xpath, "//a[contains(., /TEST/i)]")})   
         assert_false(exists?{$ff.link(:xpath , "//a[contains(.,'missing')]")})
         assert_false(exists?{$ff.link(:xpath, "//a[contains(., /miss/)]")})   
+    end
+        
+    def test_element_by_xpath_class
+        # TODO: If element is not present this should return null
+        #element = $ff.element_by_xpath("//a[contains(., /miss/)]")
+        #assert(element.instance_of?(Link),"element class should be #{Link}; got #{element.class}")
+        #element = $ff.element_by_xpath("//a[contains(.,'missing')]")
+        #assert(element.instance_of?(Link),"element class should be #{Link}; got #{element.class}")
+        element = $ff.element_by_xpath("//a[contains(., /TEST/i)]")
+        assert(element.instance_of?(Link),"element class should be #{Link}; got #{element.class}")
+        element = $ff.element_by_xpath("//a[contains(.,'test1')]")
+        assert(element.instance_of?(Link),"element class should be #{Link}; got #{element.class}")
+    end
 
+    def test_element_by_xpath_behavior
+      # TODO implement this, acquiring objects through element_by_xpath and 
+      # then testing their properties to see if they behave normally, as if 
+      # they had been created with $ff.link
     end
     
     def test_Link_Exists

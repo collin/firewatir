@@ -103,7 +103,7 @@ class TC_SelectList < Test::Unit::TestCase
     end
     
     def test_select_list_iterator
-        assert_equal(4, $ff.select_lists.length)
+        assert_equal(5, $ff.select_lists.length)
         assert_equal("o3"   ,    $ff.select_lists[1].value)  
         assert_equal("sel1" ,    $ff.select_lists[1].name )  
         assert_equal("select-one",         $ff.select_lists[1].type )  

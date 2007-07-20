@@ -48,34 +48,35 @@ class TC_Forms2 < Test::Unit::TestCase # Note: there is no TC_Forms
   end
 end
 
-#class TC_Form_Display < Test::Unit::TestCase
-#  include FireWatir
+class TC_Form_Display < Test::Unit::TestCase
+  include FireWatir
+  include MockStdoutTestCase
 
-#  def test_showforms
-#    $ff.goto($htmlRoot + "forms2.html")
-#    $stdout = @mockout
-#    $ff.showForms
-#    assert_equal(<<END_OF_MESSAGE, @mockout)
-#There are 4 forms
-#Form name: 
-#       id: 
-#   method: get
-#   action: pass.html
-#Form name: test2
-#       id: f2
-#   method: get
-#   action: pass2.html
-#Form name: test3
-#       id: 
-#   method: get
-#   action: pass2.html
-#Form name: test2
-#       id: 
-#   method: get
-#   action: pass2.html
-#END_OF_MESSAGE
-#  end
-#end
+  def test_showforms
+    $ff.goto($htmlRoot + "forms2.html")
+    $stdout = @mockout
+    $ff.showForms
+    assert_equal(<<END_OF_MESSAGE, @mockout)
+There are 4 forms
+Form name: 
+       id: 
+   method: get
+   action: pass.html
+Form name: test2
+       id: f2
+   method: get
+   action: pass2.html
+Form name: test3
+       id: 
+   method: get
+   action: pass2.html
+Form name: test2
+       id: 
+   method: get
+   action: pass2.html
+END_OF_MESSAGE
+  end
+end
 
 class TC_Forms3 < Test::Unit::TestCase
   include FireWatir

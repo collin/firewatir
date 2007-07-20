@@ -328,3 +328,45 @@ class TC_Tables_Complex < Test::Unit::TestCase
     assert_equal("subtable2 Row 1 Col1",table[2][1].table(:index,1)[1][1].text.strip)
   end
 end
+
+class TC_Tables_Display < Test::Unit::TestCase
+  include FireWatir
+  include MockStdoutTestCase
+
+  def test_showTables
+    $ff.goto($htmlRoot + "table1.html")
+    $stdout = @mockout
+    $ff.showTables
+    assert_equal(<<END_OF_MESSAGE, @mockout)
+There are 7 tables
+table:   id: tblTest
+       rows: 2
+    columns: 2
+      index: 1
+table:   id: t1
+       rows: 5
+    columns: 1
+      index: 2
+table:   id: t2
+       rows: 2
+    columns: 2
+      index: 3
+table:   id: 
+       rows: 1
+    columns: 2
+      index: 4
+table:   id: body_test
+       rows: 5
+    columns: 1
+      index: 5
+table:   id: pic_table
+       rows: 2
+    columns: 2
+      index: 6
+table:   id: tblTest1
+       rows: 5
+    columns: 1
+      index: 7
+END_OF_MESSAGE
+  end
+end

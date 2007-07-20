@@ -23,6 +23,22 @@ class TC_Bugs< Test::Unit::TestCase
         link =  $ff.link(:text, "nameDelet")
         assert_equal("test_link", link.name)
     end
+
+
+    # element_by_xpath should return an element that's instance of the
+    # appropriate class, not the generic Element class. So if it's a div,
+    # it should return an instance of Div, if it's a checkbox, CheckBox,
+    # and so on. TODO write tests for all classes
+    def test_element_by_xpath_bug01
+      $ff.goto($htmlRoot + "div.html")
+      element = $ff.element_by_xpath("//div[@id='div1']")
+      assert_not_nil(element) # helder
+      # next assert always breaks, dunno why (error, not failure)
+      #assert_instance_of(Div, element, "wrong constructor was used")
+      # using this hack instead
+      assert(element.instance_of?(Div),
+               "element class should be: #{Div}; got: #{element.class}.")
+    end
     
     def test_elements_by_xpath_bug10
         $ff.goto($htmlRoot + "links1.html")
@@ -42,7 +58,7 @@ class TC_Bugs< Test::Unit::TestCase
     def test_html_bug7
         $ff.goto($htmlRoot + "links1.html")
         html = $ff.html
-        assert(html =~ /.*<a id="linktos" *>*/)
+        assert_match(/.*<a id="linktos" *>*/,html)
     end
 
     def test_span_onclick_bug14
@@ -122,9 +138,41 @@ class TC_Bugs< Test::Unit::TestCase
 
     def test_file_field_bug_20
         $ff.goto($htmlRoot + "fileupload.html")
-        $ff.file_field(:name, "file3").set("c:\\results.txt")
+        # Enter dummy path.
+        if(RUBY_PLATFORM =~ /.*mswin.*/)
+            $ff.file_field(:name, "file3").set("c:\\results.txt")
+        else    
+            $ff.file_field(:name, "file3").set("/user/lib/results.txt")
+        end    
         $ff.button(:name, "upload").click()
         url = $ff.url
-        assert(url =~ /.*results.txt&upload=upload$/)
+        assert_match(/.*results.txt&upload=upload$/,url)
+    end
+    
+    def test_button_bug2
+        $ff.goto($htmlRoot + "buttons1.html")
+        btn = $ff.button(:id, "b7")
+        assert_equal("b7", btn.id)
+    end
+    
+    def test_getAllContents_bug25
+        $ff.goto($htmlRoot + "select_tealeaf.html")
+        $ff.select_lists.each do |select|
+            contents =  select.getAllContents().to_s
+            puts contents
+            assert_equal("=<>>=<=", contents)
+            break
+        end
+    end
+
+    def test_fire_event_bug31
+        $ff.goto($htmlRoot + "div.html")
+        div = $ff.div(:attribute, "attribute")
+        div.fire_event("ondblclick")
+        assert("PASS", $ff.text)
+        $ff.goto($htmlRoot + "div.html")
+        div = $ff.div(:id, "div1")
+        div.fireEvent("ondblclick")
+        assert("PASS", $ff.text)
     end
 end 

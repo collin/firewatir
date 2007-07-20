@@ -11,6 +11,12 @@ Test page for select boxes
     {
         document.location.href = "pass.html";
     }
+    function show_alert()
+    {
+        textbox = document.getElementById('txtAlert');
+        alert("Press OK")
+        textbox.value = "You pressed OK button";
+    }
 </script>
 CVS Revision: $Revision: 1.0 $
 <br>
@@ -20,27 +26,30 @@ CVS Revision: $Revision: 1.0 $
 <tr>
 <td>
 <select name = sel1 class='list_style'>
-<option value=o1 >Option 1<option value=o2 >Option 2<option value=o3 SELECTED >Option 3<option value=o4 >Option 4</select>
+<option value=o1 >Option 1</option><option value=o2 >Option 2</option><option value=o3 SELECTED >Option 3</option><option value=o4 >Option 4</option></select></td></tr>
 <tr>
 <td>
 <select name = sel2 multiple>
-<option value=o1  >Option 1<option value=o2 class='option_style'>Option 2<option value=o3 class='option_style' SELECTED >Option 3<option value=o4 class='option_style'>Option 4<option value=o6 class='option_style'>Option 5<option value=o6 class='option_style' SELECTED >Option 6</select></form>
-
+<option value=o1  >Option 1</option><option value=o2 class='option_style'>Option 2</option><option value=o3 class='option_style' SELECTED >Option 3</option><option value=o4 class='option_style'>Option 4</option><option value=o6 class='option_style'>Option 5</option><option value=o6 class='option_style' SELECTED >Option 6</option></select></td>
+</tr>
 <tr>
 <td>
 <select name = sel3 onChange = 'changeLocation();'>
-<option value = o1>Option 1<option value = o2>Option 2<option value = o3 selected>Option 3<option value = o4>Option 4</select>
+<option value = o1>Option 1</option><option value = o2>Option 2</option><option value = o3 selected>Option 3</option><option value = o4>Option 4</option></select></td>
 
 <td> This box is used for testing the onchange event
-
+</td></tr>
 <tr>
-<td><select id = 'selectbox_4' disabled><option value = o1>Option 1<option value = o2>Option 2
-
-<td>This box has an id
-
+<td><select id = 'selectbox_4' disabled><option value = o1>Option 1</option><option value = o2>Option 2</option>
+</td>
+<td>This box has an id</td></tr>
+<tr>
+<td><select id= 'selectbox_5' onchange='show_alert();'><option value = o1>Option 1</option><option value = o2>Option 2</option></select></td><td>
+    <input id='txtAlert'>
+    </td></tr>
 </table>
 
 
 
-
+</body>
 </html>

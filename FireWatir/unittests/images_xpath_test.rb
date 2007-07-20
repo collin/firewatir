@@ -38,6 +38,31 @@ class TC_Images_XPath < Test::Unit::TestCase
         assert_false(  $ff.image(:alt , "triangle" ).exists?  )
         assert_false(  $ff.image(:xpath , "//img[contains(@alt , 'tri')]" ).exists?  )
     end
+
+    def test_element_by_xpath_class
+      # FIXME getting HTMLAnchorElement instead of HTMLImageElement
+      # TODO: This should return null if object is not there.
+      #element = $ff.element_by_xpath("//img[@name='missing_name']")
+      #assert(element.instance_of?(Image),"element class should be #{Image}; got #{element.class}")
+      element = $ff.element_by_xpath("//img[@name='circle']")
+      assert(element.instance_of?(Image),"element class should be #{Image}; got #{element.class}")
+      element = $ff.element_by_xpath("//img[contains(@name , 'circ')]")
+      assert(element.instance_of?(Image),"element class should be #{Image}; got #{element.class}")
+      # TODO: This should return null if object is not there.
+      #element = $ff.element_by_xpath("//img[@id='missing_id']")
+      #assert(element.instance_of?(Image),"element class should be #{Image}; got #{element.class}")
+      element = $ff.element_by_xpath("//img[@id='square']")
+      assert(element.instance_of?(Image),"element class should be #{Image}; got #{element.class}")
+      element = $ff.element_by_xpath("//img[contains(@id, 'squ')]")
+      assert(element.instance_of?(Image),"element class should be #{Image}; got #{element.class}")
+      element = $ff.element_by_xpath("//img[contains(@src , 'triangle')]")
+      assert(element.instance_of?(Image),"element class should be #{Image}; got #{element.class}")
+      element = $ff.element_by_xpath("//img[contains(@alt , 'cir')]")
+      assert(element.instance_of?(Image),"element class should be #{Image}; got #{element.class}")
+      # TODO: This should return null if object is not there.
+      #element = $ff.element_by_xpath("//img[contains(@alt , 'tri')]")
+      #assert(element.instance_of?(Image),"element class should be #{Image}; got #{element.class}")
+    end
     
     def test_image_click
         assert_raises(UnknownObjectException ) { $ff.image(:xpath , "//img[@name='no_image_with_this']").click }

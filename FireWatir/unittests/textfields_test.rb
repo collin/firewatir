@@ -71,7 +71,7 @@ class TC_Fields < Test::Unit::TestCase
             "value:        Hello World",
             "disabled:     false", 
             #"style:        ",
-            #"class:        ",
+            #"  for:        ",
             "read only:    false",
             "max length:   500",
             "length:       0"
@@ -201,4 +201,30 @@ class TC_Fields < Test::Unit::TestCase
         assert_equal("Password With ID ( the text here is a label for it )" , $ff.label(:index,3).innerText)
         assert_equal("password1", $ff.label(:index,3).for)
     end
+end
+
+class TC_Labels_Display < Test::Unit::TestCase
+  include FireWatir
+  include MockStdoutTestCase
+
+  def test_showLabels
+    $ff.goto($htmlRoot + "textfields1.html")
+    $stdout = @mockout
+    $ff.showLabels
+    assert_equal(<<END_OF_MESSAGE, @mockout)
+There are 3 labels
+label: name: 
+         id: 
+        for: text2
+      index: 1
+label: name: 
+         id: label2
+        for: readOnly2
+      index: 2
+label: name: 
+         id: 
+        for: password1
+      index: 3
+END_OF_MESSAGE
+  end
 end

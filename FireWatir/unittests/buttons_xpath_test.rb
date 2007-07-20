@@ -56,6 +56,24 @@ class TC_Buttons_XPath < Test::Unit::TestCase
         assert_false($ff.button(:xpath, "//input[@name='missingname']").exists?)   
         assert_false($ff.button(:xpath, "//input[@id='missingid']").exists?)   
     end
+
+    def test_element_by_xpath_class
+      element = $ff.element_by_xpath("//input[@value='Click Me']")
+      assert(element.instance_of?(Button),"element class should be #{Button}; got #{element.class}")
+      element = $ff.element_by_xpath("//input[@value='Submit']")
+      assert(element.instance_of?(Button),"element class should be #{Button}; got #{element.class}")
+      element = $ff.element_by_xpath("//input[@name='b1']")
+      assert(element.instance_of?(Button),"element class should be #{Button}; got #{element.class}")
+      element = $ff.element_by_xpath("//input[@id='b2']")
+      assert(element.instance_of?(Button),"element class should be #{Button}; got #{element.class}")
+      # TODO: If object is not there this should return null
+      #element = $ff.element_by_xpath("//input[@value='Missing Caption']")
+      #assert(element.instance_of?(Button),"element class should be #{Button}; got #{element.class}")
+      #element = $ff.element_by_xpath("//input[@name='missingname']")
+      #assert(element.instance_of?(Button),"element class should be #{Button}; got #{element.class}")
+      #element = $ff.element_by_xpath("//input[@id='missingid']")
+      #assert(element.instance_of?(Button),"element class should be #{Button}; got #{element.class}")
+    end
     
     def test_Button_Enabled
         assert($ff.button(:xpath, "//input[@value='Click Me']").enabled?)   
