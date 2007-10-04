@@ -92,7 +92,8 @@ class TC_Bugs< Test::Unit::TestCase
         $ff.button(:id, "b2").click
         assert_false($ff.contains_text("passed"))
         assert($ff.contains_text("PASS"))
-        assert($ff.contains_text(/PASS/))
+        assert($ff.contains_text("PAS"))
+        assert($ff.contains_text(/PAS/))
         assert($ff.contains_text(/pass/i))
         assert_false($ff.contains_text(/pass/))
     end

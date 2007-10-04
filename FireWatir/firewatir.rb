@@ -172,7 +172,7 @@ module FireWatir
         # 
         # Input:
        	#   options  - Hash of any of the following options:
-	      #     :waitTime - Time to wait for Firefox to start. By default it waits for 2 seconds.
+	    #     :waitTime - Time to wait for Firefox to start. By default it waits for 2 seconds.
         #                 This is done because if Firefox is not started and we try to connect
         #                 to jssh on port 9997 an exception is thrown.
         #     :profile  - The Firefox profile to use. If none is specified, Firefox will use
@@ -485,17 +485,23 @@ module FireWatir
         # Description:
         #   Matches the given text with the current text shown in the browser.
         #
-        def contains_text(match_text)
+        # Input:
+        #   target - Text to match. Can be a string or regex
+        #
+        # Output:
+        #   Returns the index if the specified text was found.
+        #   Returns matchdata object if the specified regexp was found.
+        #
+        def contains_text(target)
             #puts "Text to match is : #{match_text}"
             #puts "Html is : #{self.text}"
-            #puts match_text.matches(self.text)
-            #puts caller(0)
-            if(match_text.matches(self.text) == nil || match_text.matches(self.text) == false)
-                return false
+            if target.kind_of? Regexp
+                self.text.match(target)
+            elsif target.kind_of? String
+                self.text.index(target)
             else
-                return true
-            end    
-            #return match_text.matches(self.text) # == nil) ? false : true
+                raise ArgumentError, "Argument #{target} should be a string or regexp."
+            end
         end
 
         #
