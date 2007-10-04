@@ -114,8 +114,10 @@ class TC_Bugs< Test::Unit::TestCase
     end
 
     def test_close_bug_26
-        $ff.close()
-        $ff = Firefox.new
+        if ! (RUBY_PLATFORM =~ /darwin/i)
+            $ff.close()
+            $ff = Firefox.new
+        end    
     end
 
     def test_class_bug_29
