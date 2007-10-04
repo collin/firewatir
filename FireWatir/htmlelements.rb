@@ -1587,9 +1587,10 @@ class RadioCheckCommon < Element
     #   Used by clear and set method to uncheck and check radio button and checkbox element respectively.
     #
     def set_clear_item(set)
-        @o.checked = set
-        @o.fireEvent("onClick")
-        @container.wait
+        if set != @o.isSet?
+          @o.fire_event("onclick") 
+          @container.wait
+        end
     end
     private :set_clear_item
 
@@ -1600,6 +1601,13 @@ end
 #   Class for RadioButton element.
 #
 class Radio < RadioCheckCommon 
+    def clear
+        assert_exists
+        assert_enabled
+        #higlight(:set)
+        @o.checked = false
+        #highlight(:clear)
+    end
 end
 
 #

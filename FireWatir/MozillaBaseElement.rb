@@ -764,29 +764,61 @@
         #   event - Event to be fired like "onclick", "onchange" etc.
         #   wait - Whether to wait for the action to get completed or not. By default its true.
         #
+				# TODO: Provide ability to specify event parameters like keycode for key events, and click screen
+				#       coordinates for mouse events.
         def fire_event(event, wait = true)
             assert_exists()
-            #puts "here in fire event function. Event is : #{event}"
-            #puts "typeof(#{element_object}.#{event.downcase}); \n"
-            $jssh_socket.send("typeof(#{element_object}.#{event.downcase});\n", 0)
-            isDefined = read_socket()
-            #puts "is method there : #{isDefined}"
-            if(isDefined != "undefined")        
-                if(element_type == "HTMLSelectElement")
-                    event =~ /on(.*)/i
-                    jssh_command = "var event = #{DOCUMENT_VAR}.createEvent(\"HTMLEvents\");
-                                    event.initEvent(\"#{$1.downcase}\", true, true);
-                                    #{element_object}.dispatchEvent(event);"
-                    jssh_command.gsub!(/\n/, "")
-                    $jssh_socket.send("#{jssh_command}\n", 0)
-                    read_socket() if wait
-                    wait() if wait
-                else    
-                    $jssh_socket.send("#{element_object}.#{event.downcase}();\n", 0)
-                    value = read_socket() if wait
-                    wait() if wait
-                end    
-            end    
+						event = event.to_s # in case event was given as a symbol
+						
+            event = event.downcase
+            
+            event =~ /on(.*)/i
+            event = $1 if $1
+            
+			# check if we've got an old-school on-event
+			#$jssh_socket.send("typeof(#{element_object}.#{event});\n", 0)
+            #is_defined = read_socket()
+              
+            # info about event types harvested from: 
+            #   http://www.howtocreate.co.uk/tutorials/javascript/domevents
+            case event
+            when 'abort', 'blur', 'change', 'error', 'focus', 'load', 'reset', 'resize',
+                    'scroll', 'select', 'submit', 'unload'
+                dom_event_type = 'HTMLEvents'
+                dom_event_init = "initEvent(\"#{event}\", true, true)"
+            when 'keydown', 'keypress', 'keyup'
+                dom_event_type = 'KeyEvents'
+                # Firefox has a proprietary initializer for keydown/keypress/keyup.
+                # Args are as follows:
+                #   'type', bubbles, cancelable, windowObject, ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode
+                dom_event_init = "initKeyEvent(\"#{event}\", true, true, #{WINDOW_VAR}, false, false, false, false, 0, 0)"
+            when 'click', 'dblclick', 'mousedown', 'mousemove', 'mouseout', 'mouseover',
+                    'mouseup'
+                dom_event_type = 'MouseEvents'
+                # Args are as follows:
+                #   'type', bubbles, cancelable, windowObject, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button, relatedTarget
+                dom_event_init = "initMouseEvent(\"#{event}\", true, true, #{WINDOW_VAR}, 1, 0, 0, 0, 0, false, false, false, false, 0, null)"
+            else
+                dom_event_type = 'HTMLEvents'
+                dom_event_init = "initEvents(\"#{event}\", true, true)"
+            end
+
+            if(element_type == "HTMLSelectElement")
+                dom_event_type = 'HTMLEvents'
+                dom_event_init = "initEvent(\"#{event}\", true, true)"
+            end
+            
+            
+            jssh_command  = "var event = #{DOCUMENT_VAR}.createEvent(\"#{dom_event_type}\"); "
+            jssh_command << "event.#{dom_event_init}; "
+            jssh_command << "#{element_object}.dispatchEvent(event);"
+            
+			#puts "JSSH COMMAND:\n#{jssh_command}\n"
+											
+			$jssh_socket.send("#{jssh_command}\n", 0)
+			read_socket() if wait
+			wait() if wait
+            
             @@current_level = 0
         end
         alias fireEvent fire_event
