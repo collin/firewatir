@@ -178,4 +178,11 @@ class TC_Bugs< Test::Unit::TestCase
         div.fireEvent("ondblclick")
         assert("PASS", $ff.text)
     end
+
+    def test_contains_text_bug37
+        $ff.goto($htmlRoot + "frame_buttons.html")
+        frame = $ff.frame(:name, "buttonFrame")
+        assert(frame.contains_text("second button"))
+        assert_false(frame.contains_text("second button second"))
+    end
 end 

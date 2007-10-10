@@ -577,10 +577,12 @@
                                     {"
             if(@container.class == FireWatir::Firefox)
                 jssh_command += "       element_name = \"elements_frames[\" + i + \"]\";
-                                        #{DOCUMENT_VAR} = elements_frames[i].contentDocument; "
+                                        #{DOCUMENT_VAR} = elements_frames[i].contentDocument; 
+                                        #{BODY_VAR} = #{DOCUMENT_VAR}.body;"
             else
                 jssh_command += "       element_name = \"elements_frames_#{@@current_level}[\" + i + \"]\";
-                                        #{DOCUMENT_VAR} = elements_frames_#{@@current_level}[i].contentDocument; "
+                                        #{DOCUMENT_VAR} = elements_frames_#{@@current_level}[i].contentDocument; 
+                                        #{BODY_VAR} = #{DOCUMENT_VAR}.body;"
             end
             jssh_command += "           break;
                                     }
@@ -617,6 +619,29 @@
 
         public
 
+        #
+        #
+        # Description:
+        #   Matches the given text with the current text shown in the browser for that particular element.
+        #
+        # Input:
+        #   target - Text to match. Can be a string or regex
+        #
+        # Output:
+        #   Returns the index if the specified text was found.
+        #   Returns matchdata object if the specified regexp was found.
+        #
+        def contains_text(target)
+            #puts "Text to match is : #{match_text}"
+            #puts "Html is : #{self.text}"
+            if target.kind_of? Regexp
+                self.text.match(target)
+            elsif target.kind_of? String
+                self.text.index(target)
+            else
+                raise ArgumentError, "Argument #{target} should be a string or regexp."
+            end
+        end
         #
         # Description:
         #   Method for inspecting the object. Defined here because IRB was not able to locate the object.
@@ -914,10 +939,15 @@
         #
         def text()
             assert_exists
-           
-            $jssh_socket.send("#{element_object}.textContent;\n", 0)
-            return_value = read_socket()
-            #puts "return value is : #{return_value}"
+       
+            if(element_type == "HTMLFrameElement")
+                $jssh_socket.send("#{BODY_VAR}.textContent;\n", 0)
+            else    
+                $jssh_socket.send("#{element_object}.textContent;\n", 0)
+            end    
+
+            return_value = read_socket().strip()
+            #puts "text content of element is : #{return_value}"
             
             #if(returnType == "boolean")
             #    return_value = false if returnValue == "false"
