@@ -370,7 +370,7 @@ module FireWatir
             #puts "current window number is : #{@@current_window}"
             if @@current_window == 0
                 $jssh_socket.send(" getWindows()[0].close(); \n", 0)
-                @t.join
+                @t.join if @t != nil
                 #sleep 5
             else
                 # Check if window exists, because there may be the case that it has been closed by click event on some element.
