@@ -746,7 +746,7 @@ module FireWatir
             $jssh_socket.send("popuptext;\n", 0)
             return_value = read_socket()
             # reset the variable
-            $jssh_socket.send("popuptexti = '';\n", 0)
+            $jssh_socket.send("popuptext = '';\n", 0)
             read_socket()
             return return_value
         end
