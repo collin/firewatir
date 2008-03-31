@@ -329,6 +329,7 @@ module FireWatir
                     retry if no_of_tries < 3
                     raise UnableToStartJSShException, "Unable to connect to machine : #{MACHINE_IP} on port 9997. Make sure that JSSh is properly installed and Firefox is running with '-jssh' option"
             end
+            @error_checkers = []
         end
         private :set_defaults
  
@@ -639,7 +640,29 @@ module FireWatir
             rescue
             end
             set_browser_document()
+            run_error_checks()
+            return self
         end
+        
+        # Add an error checker that gets called on every page load.
+        #
+        # * checker - a Proc object 
+        def add_checker(checker)
+            @error_checkers << checker
+        end
+        
+        # Disable an error checker
+        #
+        # * checker - a Proc object that is to be disabled
+        def disable_checker(checker)
+            @error_checkers.delete(checker)
+        end
+        
+        # Run the predefined error checks. This is automatically called on every page load.
+        def run_error_checks
+            @error_checkers.each { |e| e.call(self) }
+        end
+        
       
         #def jspopup_appeared(popupText = "", wait = 2)
         #    winHelper = WindowHelper.new()
