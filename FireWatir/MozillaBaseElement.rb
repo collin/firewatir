@@ -549,9 +549,6 @@
                                     }
                                     var found = false;"
             if(what.class == Regexp)
-                # Construct the regular expression because we can't use it directly by converting it to string.
-                # If reg ex is /Google/i then its string conversion will be (?i-mx:Google) so we can't use it.
-                # Construct the regular expression again from the string conversion.
                 oldRegExp = what.to_s
                 newRegExp = "/" + what.source + "/"
                 flags = oldRegExp.slice(2, oldRegExp.index(':') - 2)
