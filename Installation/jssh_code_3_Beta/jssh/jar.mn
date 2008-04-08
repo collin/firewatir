@@ -1,0 +1,6 @@
+jssh.jar:
+% content jssh %content/jssh/
+  content/jssh/jssh-debug.js                                     (resources/content/jssh-debug.js)
+  content/jssh/configure.xul                                     (resources/content/configure.xul)
+  content/jssh/contents.rdf                                      (resources/content/contents.rdf)
+  content/jssh/tasksOverlay.xul                                  (resources/content/tasksOverlay.xul)
