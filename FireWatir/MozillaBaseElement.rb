@@ -1327,10 +1327,10 @@
                 # We get method name with trailing '=' when we try to assign a value to a
                 # property. So just remove the '=' to get the type
                 temp = ""
-                assingning_value = false
+                assigning_value = false
                 if(methodName =~ /(.*)=$/)
                     temp  = "#{element_object}.#{$1}"
-                    assingning_value = true
+                    assigning_value = true
                 else
                     temp = "#{element_object}.#{methodName}"
                 end
@@ -1340,7 +1340,7 @@
                 method_type = read_socket()
                 #puts "method_type is : #{method_type}"
 
-                if(assingning_value)
+                if(assigning_value)
                     if(method_type != "boolean" && args[0].class != Fixnum)
                         args[0].gsub!("\\", "\\"*4)
                         args[0].gsub!("\"", "\\\"")
