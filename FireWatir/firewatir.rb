@@ -258,8 +258,18 @@ module FireWatir
         #   Gets the window number opened. Used internally by Firewatir.
         #
         def get_window_number()
-            @jssh_socket.send("getWindows().length;\n", 0)
-            @@current_window = read_socket().to_i - 1
+            #@jssh_socket.send("getWindows().length;\n", 0)
+            #@@current_window = read_socket().to_i - 1
+            
+            # Derek Berner 5/16/08 
+            # If at any time a non-browser window like the "Downloads" window 
+            #   pops up, it will become the topmost window, so make sure we 
+            #   ignore it.
+            @@current_window = js_eval("getWindows().length").to_i - 1
+            while js_eval("getWindows()[#{@@current_window}].getBrowser") == ''
+                @@current_window -= 1;
+            end
+
             # This will store the information about the window.
             #@@window_stack.push(@@current_window)
             #puts "here in get_window_number window number is #{@@current_window}"
@@ -373,7 +383,9 @@ module FireWatir
         #
         def close()
             #puts "current window number is : #{@@current_window}"
-            if @@current_window == 0
+            # Derek Berner 5/16/08
+            # Try to join thread only if there is exactly one open window
+            if js_eval("getWindows().length").to_i == 1
                 @jssh_socket.send(" getWindows()[0].close(); \n", 0)
                 @t.join if @t != nil
                 #sleep 5
@@ -581,68 +593,83 @@ module FireWatir
         # Description:
         #   Waits for the page to get loaded.
         #
-        def wait()
+        def wait(last_url = nil)
             #puts "In wait function "
             isLoadingDocument = ""
+            start = Time.now
+            
             while isLoadingDocument != "false"
-                @jssh_socket.send("#{BROWSER_VAR}=#{WINDOW_VAR}.getBrowser(); #{BROWSER_VAR}.webProgress.isLoadingDocument;\n" , 0)
-                isLoadingDocument = read_socket()
+                isLoadingDocument = js_eval("#{BROWSER_VAR}=#{WINDOW_VAR}.getBrowser(); #{BROWSER_VAR}.webProgress.isLoadingDocument;")
                 #puts "Is browser still loading page: #{isLoadingDocument}"
+                
+                 # Derek Berner 5/16/08
+                 # Raise an exception if the page fails to load
+                 if (Time.now - start) > 300
+                    raise "Page Load Timeout"
+                end
             end
-
-            # Check for Javascript redirect. As we are connected to Firefox via JSSh. JSSh
-            # doesn't detect any javascript redirects so check it here.
-            # If page redirects to itself that this code will enter in infinite loop.
-            # So we currently don't wait for such a page.
-            # wait variable in JSSh tells if we should wait more for the page to get loaded
-            # or continue. -1 means page is not redirected. Anyother positive values means wait.
-            jssh_command = "var wait = -1; var meta = null; meta = #{BROWSER_VAR}.contentDocument.getElementsByTagName('meta');
-                            if(meta != null)
-                            {
-                                var doc_url = #{BROWSER_VAR}.contentDocument.URL;
-                                for(var i=0; i< meta.length;++i)
+            # Derek Berner 5/16/08
+            # If the redirect is to a download attachment that does not reload this page, this
+            # method will loop forever. Therefore, we need to ensure that if this method is called
+            # twice with the same URL, we simply accept that we're done.
+            @jssh_socket.send("#{BROWSER_VAR}.contentDocument.URL;\n", 0)
+            url = read_socket()
+            
+            if(url != last_url)
+                # Check for Javascript redirect. As we are connected to Firefox via JSSh. JSSh
+                # doesn't detect any javascript redirects so check it here.
+                # If page redirects to itself that this code will enter in infinite loop.
+                # So we currently don't wait for such a page.
+                # wait variable in JSSh tells if we should wait more for the page to get loaded
+                # or continue. -1 means page is not redirected. Anyother positive values means wait.
+                jssh_command = "var wait = -1; var meta = null; meta = #{BROWSER_VAR}.contentDocument.getElementsByTagName('meta');
+                                if(meta != null)
                                 {
-									var content = meta[i].content;
-									var regex = new RegExp(\"^refresh$\", \"i\");
-									if(regex.test(meta[i].httpEquiv))
-									{
-										var arrContent = content.split(';');
-										var redirect_url = null;
-										if(arrContent.length > 0)
-										{
-											if(arrContent.length > 1)
-												redirect_url = arrContent[1];
-	                                        
-											if(redirect_url != null)
-											{
-												regex = new RegExp(\"^.*\" + redirect_url + \"$\");
-												if(!regex.test(doc_url))
-												{
-													wait = arrContent[0];
-												}
-											}
-											break;
-										}
-									}
-								}
-                            }
-                            wait;"
-            #puts "command in wait is : #{jssh_command}"                
-            jssh_command = jssh_command.gsub(/\n/, "")
-            @jssh_socket.send("#{jssh_command}; \n", 0)
-            wait_time = read_socket();
-            #puts "wait time is : #{wait_time}"
-            begin
-                wait_time = wait_time.to_i
-                if(wait_time != -1)
-                    sleep(wait_time)
-                    # Call wait again. In case there are multiple redirects.
-                    @jssh_socket.send("#{BROWSER_VAR} = #{WINDOW_VAR}.getBrowser(); \n",0)
-                    read_socket()
-                    wait()
-                end    
-            rescue
-            end
+                                    var doc_url = #{BROWSER_VAR}.contentDocument.URL;
+                                    for(var i=0; i< meta.length;++i)
+                                    {
+						    			var content = meta[i].content;
+							    		var regex = new RegExp(\"^refresh$\", \"i\");
+								    	if(regex.test(meta[i].httpEquiv))
+									    {
+										    var arrContent = content.split(';');
+    										var redirect_url = null;
+	    									if(arrContent.length > 0)
+		    								{
+			    								if(arrContent.length > 1)
+				    								redirect_url = arrContent[1];
+	                                            
+							    				if(redirect_url != null)
+						    					{
+								    				regex = new RegExp(\"^.*\" + redirect_url + \"$\");
+									    			if(!regex.test(doc_url))
+										    		{
+											    		wait = arrContent[0];
+												    }
+											    }
+											    break;
+										    }
+									    }
+								    }
+                                }
+                                wait;"
+                #puts "command in wait is : #{jssh_command}"                
+                jssh_command = jssh_command.gsub(/\n/, "")
+                @jssh_socket.send("#{jssh_command}; \n", 0)
+                wait_time = read_socket();
+                #puts "wait time is : #{wait_time}"
+                begin
+                    wait_time = wait_time.to_i
+                    if(wait_time != -1)
+                        sleep(wait_time)
+                        # Call wait again. In case there are multiple redirects.
+                        @jssh_socket.send("#{BROWSER_VAR} = #{WINDOW_VAR}.getBrowser(); \n",0)
+                        read_socket()
+                        wait(url)
+                    end    
+                rescue
+                end
+			end
             set_browser_document()
             run_error_checks()
             return self
@@ -1110,6 +1137,21 @@ module FireWatir
             end
         end
         alias showFrames show_frames
+
+	    # 5/16/08 Derek Berner
+    	# Wrapper method to send JS commands concisely,
+	    # and propagate errors
+    	def js_eval(str)
+	        #puts "JS Eval: #{str}"
+    	    @jssh_socket.send("#{str};\n",0)
+	        value = read_socket()
+	        if md=/^(\w+)Error:(.*)$/.match(value) 
+	            eval "class JS#{md[1]}Error\nend"
+	            raise (eval "JS#{md[1]}Error"), md[2]
+	        end
+	        #puts "Value: #{value}"
+	        value
+	    end
 
     end # Class Firefox
  
