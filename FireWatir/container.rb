@@ -818,7 +818,7 @@ module Container
 	end
     
     def jssh_socket
-      @jssh_socket || @container.jssh_socket
+      $jssh_socket || @container.jssh_socket
     end
 
     #
