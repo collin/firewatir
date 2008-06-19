@@ -13,7 +13,7 @@ class TC_StartupTest < Test::Unit::TestCase
         $ff.close
     end
 
-    def test_browser_starts_as_soon_as_jssh_connection_can_be_made
+    def test_browser_starts_quickly
         startup_time = Benchmark.measure { @ff = Firefox.new(:waitTime => 10) }.real
 
         assert startup_time < 10
