@@ -834,6 +834,7 @@ module Container
     def read_socket(socket = jssh_socket)
         return_value = "" 
         data = ""
+        receive = true
         #puts Thread.list
         s = nil
         while(s == nil) do
@@ -843,16 +844,22 @@ module Container
         for stream in s[0]
             data = stream.recv(1024)
             #puts "data is : #{data}"
-            while(data[data.length - 3..data.length - 1] != "\n> ")
+            while(receive)
+            #while(data.length == 1024)
                 return_value += data
-                data = stream.recv(1024)
+                if(return_value.include?("\n> "))
+                    receive = false
+                else    
+                    data = stream.recv(1024)
+                end    
+                #puts "return_value is : #{return_value}"
                 #puts "data length is : #{data.length}"
             end
         end
         
         # If received data is less than 1024 characters or for last data 
         # we read in the above loop 
-        return_value += data
+        #return_value += data
 
         # Get the command prompt inserted by JSSH
         #s = Kernel.select([socket] , nil , nil, 0.3)
