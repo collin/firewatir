@@ -168,7 +168,7 @@ module FireWatir
         
         #
         # Description: 
-        #   Starts the firefox browser. Currently this only works for Windows Platform.
+        #   Starts the firefox browser. Currently this only works for Windows and Linux.
         #   For others, you need to start Firefox manually using -jssh option.
         #   On windows this starts the first version listed in the registry.
         # 
@@ -180,13 +180,15 @@ module FireWatir
         #     :profile  - The Firefox profile to use. If none is specified, Firefox will use
         #                 the last used profile. Note that the :profile option only works if
         #                 no other instances of Firefox are already running.
+        #     :bin      - Path to he Firefox binary to use. If none is specified, the result of
+        #                 "which firefox"  will be used. This option only useful on Linux
 
         # TODO: Start the firefox version given by user. For example 
         #       ff = FireWatir::Firefox.new("1.5.0.4")
         #
  
         def initialize(options = {})
-			if(options.kind_of?(Integer))
+            if(options.kind_of?(Integer))
                 options = {:waitTime => options}
             end
 
@@ -219,9 +221,13 @@ module FireWatir
                 puts "Waiting for #{waitTime} seconds for Firefox to get started."
                 @t = Thread.new { system("\"#{path_to_exe}\" -jssh #{profile_opt}") }
             elsif(RUBY_PLATFORM =~ /linux/i)
+                bin_opt = if options[:bin]
+                    options[:bin]
+                else
+                    path_to_bin
+                end
                 puts RUBY_PLATFORM
-                path_to_bin = `which firefox`.strip
-                puts "#{path_to_bin} -jssh #{profile_opt}"
+                puts "#{bin_opt} -jssh #{profile_opt}"
                 @t = Thread.new { `#{path_to_bin} -jssh #{profile_opt}` }
             end     
             
@@ -230,6 +236,14 @@ module FireWatir
             set_defaults()
             get_window_number()
             set_browser_document()
+        end
+
+        # Description
+        # 
+        # Fetches the path to the firefox binary on linux systems
+        #
+        def path_to_bin
+            `which firefox`.strip
         end
 
         #
