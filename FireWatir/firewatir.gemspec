@@ -6,7 +6,7 @@ $__firewatir_source_patterns = [
 $LOAD_PATH.unshift File.dirname(__FILE__)
 require 'firewatir'
 
-spec = Gem::Specification.new do |s|
+@firewatir_spec = spec = Gem::Specification.new do |s|
   s.name = 'firewatir'
   s.version = "1.1.1"
   s.summary = 'Automated testing tool for web applications using Firefox browser.'
